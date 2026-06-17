@@ -1,0 +1,1310 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// CORE USER MANAGEMENT
+// ============================================
+
+model User {
+  id       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email    String     @unique @db.VarChar(255)
+  password String     @db.VarChar(255)
+  role     UserRole
+  status   UserStatus @default(pending_verification)
+
+  // OAuth fields
+  provider    String? @db.VarChar(50)
+  provider_id String? @db.VarChar(255)
+
+  // Security & verification
+  email_verified                Boolean   @default(false)
+  email_verification_token      String?   @db.VarChar(255)
+  verification_token_expires_at DateTime? @db.Timestamptz(6)
+  password_reset_token          String?   @db.VarChar(255)
+  password_reset_expires_at     DateTime? @db.Timestamptz(6)
+  invitation_token              String?   @unique
+  invitation_token_expires_at   DateTime? @db.Timestamptz(6)
+  invited_by                    String?
+
+  // User's IANA timezone (e.g., "Asia/Colombo"). Used for server-side formatting
+  // (emails, stats). All timestamps are stored as UTC and converted on display.
+  timezone String @default("UTC") @db.VarChar(64)
+
+  // Notification preferences stored as JSON map of boolean flags
+  notification_preferences Json? @default("{}")
+
+  // Metadata
+  last_login_at DateTime? @db.Timestamptz(6)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @updatedAt @db.Timestamptz(6)
+  deleted_at    DateTime? @db.Timestamptz(6)
+
+  // Relations
+  candidate     Candidate?
+  employer      Employer?
+  mis_user      MisUser?
+  notifications Notification[]
+
+  @@index([email])
+  @@index([role, status])
+  @@index([deleted_at])
+  @@map("users")
+}
+
+// ============================================
+// CANDIDATE PROFILE
+// ============================================
+
+model Candidate {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id String @unique @db.Uuid
+
+  // Basic Information (Section 1)
+  first_name        String   @db.VarChar(100)
+  last_name         String   @db.VarChar(100)
+  nicPassport       String   @db.VarChar(20)
+  dob               DateTime @db.Date
+  contact_no        String   @db.VarChar(20)
+  email             String   @unique @db.VarChar(255)
+  gender            Gender
+  current_position  String   @db.VarChar(200)
+  industry          String   @db.VarChar(100)
+  address           String   @db.Text
+  phone             String   @db.VarChar(20)
+  alternative_phone String?  @db.VarChar(20)
+  country           String?  @db.VarChar(100)
+  membership_no     String?  @db.VarChar(20)
+  resume_url        String?  @db.VarChar(255)
+  resume_copy_url   String?  @db.VarChar(255)
+
+  years_of_experience Int?             @default(0)
+  experience_level    ExperienceLevel? @default(junior)
+
+  // Qualifications stored as array for multiple selection
+  qualifications        ProfessionalQualification[]
+  highest_qualification ProfessionalQualification?
+
+  expected_monthly_salary Decimal?            @db.Decimal(12, 2)
+  availability_status     AvailabilityStatus? @default(available)
+  notice_period           String?             @db.VarChar(50) // e.g., "immediate", "1 month", "2 months"
+  employment_type         EmploymentType?     @default(full_time)
+  expected_positions      String[]            @default([]) // Up to 3 expected job positions
+
+  professional_summary String? @db.VarChar(1000)
+  profile_image_url    String? @db.VarChar(255)
+
+  approval_status   ApprovalStatus @default(pending)
+  profile_completed Boolean        @default(false)
+
+  // Approval workflow tracking
+  approval_status_message_seen Boolean   @default(false)
+  approved_at                  DateTime? @db.Timestamptz(6)
+  rejected_at                  DateTime? @db.Timestamptz(6)
+  reviewed_by                  String?   @db.Uuid
+  rejection_reason             String?   @db.Text
+
+  // Metadata
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  reviewer         MisUser?         @relation(fields: [reviewed_by], references: [user_id], onDelete: SetNull)
+  work_experiences WorkExperience[]
+  educations       Education[]
+  awards           Award[]
+  projects         Project[] // IT industry
+  certificates     Certificate[] // IT industry
+
+  // Industry-specific education
+  finance_academic_education     FinanceAcademicEducation[]
+  finance_professional_education FinanceProfessionalEducation[]
+  banking_academic_education     BankingAcademicEducation[]
+  banking_professional_education BankingProfessionalEducation[]
+  banking_specialized_training   BankingSpecializedTraining[]
+
+  // Universal - works across all industries
+  industry_specializations IndustrySpecialization[]
+
+  // Job invitations received
+  job_invitations JobInvitation[]
+
+  // Uploaded resumes
+  resumes CandidateResume[]
+
+  // Job applications
+  job_applications JobApplication[]
+
+  @@index([user_id])
+  @@index([industry])
+  @@index([experience_level])
+  @@index([availability_status])
+  @@index([country])
+  @@index([approval_status])
+  @@map("candidates")
+}
+
+// ============================================
+// CANDIDATE RESUMES
+// ============================================
+
+model CandidateResume {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String  @db.Uuid
+
+  file_name  String  @db.VarChar(255)
+  file_url   String  @db.VarChar(500)
+  file_path  String  @db.VarChar(500)
+  is_primary Boolean @default(false)
+
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([is_primary])
+  @@map("candidate_resumes")
+}
+
+// ============================================
+// CANDIDATE EXPERIENCE (Section 2)
+// ============================================
+
+model WorkExperience {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  job_title       String?         @db.VarChar(200)
+  company         String?         @db.VarChar(200)
+  employment_type EmploymentType? @default(full_time)
+  location        String?         @db.VarChar(200)
+  location_type   LocationType?   @default(onsite)
+
+  start_date  DateTime? @db.Date
+  end_date    DateTime? @db.Date
+  description String?   @db.Text
+  is_current  Boolean?  @default(false)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([is_current])
+  @@index([start_date])
+  @@map("work_experiences")
+}
+
+// ============================================
+// CANDIDATE EDUCATION (Section 3)
+// ============================================
+
+model Education {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  education_type             EducationType   @default(academic) // academic or professional
+  degree_diploma             String?         @db.VarChar(200) // Qualification
+  professional_qualification String?         @db.VarChar(200)
+  institution                String?         @db.VarChar(200)
+  status                     String          @default("incomplete") @db.VarChar(100)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([education_type])
+  @@map("educations")
+}
+
+// ============================================
+// AWARDS & ACHIEVEMENTS (Section 4)
+// ============================================
+
+model Award {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  nature_of_award String? @db.VarChar(300)
+  offered_by      String? @db.VarChar(200)
+  description     String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@map("awards")
+}
+
+// ============================================
+// IT INDUSTRY SPECIFIC - PROJECTS (Section 5)
+// ============================================
+
+model Project {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  project_name String? @db.VarChar(200)
+  description  String? @db.Text
+  demo_url     String? @db.VarChar(500) // Demo/Github URL
+  is_current   Boolean @default(false)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([is_current])
+  @@map("projects")
+}
+
+// ============================================
+// IT INDUSTRY SPECIFIC - CERTIFICATES (Section 6)
+// ============================================
+
+model Certificate {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  certificate_name  String?   @db.VarChar(200)
+  issuing_authority String?   @db.VarChar(200)
+  issue_date        DateTime? @db.Date
+  expiry_date       DateTime? @db.Date
+  credential_id     String?   @db.VarChar(100)
+  credential_url    String?   @db.VarChar(500)
+  description       String?   @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([issue_date])
+  @@index([expiry_date])
+  @@map("certificates")
+}
+
+// ============================================
+// FINANCE INDUSTRY - EDUCATION
+// ============================================
+
+model FinanceAcademicEducation {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  degree_diploma String                 @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Accounting and Finance
+  institution    String                 @db.VarChar(200)
+  status         String                 @default("incomplete") @db.VarChar(100)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@map("finance_academic_education")
+}
+
+model FinanceProfessionalEducation {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  professional_qualification String                 @db.VarChar(300) // Professional Qualifications/Professional Programs/Specialized programs
+  institution                String                 @db.VarChar(200)
+  status                     String                 @default("incomplete") @db.VarChar(100)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@map("finance_professional_education")
+}
+
+// ============================================
+// BANKING INDUSTRY - EDUCATION
+// ============================================
+
+model BankingAcademicEducation {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  degree_diploma String                 @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Banking and Finance
+  institution    String                 @db.VarChar(200)
+  status         String                 @default("incomplete") @db.VarChar(100)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@map("banking_academic_education")
+}
+
+model BankingProfessionalEducation {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  professional_qualification String                 @db.VarChar(300) // Professional Banking Programs/Specialist diplomas/International Professional Qualifications
+  institution                String                 @db.VarChar(200)
+  status                     String                 @default("incomplete") @db.VarChar(100)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@map("banking_professional_education")
+}
+
+model BankingSpecializedTraining {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  certificate_name        String                 @db.VarChar(300) // Certificate Name/Training program name
+  issuing_authority       String                 @db.VarChar(200) // Issuing Authority/Institution
+  certificate_issue_month DateTime?              @db.Date // Certificate Issue Month/training completion month
+  status                  String                 @default("incomplete") @db.VarChar(100)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([certificate_issue_month])
+  @@map("banking_specialized_training")
+}
+
+// ============================================
+// UNIVERSAL - INDUSTRY SPECIALIZATION
+// ============================================
+
+model IndustrySpecialization {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
+
+  industry         IndustryType
+  specialization   String       @db.VarChar(200) // e.g., "Mobile Development", "Trade Finance"
+  description      String?      @db.Text
+  years_experience Int?         @default(0)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@index([candidate_id])
+  @@index([industry])
+  @@map("industry_specializations")
+}
+
+// ============================================
+// EMPLOYER & COMPANY
+// ============================================
+
+model Company {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // Company Information (Section 1)
+  company_name                String   @db.VarChar(200)
+  business_registration_no    String   @unique @db.VarChar(50)
+  industry                    String   @db.VarChar(100)
+  bio                         String?  @db.VarChar(255)
+  business_registered_address String   @db.VarChar(255)
+  br_certificate_url          String   @db.VarChar(255) // BR Certificate URL
+  logo_url                    String?  @db.VarChar(255)
+  description                 String?  @db.VarChar(5000)
+  phone                       String   @db.VarChar(20)
+  website                     String?  @db.VarChar(255)
+  headoffice_location         String?  @db.VarChar(200)
+  company_size                String?  @db.VarChar(50)
+  specialities                String[] @default([]) // Array of specialities
+  map_link                    String?  @db.VarChar(1000)
+
+  // Privacy & visibility settings
+  profile_visible      Boolean @default(true)
+  show_company_size    Boolean @default(true)
+  show_company_website Boolean @default(true)
+  team_settings        Json?   @default("{}")
+
+  approval_status   ApprovalStatus @default(pending)
+  profile_completed Boolean        @default(false)
+
+  // Approval workflow tracking
+  approval_status_message_seen Boolean   @default(false)
+  approved_at                  DateTime? @db.Timestamptz(6)
+  rejected_at                  DateTime? @db.Timestamptz(6)
+  reviewed_by                  String?   @db.Uuid
+  rejection_reason             String?   @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  employers        Employer[]
+  jobs             Job[]
+  job_invitations  JobInvitation[]
+  payment_requests PaymentRequest[]
+
+  @@index([business_registration_no])
+  @@index([industry])
+  @@index([approval_status])
+  @@map("companies")
+}
+
+model Employer {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String @unique @db.Uuid
+  company_id String @db.Uuid
+
+  first_name        String  @db.VarChar(100)
+  last_name         String  @db.VarChar(100)
+  designation       String? @db.VarChar(200)
+  phone             String? @db.VarChar(20)
+  email             String  @db.VarChar(255)
+  address           String  @db.VarChar(255)
+  job_title         String? @db.VarChar(200)
+  department        String? @db.VarChar(100)
+  is_super_admin      Boolean @default(false)
+  profile_completed   Boolean @default(false)
+  profile_image_url   String? @db.VarChar(500)
+  hiring_preferences  Json?   @default("{}")
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  user            User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  company         Company         @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  jobs            Job[]
+  job_invitations JobInvitation[]
+  payment_requests        PaymentRequest[]
+  payment_proofs_uploaded PaymentProof[]
+
+  @@index([user_id])
+  @@index([company_id])
+  @@map("employers")
+}
+
+// ============================================
+// MIS USER
+// ============================================
+
+model MisUser {
+  user_id             String      @id @db.Uuid
+  first_name          String      @db.VarChar(100)
+  last_name           String      @db.VarChar(100)
+  email               String      @unique @db.VarChar(255)
+  role_id             String?     @db.Uuid // Assigned role
+  is_super_admin      Boolean     @default(false) // Super admin flag
+  created_at          DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime    @updatedAt @db.Timestamptz(6)
+  user                User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role                MisRole?    @relation(fields: [role_id], references: [id], onDelete: SetNull)
+  reviewed_candidates Candidate[]
+  payment_requests_created PaymentRequest[] @relation("PaymentRequestCreator")
+  payment_proofs_reviewed  PaymentProof[]   @relation("PaymentProofReviewer")
+
+  @@index([role_id])
+  @@index([is_super_admin])
+  @@map("mis_user")
+}
+
+// ============================================
+// MIS RBAC SYSTEM
+// ============================================
+
+model MisRole {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(100) // e.g., "Approver", "Support Agent", "Finance Admin"
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+  created_by  String   @db.Uuid // MIS user who created this role
+
+  // Relations
+  mis_users       MisUser[]
+  role_permissions MisRolePermission[]
+
+  @@index([is_active])
+  @@map("mis_roles")
+}
+
+model MisPermission {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(100) // e.g., "candidates.approve", "users.create"
+  resource    String   @db.VarChar(50) // e.g., "candidates", "employers", "jobs", "users", "roles"
+  action      String   @db.VarChar(50) // e.g., "view", "create", "edit", "delete", "approve"
+  description String?  @db.Text
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  role_permissions MisRolePermission[]
+
+  @@unique([resource, action])
+  @@index([resource])
+  @@map("mis_permissions")
+}
+
+model MisRolePermission {
+  role_id       String        @db.Uuid
+  permission_id String        @db.Uuid
+  assigned_at   DateTime      @default(now()) @db.Timestamptz(6)
+  assigned_by   String        @db.Uuid // MIS user who assigned this permission
+
+  // Relations
+  role       MisRole       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission MisPermission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+  @@index([role_id])
+  @@index([permission_id])
+  @@map("mis_role_permissions")
+}
+
+// ============================================
+// MIS SIDEBAR VISIBILITY SETTINGS
+// ============================================
+
+model MisSidebarVisibilitySettings {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  portal_type        String   @unique // "candidate" or "employer"
+  visibility_config  Json     @default("{}")
+  updated_at         DateTime @updatedAt @db.Timestamptz(6)
+  updated_by_user_id String?  @db.Uuid
+
+  @@map("mis_sidebar_visibility_settings")
+}
+
+// ============================================
+// JOB MANAGEMENT
+// ============================================
+
+model Job {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employer_id String @db.Uuid
+  company_id  String @db.Uuid
+
+  // Job Information
+  job_title          String    @db.VarChar(200)
+  location           String?   @db.VarChar(200)
+  industry           String?   @db.VarChar(100)
+  deadline           DateTime? @db.Date
+  job_type           JobType   @default(full_time)
+  advertisement_link String?   @db.VarChar(500)
+
+  description String?   @db.Text
+  status      JobStatus @default(draft)
+
+  // Advertisement-specific fields
+  salary_min          Decimal? @db.Decimal(12, 2)
+  salary_max          Decimal? @db.Decimal(12, 2)
+  salary_currency     String?  @db.VarChar(10) @default("LKR")
+  experience_level    String?  @db.VarChar(50)
+  positions_available Int?     @default(1)
+  validity_days       Int      @default(30)
+  custom_start_date   DateTime? @db.Date
+  custom_end_date     DateTime? @db.Date
+  expires_at          DateTime? @db.Timestamptz(6)
+  is_deleted          Boolean  @default(false)
+  deleted_at          DateTime? @db.Timestamptz(6)
+
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @updatedAt @db.Timestamptz(6)
+  published_at DateTime? @db.Timestamptz(6)
+
+  employer         Employer         @relation(fields: [employer_id], references: [id], onDelete: Cascade)
+  company          Company          @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  job_invitations  JobInvitation[]
+  payment_requests PaymentRequest[]
+  job_applications JobApplication[]
+
+  @@index([employer_id])
+  @@index([company_id])
+  @@index([status])
+  @@index([job_type])
+  @@index([industry])
+  @@index([published_at])
+  @@index([deadline])
+  @@index([expires_at])
+  @@index([is_deleted])
+  @@index([status, is_deleted])
+  @@map("jobs")
+}
+
+model JobApplication {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id       String            @db.Uuid
+  candidate_id String            @db.Uuid
+  status       ApplicationStatus @default(pending)
+  cover_letter String?           @db.Text
+  resume_url   String?           @db.VarChar(500)
+  applied_at   DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime          @updatedAt @db.Timestamptz(6)
+  notes        String?           @db.Text
+
+  job       Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, candidate_id])
+  @@index([job_id])
+  @@index([candidate_id])
+  @@index([status])
+  @@index([applied_at])
+  @@map("job_applications")
+}
+
+// ============================================
+// JOB INVITATIONS
+// ============================================
+
+model JobInvitation {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id       String? @db.Uuid // Optional - invitations can be sent without a job posting
+  candidate_id String  @db.Uuid
+  employer_id  String  @db.Uuid
+  company_id   String  @db.Uuid
+
+  status  InvitationStatus @default(pending)
+  message String?          @db.Text // Optional custom message from employer
+
+  // Interview scheduling context
+  industry        String @db.VarChar(100) // From filter context
+  job_designation String @db.VarChar(200) // From filter context
+
+  // Time slots stored as JSON arrays
+  given_time_slots   Json? // Array of {date, time, order} objects
+  alternative_dates  Json? // Array of {date, time, order} objects
+  selected_time_slot Json? // Candidate's chosen time slot {date, time, is_alternative}
+  interview_mode     InterviewMode? // Candidate's preference: online or physical
+
+  // Interview confirmation by employer
+  interview_confirmed Boolean   @default(false) // True when employer confirms the interview
+  confirmed_time      String?   @db.VarChar(10) // Time slot for alternative dates (e.g., "09:00")
+  meeting_link        String?   @db.Text // For online interviews
+  interview_address   String?   @db.Text // For physical interviews
+  map_link            String?   @db.Text // Map link for physical location
+  confirmed_at        DateTime? @db.Timestamptz(6) // When employer confirmed
+
+  // Interview cancellation tracking
+  invitation_canceled Boolean     @default(false) // True if interview was cancelled
+  canceled_by         CanceledBy? // Who canceled: candidate or employer
+  cancellation_reason String?     @db.Text // Reason for cancellation
+  canceled_at         DateTime? @db.Timestamptz(6) // When the interview was cancelled
+
+  // MIS Reschedule tracking (for rescheduling cancelled confirmed interviews)
+  mis_rescheduled     Boolean   @default(false) // True if MIS rescheduled the interview
+  mis_rescheduled_at  DateTime? @db.Timestamptz(6) // When MIS rescheduled the interview
+  mis_rescheduled_by  String?   @db.Uuid // MIS user who rescheduled
+  mis_reschedule_data Json? // New interview details (date, time, mode, link/address)
+
+  // Pipeline management (Phase 1: additive)
+  pipeline_status      PipelineStatus @default(active)
+  current_round_number Int @default(1)
+  closed_at            DateTime?
+  closed_reason        String?
+
+  // Tracking
+  sent_at      DateTime  @default(now()) @db.Timestamptz(6)
+  viewed_at    DateTime? @db.Timestamptz(6)
+  responded_at DateTime? @db.Timestamptz(6)
+  /// When the employer last opened this invitation; null = unread on employer sidebar
+  employer_last_seen_at DateTime? @db.Timestamptz(6)
+
+  // Relations
+  job       Job?      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  employer  Employer  @relation(fields: [employer_id], references: [id], onDelete: Cascade)
+  company   Company   @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  interview_rounds        InterviewRound[]
+  offer                   JobOffer?
+  interview_reminder_sent InterviewReminderSent[]
+  payment_requests        PaymentRequest[]
+
+  // Removed unique constraint to allow re-inviting candidates when previous invitations are cancelled or completed
+  @@index([candidate_id, status])
+  @@index([employer_id])
+  @@index([company_id])
+  @@index([sent_at])
+  @@index([job_id])
+  /// Supabase Realtime enabled: REPLICA IDENTITY FULL (migration: enable_realtime_for_notification_tables)
+  @@map("job_invitations")
+}
+
+model InterviewRound {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invitation_id   String   @db.Uuid
+  round_number    Int      // 1, 2, 3, ...
+  round_label     String?  @db.VarChar(100) // e.g. "Technical Interview", "Culture Fit", "Final Round"
+
+  // ---- Scheduling ----
+  status          RoundStatus   @default(pending)  // pending|viewed|accepted|declined|expired|confirmed|completed|canceled
+  given_time_slots   Json  // Array of time slot objects
+  alternative_dates  Json? // Array of alternative date objects
+  selected_time_slot Json? // Candidate's selected time slot
+  interview_mode     InterviewMode?
+  interview_confirmed Boolean @default(false)
+  confirmed_time      Json?   // Confirmed time for alternative dates
+  meeting_link        String? @db.Text
+  interview_address   String? @db.Text
+  map_link            String? @db.Text
+  confirmed_at        DateTime? @db.Timestamptz(6)
+
+  // ---- Cancellation ----
+  round_canceled       Boolean  @default(false)
+  canceled_by          CanceledBy?
+  cancellation_reason  String?  @db.Text
+  canceled_at          DateTime? @db.Timestamptz(6)
+
+  // ---- MIS reschedule ----
+  mis_rescheduled     Boolean @default(false)
+  mis_rescheduled_at  DateTime? @db.Timestamptz(6)
+  mis_rescheduled_by  String? @db.Uuid
+  mis_reschedule_data Json?
+
+  // ---- Interview Feedback & Outcome ----
+  outcome             RoundOutcome?   // advance|reject|offer|no_decision
+  outcome_notes       String?  @db.Text  // Employer's feedback about candidate performance
+  outcome_at          DateTime? @db.Timestamptz(6)
+  outcome_by          String? @db.Uuid   // employer user id who made the decision
+
+  // ---- Timestamps ----
+  sent_at      DateTime  @default(now()) @db.Timestamptz(6)
+  viewed_at    DateTime? @db.Timestamptz(6)
+  responded_at DateTime? @db.Timestamptz(6)
+
+  // ---- Relations ----
+  invitation JobInvitation @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  offer      JobOffer?
+
+  @@unique([invitation_id, round_number])
+  @@index([invitation_id])
+  @@index([status])
+  @@index([outcome])
+  @@index([outcome_by])
+  @@index([invitation_id, round_number])
+  @@map("interview_rounds")
+}
+
+/// Singleton row (id = 1): MIS-configured offsets in minutes before each interview start.
+model MisInterviewReminderSettings {
+  id                Int      @id @default(1)
+  enabled           Boolean  @default(false)
+  offsets_minutes   Int[]    @default([])
+  updated_at        DateTime @updatedAt @db.Timestamptz(6)
+  updated_by_user_id String? @db.Uuid
+
+  @@map("mis_interview_reminder_settings")
+}
+
+/// One row per reminder actually sent (deduped by target + offset + scheduled instant).
+model InterviewReminderSent {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  target_key             String   @db.VarChar(120)
+  job_invitation_id      String   @db.Uuid
+  offset_minutes         Int
+  interview_scheduled_at DateTime @db.Timestamptz(6)
+  sent_at                DateTime @default(now()) @db.Timestamptz(6)
+
+  invitation JobInvitation @relation(fields: [job_invitation_id], references: [id], onDelete: Cascade)
+
+  @@unique([target_key, offset_minutes, interview_scheduled_at])
+  @@index([job_invitation_id])
+  @@map("interview_reminder_sent")
+}
+
+model JobOffer {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invitation_id  String   @unique @db.Uuid
+  round_id       String?  @unique @db.Uuid          // round after which offer was made
+
+  job_title      String
+  salary_amount  Decimal? @db.Decimal(12,2)
+  salary_currency String? @default("LKR")
+  salary_period  SalaryPeriod? @default(monthly)    // monthly|annual
+  start_date     DateTime?
+  expiry_date    DateTime?
+  offer_letter_url String?
+  description    String?                             // benefits, terms, etc.
+
+  status         OfferStatus @default(pending)       // pending|accepted|declined|withdrawn|expired
+  decline_reason String?
+  responded_at   DateTime?
+  created_by     String  @db.Uuid                    // employer user id
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  invitation JobInvitation @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  round      InterviewRound? @relation(fields: [round_id], references: [id])
+
+  @@map("job_offers")
+}
+
+// ============================================
+// JOB DESIGNATIONS SYSTEM
+// ============================================
+
+model Industry {
+  industry_id   Int    @id
+  industry_name String @db.VarChar(100)
+
+  designations JobDesignation[]
+
+  @@map("industries")
+}
+
+model SeniorityLevel {
+  level_id    Int    @id
+  level_name  String @db.VarChar(50)
+  level_order Int
+
+  designations JobDesignation[]
+
+  @@map("seniority_levels")
+}
+
+model JobDesignation {
+  designation_id   Int    @id @default(autoincrement())
+  designation_name String @db.VarChar(150)
+  industry_id      Int
+  level_id         Int
+
+  industry        Industry       @relation(fields: [industry_id], references: [industry_id])
+  seniority_level SeniorityLevel @relation(fields: [level_id], references: [level_id])
+
+  @@index([industry_id])
+  @@index([level_id])
+  @@map("job_designations")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  candidate
+  employer
+  mis
+}
+
+enum UserStatus {
+  active
+  inactive
+  suspended
+  pending_verification
+}
+
+enum ExperienceLevel {
+  entry
+  junior
+  mid
+  senior
+  lead
+  principal
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum ProfessionalQualification {
+  bachelors_degree
+  masters_degree
+  doctorate_phd
+  undergraduate
+  post_graduate
+  diploma
+  certificate
+  professional_certification
+  vocational_training
+  no_formal_education
+}
+
+enum AvailabilityStatus {
+  available
+  open_to_opportunities
+  not_looking
+}
+
+enum EmploymentType {
+  full_time
+  part_time
+  contract
+  internship
+  freelance
+  volunteer
+}
+
+enum LocationType {
+  remote
+  hybrid
+  onsite
+}
+
+enum EducationType {
+  academic
+  professional
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum JobType {
+  full_time
+  part_time
+  contract
+  internship
+  freelance
+}
+
+enum JobStatus {
+  draft
+  published
+  paused
+  closed
+  archived
+  expired
+  deleted
+}
+
+enum ApplicationStatus {
+  pending
+  reviewed
+  shortlisted
+  rejected
+  hired
+  withdrawn
+}
+
+// ============================================
+
+enum IndustryType {
+  it_software
+  banking
+  finance_investment
+}
+
+enum InvitationStatus {
+  pending
+  viewed
+  accepted
+  declined
+  expired
+}
+
+enum InterviewMode {
+  online
+  physical
+}
+
+enum CanceledBy {
+  candidate
+  employer
+}
+
+// ============================================
+// LOGGING & ANALYTICS
+// ============================================
+
+enum LogCategory {
+  auth
+  activity
+  business
+  system
+}
+
+enum RoundStatus {
+  pending
+  viewed
+  accepted
+  declined
+  expired
+  confirmed
+  completed
+  canceled
+}
+
+enum RoundOutcome {
+  advance
+  reject
+  offer
+  no_decision
+}
+
+enum PipelineStatus {
+  active
+  rejected
+  offered
+  hired
+  withdrawn
+  expired
+}
+
+enum OfferStatus {
+  pending
+  accepted
+  declined
+  withdrawn
+  expired
+}
+
+enum SalaryPeriod {
+  hourly
+  daily
+  monthly
+  annual
+}
+
+model EventLog {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // Who
+  user_id   String? @db.Uuid
+  user_role String? @db.VarChar(20)
+
+  // What
+  category LogCategory
+  action   String      @db.VarChar(100)
+  label    String?     @db.VarChar(255)
+
+  // Context
+  resource_type String? @db.VarChar(50)
+  resource_id   String? @db.Uuid
+  metadata      Json?
+
+  // Request info
+  ip_address String? @db.VarChar(45)
+  user_agent String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([user_id])
+  @@index([category])
+  @@index([action])
+  @@index([resource_type, resource_id])
+  @@index([created_at])
+  @@index([user_role, category])
+  @@map("event_logs")
+}
+
+model ApiRequestLog {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  user_id    String? @db.Uuid
+  method     String  @db.VarChar(10)
+  path       String  @db.VarChar(500)
+  status     Int
+  duration   Int // milliseconds
+  query_params String? @db.Text
+  
+  ip_address String? @db.VarChar(45)
+  user_agent String? @db.Text
+  error      String? @db.Text
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([user_id])
+  @@index([path])
+  @@index([status])
+  @@index([created_at])
+  @@map("api_request_logs")
+}
+
+model ErrorLog {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  user_id    String? @db.Uuid
+  source     String  @db.VarChar(200)
+  error_type String  @db.VarChar(100)
+  message    String  @db.Text
+  stack      String? @db.Text
+  metadata   Json?
+
+  resolved   Boolean @default(false)
+  resolved_at DateTime? @db.Timestamptz(6)
+  resolved_by String? @db.Uuid
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([source])
+  @@index([error_type])
+  @@index([resolved])
+  @@index([created_at])
+  @@map("error_logs")
+}
+
+// ============================================
+// REALTIME NOTIFICATIONS (Phase 5)
+// ============================================
+
+model Notification {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id String  @db.Uuid
+
+  type    String  @db.Text // notification type: invitation_received, interview_scheduled, etc.
+  title   String  @db.Text
+  body    String? @db.Text
+  data    Json?   // Additional context: {invitation_id, round_id, offer_id, etc.}
+  is_read Boolean @default(false)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Indexes matching the SQL migration
+  @@index([user_id, is_read, created_at(sort: Desc)]) // For unread notifications query
+  @@index([user_id, created_at(sort: Desc)])          // For notification history
+  /// Supabase Realtime enabled: REPLICA IDENTITY FULL (migration: enable_realtime_for_notification_tables)
+  @@map("notifications")
+}
+
+// ============================================
+// PAYMENT SYSTEM
+// ============================================
+
+model PaymentType {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique @db.VarChar(100)
+  label       String   @db.VarChar(200)
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  payment_requests PaymentRequest[]
+  payment_pricing  PaymentPricing[]
+
+  @@index([is_active])
+  @@map("payment_types")
+}
+
+model PaymentPricing {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  payment_type_id String      @db.Uuid
+  amount          Decimal     @db.Decimal(12, 2)
+  currency        String      @default("LKR") @db.VarChar(10)
+  description     String?     @db.Text
+  is_active       Boolean     @default(true)
+  effective_from  DateTime    @default(now()) @db.Timestamptz(6)
+  created_at      DateTime    @default(now()) @db.Timestamptz(6)
+
+  payment_type PaymentType @relation(fields: [payment_type_id], references: [id], onDelete: Cascade)
+
+  @@index([payment_type_id])
+  @@index([is_active])
+  @@map("payment_pricing")
+}
+
+model PaymentBankDetails {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bank_name      String   @db.VarChar(200)
+  account_name   String   @db.VarChar(200)
+  account_number String   @db.VarChar(100)
+  branch         String?  @db.VarChar(200)
+  bank_code      String?  @db.VarChar(50)
+  swift_code     String?  @db.VarChar(50)
+  is_active      Boolean  @default(true)
+  sort_order     Int      @default(0)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([is_active])
+  @@map("payment_bank_details")
+}
+
+model PaymentRequest {
+  id                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id              String               @db.Uuid
+  employer_id             String?              @db.Uuid
+  created_by_mis_user_id  String               @db.Uuid
+  payment_type_id         String               @db.Uuid
+  reference_job_id        String?              @db.Uuid
+  reference_invitation_id String?              @db.Uuid
+  amount                  Decimal              @db.Decimal(12, 2)
+  currency                String               @default("LKR") @db.VarChar(10)
+  description             String               @db.Text
+  due_date                DateTime?            @db.Date
+  status                  PaymentRequestStatus @default(pending_payment)
+  bank_transfer_reference String?              @db.VarChar(200)
+  created_at              DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime             @updatedAt @db.Timestamptz(6)
+
+  company              Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  employer             Employer?      @relation(fields: [employer_id], references: [id], onDelete: SetNull)
+  created_by_mis       MisUser        @relation("PaymentRequestCreator", fields: [created_by_mis_user_id], references: [user_id])
+  payment_type         PaymentType    @relation(fields: [payment_type_id], references: [id])
+  reference_job        Job?           @relation(fields: [reference_job_id], references: [id], onDelete: SetNull)
+  reference_invitation JobInvitation? @relation(fields: [reference_invitation_id], references: [id], onDelete: SetNull)
+  payment_proofs       PaymentProof[]
+
+  @@index([company_id])
+  @@index([employer_id])
+  @@index([status])
+  @@index([payment_type_id])
+  @@index([created_at])
+  @@index([due_date])
+  /// Supabase Realtime enabled: REPLICA IDENTITY FULL (migration: enable_realtime_for_notification_tables)
+  @@map("payment_requests")
+}
+
+model PaymentProof {
+  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  payment_request_id      String             @db.Uuid
+  uploaded_by_employer_id String             @db.Uuid
+  file_url                String             @db.VarChar(500)
+  file_path               String             @db.VarChar(500)
+  file_name               String             @db.VarChar(255)
+  file_type               String             @db.VarChar(100)
+  uploaded_at             DateTime           @default(now()) @db.Timestamptz(6)
+  reviewed_by_mis_user_id String?            @db.Uuid
+  reviewed_at             DateTime?          @db.Timestamptz(6)
+  review_notes            String?            @db.Text
+  status                  PaymentProofStatus @default(pending_review)
+
+  payment_request PaymentRequest @relation(fields: [payment_request_id], references: [id], onDelete: Cascade)
+  uploaded_by     Employer       @relation(fields: [uploaded_by_employer_id], references: [id])
+  reviewed_by     MisUser?       @relation("PaymentProofReviewer", fields: [reviewed_by_mis_user_id], references: [user_id])
+
+  @@index([payment_request_id])
+  @@index([status])
+  @@map("payment_proofs")
+}
+
+enum PaymentRequestStatus {
+  pending_payment
+  under_review
+  verified
+  rejected
+  cancelled
+}
+
+enum PaymentProofStatus {
+  pending_review
+  approved
+  rejected
+}

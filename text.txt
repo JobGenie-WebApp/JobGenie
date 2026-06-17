@@ -1,0 +1,1 @@
+I want to send reminders to both candidate and employer about the scheduled interview. reminder should recieve for both parties before 24 hours from the interview time.

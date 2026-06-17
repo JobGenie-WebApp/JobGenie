@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Pathum\\\\JG-Backup\\\\JobGenie\\\\jg-new\\\\project\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Pathum\\\\JG-Backup\\\\JobGenie\\\\src\" -Recurse -Force)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(npx next *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Pathum\\\\JG-Backup\\\\JobGenie\\\\jg-new\" -Depth 1)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Get-ChildItem \"c:\\\\Pathum\\\\JG-Backup\\\\JobGenie\\\\src\\\\app\\\\candidate\\\\\\(dashboard\\\\\\)\\\\invitations\" -Recurse)"
+    ]
+  }
+}

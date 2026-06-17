@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "resend": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "resend-mcp"
+      ],
+      "env": {
+        "RESEND_API_KEY": "re_KoUMwwFD_LNXeiM2AfPpvZJGWWgeBZApE"
+      }
+    }
+  }
+}

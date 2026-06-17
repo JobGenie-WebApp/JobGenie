@@ -1,0 +1,1 @@
+if in an implementation there will be a database change always update schema.prisma file and apply migrations fo both dev and prod databases. make sure must not drop or clear any data in the database.

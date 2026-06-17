@@ -1,0 +1,87 @@
+name: Supabase Backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # Every day at 2 AM UTC
+  workflow_dispatch:        # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install postgresql-client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install JS dependencies
+        run: npm install @supabase/supabase-js
+
+      # ---- DATABASE TABLES ----
+      # Uses the *direct* host URL (db.PROJECT-REF.supabase.co:5432), not the pooler.
+      # pg_dump requires a persistent session and will fail silently with the pooler.
+      #
+      # GitHub secret required: SUPABASE_DB_PASSWORD
+      #   → Supabase Dashboard → Project Settings → Database → Database password
+      - name: Backup DB tables
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          DATE=$(date +%Y-%m-%d_%H-%M)
+          DUMP_FILE="db_backup_${DATE}.sql"
+          PROJECT_REF="qqhdpoddfwkqsubmjskg"
+          DB_HOST="db.${PROJECT_REF}.supabase.co"
+
+          # Build the direct URL at runtime — avoids storing a URL with embedded
+          # password in secrets. Password is URL-encoded to handle special chars.
+          ENCODED_PASS=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$SUPABASE_DB_PASSWORD")
+          DIRECT_URL="postgresql://postgres:${ENCODED_PASS}@${DB_HOST}:5432/postgres"
+
+          echo "Connecting to: ${DB_HOST}:5432"
+
+          # Plain SQL (-Fp): human-readable, no special tools needed to open.
+          # --schema=public: skip Supabase internal schemas (auth, storage, etc.).
+          # --no-owner / --no-privileges: skip roles that won't exist on restore.
+          PGPASSWORD="${SUPABASE_DB_PASSWORD}" pg_dump \
+            --host="${DB_HOST}" \
+            --port=5432 \
+            --username=postgres \
+            --dbname=postgres \
+            --clean \
+            --if-exists \
+            --no-owner \
+            --no-privileges \
+            --schema=public \
+            -Fp \
+            -f "${DUMP_FILE}"
+
+          if [ ! -s "${DUMP_FILE}" ]; then
+            echo "ERROR: Dump file is empty — pg_dump failed. Check SUPABASE_DB_PASSWORD and that the direct host is reachable."
+            exit 1
+          fi
+
+          echo "Backup complete: ${DUMP_FILE} ($(du -h "${DUMP_FILE}" | cut -f1))"
+
+      # ---- STORAGE BUCKETS ----
+      # Uses SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY — same names as your app secrets.
+      - name: Backup Storage Buckets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/backup-buckets.js
+
+      # ---- UPLOAD ARTIFACT (retained 30 days) ----
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_id }}
+          path: |
+            *.sql
+            bucket_backup/
+          retention-days: 30

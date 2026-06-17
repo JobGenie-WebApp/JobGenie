@@ -1,0 +1,49 @@
+# Email Configuration (SMTP)
+# Add these to your .env file to enable email sending
+
+# For Gmail:
+# 1. Enable 2-Factor Authentication on your Google account
+# 2. Generate an App Password: https://myaccount.google.com/apppasswords
+# 3. Use coordinates below:
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# For Outlook/Hotmail:
+# SMTP_HOST=smtp-mail.outlook.com
+# SMTP_PORT=587
+# SMTP_SECURE=false
+# SMTP_USER=your-email@outlook.com
+# SMTP_PASS=your-password
+
+# For Yahoo:
+# SMTP_HOST=smtp.mail.yahoo.com
+# SMTP_PORT=587
+# SMTP_SECURE=false
+# SMTP_USER=your-email@yahoo.com
+# SMTP_PASS=your-app-password
+
+# For Custom SMTP:
+# SMTP_HOST=your-smtp-server.com
+# SMTP_PORT=587
+# SMTP_SECURE=false
+# SMTP_USER=your-email
+# SMTP_PASS=your-password
+
+# ============================================
+# APPLICATION URL CONFIGURATION
+# ============================================
+# This URL is used in email links (login, password reset, etc.)
+# 
+# For local development (default if not set):
+# NEXT_PUBLIC_APP_URL=http://localhost:3000
+#
+# For production (Vercel deployment):
+# NEXT_PUBLIC_APP_URL=https://job-genie-web.vercel.app
+#
+# NOTE: Leave this blank for local development. Set this in your
+# Vercel environment variables for production deployment.
+NEXT_PUBLIC_APP_URL=

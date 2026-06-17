@@ -1,0 +1,735 @@
+
+E:\JG-Backup\JobGenie\src\app\actions\auth.ts
+  10:10  warning  'redirect' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\actions\employer-profiles.ts
+  3:10  warning  'createClient' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\actions\extract-cv.ts
+  5:10  warning  'logActivity' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\actions\profile.ts
+  430:18  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\candidate\invitations\[id]\respond\route.ts
+  13:45  warning  'request_reschedule' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  13:65  warning  'reschedule_reason' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\candidate\job-preferences\route.ts
+  7:7  warning  'NOTICE_PERIODS' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\candidate\upload-profile-image\route.ts
+  101:23  warning  'uploadData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\employer\invitations\route.ts
+  11:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\mis\analytics\stats\route.ts
+  6:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\mis\audit\errors\route.ts
+  4:10  warning  'logError' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\mis\interviews\stats\route.ts
+  9:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\mis\master-data\industries\route.ts
+  6:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\mis\permissions\route.ts
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\api\mis\roles\[roleId]\route.ts
+  129:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\JG-Backup\JobGenie\src\app\api\mis\roles\route.ts
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\candidate\(dashboard)\calendar\CandidateCalendarClient.tsx
+    4:160  warning  'startOfDay' is defined but never used                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+    4:172  warning  'endOfDay' is defined but never used                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+    4:182  warning  'eachHourOfInterval' is defined but never used                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+    4:202  warning  'isBefore' is defined but never used                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+    4:212  warning  'isAfter' is defined but never used                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  321:11   warning  'now' is assigned a value but never used                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  393:11   warning  The 'invitations' conditional could make the dependencies of useMemo Hook (at line 394) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'invitations' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\app\candidate\(dashboard)\invitations\InvitationsClient.tsx
+    4:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+    6:36  warning  'MapPin' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   99:11  warning  'selectedInv' is assigned a value but never used                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  230:55  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\app\candidate\(dashboard)\invitations\[id]\InvitationDetailClient.tsx
+    5:10  warning  'Badge' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  251:27  warning  'i' is defined but never used                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  668:30  warning  'invitationId' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  974:35  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\app\candidate\(dashboard)\resumes\ResumesClientContent.tsx
+  7:34  warning  'X' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\candidate\(dashboard)\settings\AccountSecuritySettings.tsx
+  8:5  warning  'Trash2' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\candidate\(dashboard)\settings\JobPreferencesSettings.tsx
+   10:10  warning  'Label' is defined but never used                                @typescript-eslint/no-unused-vars
+  226:91  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\EmployerAccessControl.tsx
+  15:12  warning  'isChecking' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  24:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\EmployerAccessControl.tsx:24:9
+  22 |             }
+  23 |         }
+> 24 |         setIsChecking(false);
+     |         ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |     }, [pathname, approvalStatus, router]);
+  26 |
+  27 |     // Optional: Show loading state while checking?   react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\admins\AdminProfilesClient.tsx
+  41:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\admins\AdminProfilesClient.tsx:41:13
+  39 |         const adminIdFromUrl = searchParams.get("adminId");
+  40 |         if (adminIdFromUrl && admins.find(a => a.id === adminIdFromUrl)) {
+> 41 |             setSelectedAdminId(adminIdFromUrl);
+     |             ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  42 |         } else if (admins.length > 0 && !selectedAdminId) {
+  43 |             setSelectedAdminId(admins[0].id);
+  44 |         }  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\admins\add\page.tsx
+  67:79  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\calendar\EmployerCalendarClient.tsx
+  573:11  warning  The 'invitations' conditional could make the dependencies of useMemo Hook (at line 574) change on every render. To fix this, wrap the initialization of 'invitations' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\candidates\CandidateDetailModal.tsx
+    4:10   warning  'X' is defined but never used                        @typescript-eslint/no-unused-vars
+    4:107  warning  'ChevronDown' is defined but never used              @typescript-eslint/no-unused-vars
+    4:120  warning  'ChevronUp' is defined but never used                @typescript-eslint/no-unused-vars
+   25:10   warning  'formatIndustry' is defined but never used           @typescript-eslint/no-unused-vars
+  101:12   warning  'currentPage' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  101:25   warning  'setCurrentPage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\candidates\CandidateTable.tsx
+   23:14  warning  'formatIndustry' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   87:10  warning  'getHighestQualification' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  129:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\candidates\CandidateTable.tsx:129:13
+  127 |     useEffect(() => {
+  128 |         if (selectedIndustryId) {
+> 129 |             setLoadingDesignations(true);
+      |             ^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  130 |             fetch(`/api/job-designations?industryId=${selectedIndustryId}`)
+  131 |                 .then(res => res.json())
+  132 |                 .then(data => {  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\invitations\InvitationsClient.tsx
+    15:8    warning  'Link' is defined but never used                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   186:11   warning  'canEdit' is assigned a value but never used                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   557:106  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+   557:132  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+   569:37   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+   569:51   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+   629:51   warning  'i' is defined but never used                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   799:8    warning  React Hook useEffect has a missing dependency: 'onOutcomeFound'. Either include it or remove the dependency array. If 'onOutcomeFound' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+   887:111  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+   887:133  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+   918:112  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+   918:140  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                              react/no-unescaped-entities
+  1064:8    warning  React Hook useEffect has missing dependencies: 'filteredInvitations', 'selectedInvitation', and 'updateURLWithInvitation'. Either include them or remove the dependency array                                                                react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\invitations\InvitationsKanban.tsx
+   14:10   warning  'Badge' is defined but never used                                @typescript-eslint/no-unused-vars
+  346:12   warning  'hasOutcome' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+  469:101  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  469:127  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  601:101  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  601:133  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\payments\PaymentsClient.tsx
+    6:38  warning  'XCircle' is defined but never used                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   20:5   warning  'Select' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   20:13  warning  'SelectContent' is defined but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   20:28  warning  'SelectItem' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   20:40  warning  'SelectTrigger' is defined but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   20:55  warning  'SelectValue' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  120:8   warning  React Hook useCallback has a missing dependency: 'statusMap'. Either include it or remove the dependency array                                                                                                                                                                           react-hooks/exhaustive-deps
+  500:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\settings\AccountSecuritySettings.tsx
+   8:5   warning  'Trash2' is defined but never used       @typescript-eslint/no-unused-vars
+  22:11  warning  'AccountInfo' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\employer\(dashboard)\settings\PrivacyVisibilitySettings.tsx
+  4:23  warning  'Users' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\employer\setup-password\page.tsx
+  60:36  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\JG-Backup\JobGenie\src\app\employer\setup-password\page.tsx:60:36
+  58 |     if (user.invitation_token_expires_at) {
+  59 |         const expiryDate = new Date(user.invitation_token_expires_at);
+> 60 |         if (expiryDate.getTime() < Date.now()) {
+     |                                    ^^^^^^^^^^ Cannot call impure function
+  61 |             return (
+  62 |                 <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-green-50 to-emerald-100 dark:bg-background">
+  63 |                     <div className="w-full max-w-md">  react-hooks/purity
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\candidates\CandidateProfileView.tsx
+  4:10  warning  'X' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\dashboard\page.tsx
+  11:56  warning  'interviewsCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\employers\EmployerProfileView.tsx
+  4:10  warning  'X' is defined but never used      @typescript-eslint/no-unused-vars
+  4:32  warning  'Globe' is defined but never used  @typescript-eslint/no-unused-vars
+  4:47  warning  'Phone' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\interviews\InterviewDetailView.tsx
+  47:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\interviews\InterviewDetailView.tsx:47:13
+  45 |     useEffect(() => {
+  46 |         if (interviewId) {
+> 47 |             setLoading(true);
+     |             ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  48 |             setInterview(null);
+  49 |             setError(null);
+  50 |  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\interviews\InterviewTable.tsx
+  72:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\interviews\InterviewTable.tsx:72:9
+  70 |
+  71 |     useEffect(() => {
+> 72 |         setMounted(true);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  73 |     }, []);
+  74 |
+  75 |     const filteredInterviews = useMemo(() => {  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\payments\PaymentsClient.tsx
+    5:5   warning  'CreditCard' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+    5:17  warning  'Building2' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+    5:28  warning  'User' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+    5:34  warning  'Calendar' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+    6:46  warning  'Trash2' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  693:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\reports\ReportsClient.tsx
+  150:23  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\reports\ReportsClient.tsx:150:23
+  148 |     const [page, setPage] = useState(1);
+  149 |     // Reset to page 1 whenever the item list length changes (e.g. search filter applied)
+> 150 |     useEffect(() => { setPage(1); }, [items.length]);
+      |                       ^^^^^^^ Avoid calling setState() directly within an effect
+  151 |     const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  152 |     const safePage = Math.min(page, totalPages);
+  153 |     const slice = items.slice((safePage - 1) * pageSize, safePage * pageSize);  react-hooks/set-state-in-effect
+  262:10  warning  'SectionHeader' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  350:1   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  352:11  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+
+E:\JG-Backup\JobGenie\src\app\mis\(dashboard)\roles\[roleId]\permissions\PermissionsManager.tsx
+  31:5  warning  'roleName' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\mis\login\page.tsx
+  1:8  warning  'Link' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\app\mis\setup-password\page.tsx
+  47:66  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\JG-Backup\JobGenie\src\app\mis\setup-password\page.tsx:47:66
+  45 |
+  46 |     const isExpired = user?.invitation_token_expires_at
+> 47 |         ? new Date(user.invitation_token_expires_at).getTime() < Date.now()
+     |                                                                  ^^^^^^^^^^ Cannot call impure function
+  48 |         : true;
+  49 |
+  50 |     const isInvalid = !user || error || isExpired || user.role !== "mis";  react-hooks/purity
+
+E:\JG-Backup\JobGenie\src\components\auth\CandidateSignupForm.tsx
+  76:28  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\components\auth\CandidateSignupForm.tsx:76:28
+  74 |     useEffect(() => {
+  75 |         const saved = localStorage.getItem("candidate-signup-form");
+> 76 |         if (saved) { try { setFormData(JSON.parse(saved)); } catch {} }
+     |                            ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  77 |     }, []);
+  78 |     useEffect(() => {
+  79 |         localStorage.setItem("candidate-signup-form", JSON.stringify(formData));  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\components\auth\ForgotPasswordForm.tsx
+  30:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\components\auth\ForgotPasswordForm.tsx:30:13
+  28 |         if (!state) return;
+  29 |         if (state.success) {
+> 30 |             setSubmitted(true);
+     |             ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |         } else {
+  32 |             toast.error(state.message);
+  33 |         }  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\components\candidate\ApprovalStatusNotification.tsx
+  73:35  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\candidate\CandidateLayout.tsx
+  6:10  warning  'PortalMain' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\InterviewOutcomeDisplay.tsx
+   8:5   warning  'CheckCircle2' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+  18:10  warning  'toast' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  49:8   warning  React Hook useEffect has a missing dependency: 'fetchRounds'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\components\candidate\JobOfferCard.tsx
+   49:5   warning  'jobDesignation' is defined but never used                       @typescript-eslint/no-unused-vars
+  289:91  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\candidate\RoundResponseCard.tsx
+  32:5  warning  'roundNumber' is defined but never used  @typescript-eslint/no-unused-vars
+  33:5  warning  'roundLabel' is defined but never used   @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\UserMenu.tsx
+  32:12  warning  'isLoggingOut' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\dashboard\InterviewCalendarWidget.tsx
+  5:13  warning  'parseISO' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\dashboard\ProfileHeroWidget.tsx
+  6:5  warning  'User' is defined but never used   @typescript-eslint/no-unused-vars
+  9:5  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\AboutSection.tsx
+  42:67  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  42:83  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\AwardsSection.tsx
+   76:18  warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  110:56  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  110:66  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\CertificationsSection.tsx
+   56:60  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   56:78  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  113:18  warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\EducationSection.tsx
+  190:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\ExperienceSection.tsx
+   10:39  warning  'ChevronDown' is defined but never used                          @typescript-eslint/no-unused-vars
+   10:52  warning  'ChevronUp' is defined but never used                            @typescript-eslint/no-unused-vars
+   56:61  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   56:76  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  165:18  warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\ProjectsSection.tsx
+   55:54  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   55:66  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  104:18  warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\dialogs\BasicInfoDialog.tsx
+  494:90  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  495:86  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\candidate\profile\dialogs\ProjectDialog.tsx
+  76:11  warning  'isCurrent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\AddSubAdminForm.tsx
+  5:25  warning  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\BRCertificateUpload.tsx
+   60:19  error    Error: Cannot access variable before it is declared
+
+`uploadAndVerify` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+E:\JG-Backup\JobGenie\src\components\employer\BRCertificateUpload.tsx:60:19
+  58 |
+  59 |             // Upload file and verify
+> 60 |             await uploadAndVerify(selectedFile);
+     |                   ^^^^^^^^^^^^^^^ `uploadAndVerify` accessed before it is declared
+  61 |         },
+  62 |         [companyName, businessRegistrationNo]
+  63 |     );
+
+E:\JG-Backup\JobGenie\src\components\employer\BRCertificateUpload.tsx:65:5
+   63 |     );
+   64 |
+>  65 |     const uploadAndVerify = async (fileToUpload: File) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  66 |         if (!companyName || !businessRegistrationNo) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  67 |             toast.error("Please fill in company name and registration number first.");
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |         }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |     };
+      | ^^^^^^^ `uploadAndVerify` is declared here
+  145 |
+  146 |     const handleDrop = useCallback(
+  147 |         (e: React.DragEvent<HTMLDivElement>) => {  react-hooks/immutability
+   62:9   warning  React Hook useCallback has a missing dependency: 'uploadAndVerify'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+  220:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\components\employer\CompanyProfileClient.tsx
+  10:43  warning  'FileText' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  25:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\components\employer\CompanyProfileClient.tsx:25:9
+  23 |
+  24 |     useEffect(() => {
+> 25 |         setIsMounted(true);
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |     }, []);
+  27 |
+  28 |     const companyInitials = company.company_name  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\components\employer\EmployerApprovalBanner.tsx
+   4:23  warning  'CheckCircle2' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  38:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\components\employer\EmployerApprovalBanner.tsx:38:13
+  36 |     useEffect(() => {
+  37 |         if (isMessageSeen) {
+> 38 |             setIsVisible(false);
+     |             ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  39 |         }
+  40 |     }, [isMessageSeen]);
+  41 |  react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\components\employer\EmployerLayout.tsx
+  6:10  warning  'PortalMain' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\EmployerSetupPasswordForm.tsx
+  4:21  warning  'useSearchParams' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\EmployerSignupWizard.tsx
+  10:33  warning  'ActionState' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\EmployerUserMenu.tsx
+   7:39  warning  'User' is defined but never used                   @typescript-eslint/no-unused-vars
+   7:45  warning  'Shield' is defined but never used                 @typescript-eslint/no-unused-vars
+   8:34  warning  'AvatarImage' is defined but never used            @typescript-eslint/no-unused-vars
+  31:12  warning  'isLoggingOut' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\InterviewFeedbackDialog.tsx
+  128:61  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  196:50  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  210:50  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\employer\InterviewFeedbackPanel.tsx
+  63:8  warning  React Hook useEffect has a missing dependency: 'fetchCurrentRound'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\components\employer\InterviewRoundsDisplay.tsx
+  224:8   warning  React Hook useEffect has a missing dependency: 'fetchRounds'. Either include it or remove the dependency array       react-hooks/exhaustive-deps
+  291:8   warning  React Hook useEffect has a missing dependency: 'checkOfferExists'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  637:37  warning  'index' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\InviteCandidateButton.tsx
+  122:8  warning  React Hook useEffect has missing dependencies: 'addTimeSlot' and 'timeSlots.length'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\components\employer\NextRoundDialog.tsx
+  254:51  warning  'i' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\employer\dialogs\CompanyInfoDialog.tsx
+  471:67  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  471:73  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  472:67  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  472:79  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\employer\profile\CompanyLogoUpload.tsx
+  122:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\components\employer\profile\EmployerProfileWizard.tsx
+    3:33  warning  'useEffect' is defined but never used                                                                                              @typescript-eslint/no-unused-vars
+  157:8   warning  React Hook useCallback has an unnecessary dependency: 'initialData.employer.id'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\components\employer\profile\ProfileImageUpload.tsx
+    3:27  warning  'ImageIcon' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  122:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\components\landing\Features.tsx
+  121:11  warning  'maxH' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\mis\CandidateApprovalActions.tsx
+  118:82  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\mis\EmployerApprovalActions.tsx
+  118:80  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+E:\JG-Backup\JobGenie\src\components\profile\CVUpload.tsx
+  90:8  warning  React Hook useCallback has a missing dependency: 'onFileSelect'. Either include it or remove the dependency array. If 'onFileSelect' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\components\profile\CreateProfileForm.tsx
+  131:37  warning  'userId' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\profile\CreateProfileWizard.tsx
+    8:10  warning  'CVUpload' is defined but never used                                                                                            @typescript-eslint/no-unused-vars
+   18:10  warning  'completeFullProfile' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   19:25  warning  'BANKING_FINANCE_INDUSTRIES' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   71:12  warning  'cvUploaded' is assigned a value but never used                                                                                 @typescript-eslint/no-unused-vars
+  352:8   warning  React Hook useCallback has unnecessary dependencies: 'router' and 'userId'. Either exclude them or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\components\profile\steps\AwardsStep.tsx
+  3:10  warning  'Award' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\profile\steps\BasicInfoStep.tsx
+  180:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+E:\JG-Backup\JobGenie\src\components\profile\steps\CertificatesStep.tsx
+  3:10  warning  'Medal' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\profile\steps\EducationStep.tsx
+  3:10  warning  'GraduationCap' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\profile\steps\ExperienceStep.tsx
+  3:10  warning  'Briefcase' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\profile\steps\IndustryStep.tsx
+  29:5  warning  'onNext' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\profile\steps\ProjectsStep.tsx
+  3:10  warning  'FolderGit2' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\components\providers\StoreProvider.tsx
+  14:29  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\JG-Backup\JobGenie\src\components\providers\StoreProvider.tsx:14:29
+  12 |     const storeRef = useRef(store);
+  13 |
+> 14 |     return <Provider store={storeRef.current}>{children}</Provider>;
+     |                             ^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  15 | }
+  16 |  react-hooks/refs
+
+E:\JG-Backup\JobGenie\src\components\shared\InterviewRoadmap.tsx
+  11:5  warning  'Briefcase' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+  79:8  warning  React Hook useEffect has a missing dependency: 'fetchRounds'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\components\ui\command.tsx
+  26:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+E:\JG-Backup\JobGenie\src\components\ui\sidebar.tsx
+  611:26  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\JG-Backup\JobGenie\src\components\ui\sidebar.tsx:611:26
+  609 |   // Random width between 50 to 90%.
+  610 |   const width = React.useMemo(() => {
+> 611 |     return `${Math.floor(Math.random() * 40) + 50}%`
+      |                          ^^^^^^^^^^^^^ Cannot call impure function
+  612 |   }, [])
+  613 |
+  614 |   return (  react-hooks/purity
+
+E:\JG-Backup\JobGenie\src\hooks\use-toast.ts
+  15:7  warning  'actionTypes' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\hooks\useLandingSectionSpy.ts
+  61:8  warning  React Hook useEffect has a missing dependency: 'sectionIds'. Either include it or remove the dependency array                             react-hooks/exhaustive-deps
+  61:9  warning  React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+
+E:\JG-Backup\JobGenie\src\hooks\useRealtimeCount.ts
+   3:44  warning  'useRef' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  40:36  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `query.filters`, but the source dependencies were [supabase, query.table]. Inferred different dependency than source.
+
+E:\JG-Backup\JobGenie\src\hooks\useRealtimeCount.ts:40:36
+  38 |     const supabase = createClient();
+  39 |
+> 40 |     const fetchCount = useCallback(async () => {
+     |                                    ^^^^^^^^^^^^^
+> 41 |         let q = supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |             .from(query.table)
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 60 |         setIsLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 61 |     }, [supabase, query.table]); // eslint-disable-line react-hooks/exhaustive-deps
+     | ^^^^^^ Could not preserve existing manual memoization
+  62 |
+  63 |     useEffect(() => {
+  64 |         let channel: RealtimeChannel | null = null;        react-hooks/preserve-manual-memoization
+  40:36  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `query.isNullColumns`, but the source dependencies were [supabase, query.table]. Inferred different dependency than source.
+
+E:\JG-Backup\JobGenie\src\hooks\useRealtimeCount.ts:40:36
+  38 |     const supabase = createClient();
+  39 |
+> 40 |     const fetchCount = useCallback(async () => {
+     |                                    ^^^^^^^^^^^^^
+> 41 |         let q = supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |             .from(query.table)
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 60 |         setIsLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 61 |     }, [supabase, query.table]); // eslint-disable-line react-hooks/exhaustive-deps
+     | ^^^^^^ Could not preserve existing manual memoization
+  62 |
+  63 |     useEffect(() => {
+  64 |         let channel: RealtimeChannel | null = null;  react-hooks/preserve-manual-memoization
+  40:36  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `query.eqFilters`, but the source dependencies were [supabase, query.table]. Inferred different dependency than source.
+
+E:\JG-Backup\JobGenie\src\hooks\useRealtimeCount.ts:40:36
+  38 |     const supabase = createClient();
+  39 |
+> 40 |     const fetchCount = useCallback(async () => {
+     |                                    ^^^^^^^^^^^^^
+> 41 |         let q = supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |             .from(query.table)
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 60 |         setIsLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 61 |     }, [supabase, query.table]); // eslint-disable-line react-hooks/exhaustive-deps
+     | ^^^^^^ Could not preserve existing manual memoization
+  62 |
+  63 |     useEffect(() => {
+  64 |         let channel: RealtimeChannel | null = null;      react-hooks/preserve-manual-memoization
+  40:36  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `query.inFilter`, but the source dependencies were [supabase, query.table]. Inferred different dependency than source.
+
+E:\JG-Backup\JobGenie\src\hooks\useRealtimeCount.ts:40:36
+  38 |     const supabase = createClient();
+  39 |
+> 40 |     const fetchCount = useCallback(async () => {
+     |                                    ^^^^^^^^^^^^^
+> 41 |         let q = supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |             .from(query.table)
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 60 |         setIsLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 61 |     }, [supabase, query.table]); // eslint-disable-line react-hooks/exhaustive-deps
+     | ^^^^^^ Could not preserve existing manual memoization
+  62 |
+  63 |     useEffect(() => {
+  64 |         let channel: RealtimeChannel | null = null;       react-hooks/preserve-manual-memoization
+  67:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\JG-Backup\JobGenie\src\hooks\useRealtimeCount.ts:67:9
+  65 |         let cancelled = false;
+  66 |
+> 67 |         fetchCount();
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  68 |
+  69 |         const channelName = `realtime-count-${query.table}-${realtimeFilter ?? "all"}`;
+  70 |         channel = supabase                                                                                                                                      react-hooks/set-state-in-effect
+
+E:\JG-Backup\JobGenie\src\lib\date-utils.ts
+  111:5  warning  'tz' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\lib\email.ts
+  194:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+E:\JG-Backup\JobGenie\src\lib\pdf-generator.ts
+   43:9   warning  'timesRomanBold' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  201:47  warning  'index' is defined but never used                    @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\lib\permissions.ts
+  108:39  warning  'misUserError' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\lib\storage.ts
+  115:13  warning  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\JG-Backup\JobGenie\src\lib\supabase\proxy.ts
+  18:58  warning  'options' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 206 problems (61 errors, 145 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+
