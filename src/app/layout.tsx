@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import StoreProvider from "@/components/providers/StoreProvider";
 import { SWRProvider } from "@/components/providers/SWRProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
             >
               {children}
               <Toaster />
+              <Analytics />
             </ThemeProvider>
           </SWRProvider>
         </StoreProvider>
