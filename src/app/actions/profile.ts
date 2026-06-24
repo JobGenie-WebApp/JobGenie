@@ -624,6 +624,32 @@ export async function completeFullProfileWithCV(
                 throw new Error(`Profile update failed: ${updateError.message}`);
             }
 
+            // Sync the uploaded CV into the "My Resumes" list so it shows up there.
+            // Only create a row if the candidate has none yet (My Resumes is managed
+            // independently afterwards — avoid duplicating on profile resubmission).
+            if (uploadedCvUrl && uploadedCvPath && cvFile && cvFile.size > 0) {
+                const { count: existingResumeCount } = await supabase
+                    .from("candidate_resumes")
+                    .select("id", { count: "exact", head: true })
+                    .eq("candidate_id", candidateId);
+
+                if ((existingResumeCount ?? 0) === 0) {
+                    const resumeDisplayName = cvFile.name
+                        .replace(/\.[^.]+$/, "")
+                        .replace(/[_-]+/g, " ")
+                        .replace(/\s+/g, " ")
+                        .trim() || "My Resume";
+
+                    await supabase.from("candidate_resumes").insert({
+                        candidate_id: candidateId,
+                        file_name: resumeDisplayName,
+                        file_url: uploadedCvUrl,
+                        file_path: uploadedCvPath,
+                        is_primary: true,
+                    });
+                }
+            }
+
             // Handle other relations (Work Exp, Edu, etc.)
             // Reuse logic or copy-paste? Copied logic for robustness as we are in a different function context
             // Note: ideally refactor to shared function, but for now duplicating the relation updates is safer to avoid breaking existing flow.

@@ -683,32 +683,9 @@ export default function EmployerCalendarClient() {
                         </button>
                     </div>
 
-                    {/* Calendar grid */}
+                    {/* Calendar grid — always rendered; empty cells show when there are no events */}
                     <div className="flex-1 overflow-hidden">
-                        {allEvents.length === 0 ? (
-                            <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-accent/15 ring-1 ring-primary/20">
-                                    <CalendarIcon className="h-7 w-7 text-primary" />
-                                </div>
-                                <div className="max-w-sm space-y-1.5">
-                                    <p className="text-sm font-semibold text-foreground">No interviews on the calendar yet</p>
-                                    <p className="text-xs leading-relaxed text-muted-foreground">
-                                        Confirm slots inside Invitations — accepted times sync here for your whole hiring team.
-                                    </p>
-                                </div>
-                                <Link href="/employer/invitations" className="text-xs font-semibold text-primary underline-offset-4 hover:underline">
-                                    Open invitations
-                                </Link>
-                            </div>
-                        ) : events.length === 0 ? (
-                            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                                <CalendarIcon className="h-8 w-8 text-muted-foreground/40" />
-                                <p className="text-sm text-muted-foreground">No interviews match the selected filter.</p>
-                                <button onClick={() => setStatusFilter("all")} className="text-xs font-semibold text-primary hover:underline">
-                                    Clear filter
-                                </button>
-                            </div>
-                        ) : view === "Month" ? (
+                        {view === "Month" ? (
                             <MonthView date={date} events={events} onSelectEvent={handleSelectEvent} />
                         ) : view === "Week" ? (
                             <WeekView date={date} events={events} onSelectEvent={handleSelectEvent} />
@@ -721,11 +698,23 @@ export default function EmployerCalendarClient() {
                 {/* Sidebar — one card per candidate with roadmap */}
                 <div className="hidden lg:flex w-72 flex-shrink-0 flex-col gap-2">
                     <p className="text-sm font-semibold text-foreground px-1">Candidates</p>
-                    <CandidateRoadmapSidebar
-                        allEvents={allEvents}
-                        filteredEvents={events}
-                        onSelectEvent={handleSelectEvent}
-                    />
+                    {allEvents.length === 0 ? (
+                        <div className="rounded-lg border border-border/50 bg-card/50 px-4 py-5 text-center space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground">No interviews yet</p>
+                            <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+                                Confirm slots in Invitations — they'll appear here automatically.
+                            </p>
+                            <Link href="/employer/invitations" className="text-[11px] font-semibold text-primary hover:underline">
+                                Open invitations
+                            </Link>
+                        </div>
+                    ) : (
+                        <CandidateRoadmapSidebar
+                            allEvents={allEvents}
+                            filteredEvents={events}
+                            onSelectEvent={handleSelectEvent}
+                        />
+                    )}
                 </div>
             </div>
 

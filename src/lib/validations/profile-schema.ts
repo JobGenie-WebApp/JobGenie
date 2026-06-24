@@ -112,7 +112,7 @@ export const projectSchema = z.object({
     id: z.string().optional(),
     projectName: z.string().min(1, "Project name is required").max(200),
     description: z.string().optional(),
-    demoUrl: z.string().url().max(500).optional().or(z.literal("")),
+    demoUrl: z.url().max(500).optional().or(z.literal("")),
     isCurrent: z.boolean().default(false),
 });
 
@@ -128,7 +128,7 @@ export const certificateSchema = z.object({
     issueDate: z.string().optional(),
     expiryDate: z.string().optional().nullable(),
     credentialId: z.string().max(100).optional(),
-    credentialUrl: z.string().url().max(500).optional().or(z.literal("")),
+    credentialUrl: z.string().max(500).optional().or(z.literal("")),
     description: z.string().optional(),
 });
 
@@ -192,7 +192,7 @@ export type BankingSpecializedTrainingData = z.infer<typeof bankingSpecializedTr
 export const basicInfoSchema = z.object({
     firstName: z.string().min(1, "First name is required").max(100),
     lastName: z.string().min(1, "Last name is required").max(100),
-    email: z.string().email("Invalid email address").max(255),
+    email: z.email("Invalid email address").max(255),
     phone: z
         .string()
         .max(15, "Phone number cannot exceed 15 characters")
@@ -253,46 +253,49 @@ export type CompleteProfileData = z.infer<typeof completeProfileSchema>;
 // ============================================
 // CV EXTRACTION RESULT SCHEMA
 // ============================================
+// Gemini returns `null` for fields it cannot extract (per the prompt).
+// Zod's `.optional()` accepts `undefined` but NOT `null`, so all fields
+// that Gemini may null-out must use `.nullish()` (= optional + nullable).
 export const cvExtractionResultSchema = z.object({
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    email: z.string().optional(),
-    phone: z.string().optional(),
-    address: z.string().optional(),
-    currentPosition: z.string().optional(),
-    yearsOfExperience: z.number().optional(),
-    professionalSummary: z.string().optional(),
+    firstName: z.string().nullish(),
+    lastName: z.string().nullish(),
+    email: z.string().nullish(),
+    phone: z.string().nullish(),
+    address: z.string().nullish(),
+    currentPosition: z.string().nullish(),
+    yearsOfExperience: z.number().nullish(),
+    professionalSummary: z.string().nullish(),
     workExperiences: z.array(z.object({
-        jobTitle: z.string().optional(),
-        company: z.string().optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        description: z.string().optional(),
-        isCurrent: z.boolean().optional(),
-    })).optional(),
+        jobTitle: z.string().nullish(),
+        company: z.string().nullish(),
+        startDate: z.string().nullish(),
+        endDate: z.string().nullish(),
+        description: z.string().nullish(),
+        isCurrent: z.boolean().nullish(),
+    })).nullish(),
     educations: z.array(z.object({
-        educationType: z.string().optional(),
-        degreeDiploma: z.string().optional(),
-        professionalQualification: z.string().optional(),
-        institution: z.string().optional(),
-        status: z.string().optional(),
-    })).optional(),
-    skills: z.array(z.string()).optional(),
+        educationType: z.string().nullish(),
+        degreeDiploma: z.string().nullish(),
+        professionalQualification: z.string().nullish(),
+        institution: z.string().nullish(),
+        status: z.string().nullish(),
+    })).nullish(),
+    skills: z.array(z.string().nullish()).nullish(),
     certificates: z.array(z.object({
-        certificateName: z.string().optional(),
-        issuingAuthority: z.string().optional(),
-        issueDate: z.string().optional(),
-    })).optional(),
+        certificateName: z.string().nullish(),
+        issuingAuthority: z.string().nullish(),
+        issueDate: z.string().nullish(),
+    })).nullish(),
     projects: z.array(z.object({
-        projectName: z.string().optional(),
-        description: z.string().optional(),
-        demoUrl: z.string().optional(),
-    })).optional(),
+        projectName: z.string().nullish(),
+        description: z.string().nullish(),
+        demoUrl: z.string().nullish(),
+    })).nullish(),
     awards: z.array(z.object({
-        awardName: z.string().optional(),
-        offeredBy: z.string().optional(),
-        description: z.string().optional(),
-    })).optional(),
+        awardName: z.string().nullish(),
+        offeredBy: z.string().nullish(),
+        description: z.string().nullish(),
+    })).nullish(),
 });
 
 export type CVExtractionResult = z.infer<typeof cvExtractionResultSchema>;

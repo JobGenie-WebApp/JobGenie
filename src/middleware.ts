@@ -230,7 +230,7 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL(getDashboardForRole(userData.role), request.url));
         }
 
-        // Additional check for candidates: verify approval status
+        // Additional check for candidates: verify profile completion and approval status
         if (userData.role === 'candidate' && requiredRole === 'candidate') {
             const { data: candidateData } = await supabase
                 .from('candidates')
@@ -238,14 +238,18 @@ export async function middleware(request: NextRequest) {
                 .eq('user_id', user.id)
                 .single();
 
-            // Only restrict if profile is completed but not approved
-            if (candidateData?.profile_completed && candidateData.approval_status !== 'approved') {
-                // Allow access to dashboard, profile, and resume routes
+            // Block access to any candidate route if profile is not yet completed
+            if (!candidateData?.profile_completed) {
+                // Only allow the profile creation route itself
+                if (!pathname.startsWith('/candidate/create-profile')) {
+                    return NextResponse.redirect(new URL('/candidate/create-profile', request.url));
+                }
+            } else if (candidateData.approval_status !== 'approved') {
+                // Profile is complete but pending/rejected approval — restrict to a small set of routes
                 const allowedRoutes = ['/candidate/dashboard', '/candidate/profile', '/candidate/resumes', '/candidate/create-profile', '/candidate/settings'];
                 const isAllowedRoute = allowedRoutes.some(route => pathname.startsWith(route));
 
                 if (!isAllowedRoute) {
-                    // Redirect to dashboard with info message
                     const dashboardUrl = new URL('/candidate/dashboard', request.url);
                     dashboardUrl.searchParams.set('info', 'approval_pending');
                     return NextResponse.redirect(dashboardUrl);
@@ -253,12 +257,14 @@ export async function middleware(request: NextRequest) {
             }
         }
 
-        // Additional check for employers: verify company approval status
+        // Additional check for employers: verify profile completion and approval status
         if (userData.role === 'employer' && requiredRole === 'employer') {
             const { data: employerData } = await supabase
                 .from('employers')
                 .select(`
                     id,
+                    profile_completed,
+                    is_super_admin,
                     companies!inner (
                         approval_status,
                         profile_completed
@@ -269,15 +275,28 @@ export async function middleware(request: NextRequest) {
 
             // Type assertion for nested company data
             const company = (employerData as Record<string, unknown>)?.companies as { profile_completed?: boolean; approval_status?: string } | null;
+            const isSuperAdmin = (employerData as Record<string, unknown>)?.is_super_admin as boolean | null;
 
-            // Only restrict if company profile is completed but not approved
+            // Super admins complete the company profile only (the personal employer
+            // profile step was removed from their wizard). Sub-admins only need their
+            // own employer profile completed. This must stay aligned with the check in
+            // src/app/employer/complete-profile/page.tsx, otherwise the two redirect
+            // back and forth in an infinite loop.
+            const isProfileComplete = isSuperAdmin
+                ? company?.profile_completed
+                : employerData?.profile_completed;
+
+            // Block access to any employer route if profile is not yet completed
+            if (!isProfileComplete) {
+                return NextResponse.redirect(new URL('/employer/complete-profile', request.url));
+            }
+
+            // Profile is complete but company pending/rejected approval — restrict routes
             if (company?.profile_completed && company.approval_status !== 'approved') {
-                // Allow access to dashboard, company profile, and personal profile routes
                 const allowedRoutes = ['/employer/dashboard', '/employer/company', '/employer/profile'];
                 const isAllowedRoute = allowedRoutes.some(route => pathname.startsWith(route));
 
                 if (!isAllowedRoute) {
-                    // Redirect to dashboard with info message
                     const dashboardUrl = new URL('/employer/dashboard', request.url);
                     dashboardUrl.searchParams.set('info', 'approval_pending');
                     return NextResponse.redirect(dashboardUrl);

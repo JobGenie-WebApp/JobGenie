@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,11 +39,11 @@ export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerPro
     // File states (will be uploaded during submission)
     const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
 
-    // Only super admins see company details step
+    // Super admins complete the company profile only. Employer details are optional
+    // and should not block company profile creation.
     const steps = isSuperAdmin
         ? [
             { id: "company", title: "Company Details" },
-            { id: "employer", title: "Your Details" },
         ]
         : [
             { id: "employer", title: "Your Details" },
@@ -113,11 +113,13 @@ export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerPro
                 logo_url: uploadedLogoUrl || companyData.logo_url || "",
             } : null;
 
-            const updatedEmployerData = {
-                department: employerData.department || "",
-                address: employerData.address || "",
-                phone: employerData.phone || "",
-            };
+            const updatedEmployerData = isSuperAdmin
+                ? null
+                : {
+                    department: employerData.department || "",
+                    address: employerData.address || "",
+                    phone: employerData.phone || "",
+                };
 
             const result = await completeEmployerProfile(updatedCompanyData, updatedEmployerData);
 
@@ -154,7 +156,7 @@ export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerPro
         } finally {
             setIsLoading(false);
         }
-    }, [companyData, employerData, companyLogoFile, initialData.employer.id, router, isSuperAdmin]);
+    }, [companyData, employerData, companyLogoFile, router, isSuperAdmin]);
 
     const renderStep = () => {
         const stepId = steps[currentStep]?.id;
@@ -166,7 +168,9 @@ export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerPro
                         data={companyData}
                         onChange={setCompanyData}
                         onFileSelect={setCompanyLogoFile}
-                        onNext={handleNext}
+                        onNext={totalSteps > 1 ? handleNext : handleSubmit}
+                        nextLabel={totalSteps > 1 ? "Next" : "Complete Profile"}
+                        isLoading={isLoading}
                         companyName={initialData.company.company_name}
                     />
                 );

@@ -6,19 +6,23 @@ import Papa from "papaparse";
 
 interface DesignationCSVRow {
     designation_name: string;
-    industry_name: string;
-    seniority_level: string;
+    // Industry can be given by id (industry_id) or by name (industry_name).
+    industry_id?: string;
+    industry_name?: string;
+    // Seniority can be given by id (level_id) or by name (seniority_level).
+    level_id?: string;
+    seniority_level?: string;
 }
 
-const SENIORITY_LEVELS_MAP: Record<string, number> = {
-    "entry level": 1,
-    "junior": 2,
-    "mid level": 3,
-    "mid-level": 3,
-    "senior": 4,
-    "lead": 5,
-    "principal": 6,
-};
+interface EvaluatedRow {
+    row: number;
+    valid: boolean;
+    error: string | null;
+    values: { designation_name: string; industry_name: string; seniority_level: string };
+    // Resolved FK ids for valid rows (null when invalid).
+    industry_id: number | null;
+    level_id: number | null;
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -42,6 +46,7 @@ export async function POST(request: NextRequest) {
 
         const formData = await request.formData();
         const file = formData.get("file") as File;
+        const mode = (formData.get("mode") as string) || "commit";
 
         if (!file) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -80,66 +85,143 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
-        const industryMap = new Map(
+        // Lookups by name (case-insensitive) and by id, plus id -> name for display.
+        const industryByName = new Map(
             industries?.map((ind) => [ind.industry_name.toLowerCase(), ind.industry_id]) || []
         );
+        const industryNameById = new Map(
+            industries?.map((ind) => [ind.industry_id, ind.industry_name]) || []
+        );
 
-        const errors: string[] = [];
-        const validRows: Array<{
-            designation_name: string;
-            industry_id: number;
-            level_id: number;
-        }> = [];
+        // Fetch seniority levels from the database (MIS-managed, not hardcoded)
+        const { data: seniorityLevels, error: seniorityError } = await adminClient
+            .from("seniority_levels")
+            .select("level_id, level_name");
 
-        rows.forEach((row, index) => {
+        if (seniorityError) {
+            return NextResponse.json({
+                error: "Failed to fetch seniority levels",
+                details: seniorityError.message,
+            }, { status: 500 });
+        }
+
+        const seniorityByName = new Map(
+            seniorityLevels?.map((lvl) => [lvl.level_name.toLowerCase(), lvl.level_id]) || []
+        );
+        const seniorityNameById = new Map(
+            seniorityLevels?.map((lvl) => [lvl.level_id, lvl.level_name]) || []
+        );
+        const validSeniorityNames = (seniorityLevels || [])
+            .map((lvl) => lvl.level_name)
+            .join(", ");
+
+        // Resolve a foreign key from a CSV row that may supply either an id or a name.
+        const resolveFk = (
+            idRaw: string,
+            nameRaw: string,
+            byName: Map<string, number>,
+            nameById: Map<number, string>,
+        ): { id: number | null; display: string; error: string | null } => {
+            // Prefer an explicit id column when present.
+            if (idRaw) {
+                const parsed = Number(idRaw);
+                if (!Number.isInteger(parsed) || !nameById.has(parsed)) {
+                    return { id: null, display: idRaw, error: `id "${idRaw}" not found` };
+                }
+                return { id: parsed, display: nameById.get(parsed)!, error: null };
+            }
+            if (nameRaw) {
+                const id = byName.get(nameRaw.toLowerCase());
+                if (!id) {
+                    return { id: null, display: nameRaw, error: `"${nameRaw}" not found` };
+                }
+                return { id, display: nameById.get(id) ?? nameRaw, error: null };
+            }
+            return { id: null, display: "", error: "missing" };
+        };
+
+        const evaluated: EvaluatedRow[] = rows.map((row, index) => {
             const rowNum = index + 2;
+            const name = (row.designation_name || "").trim();
+            const industryIdRaw = (row.industry_id || "").trim();
+            const industryName = (row.industry_name || "").trim();
+            const levelIdRaw = (row.level_id || "").trim();
+            const seniority = (row.seniority_level || "").trim();
 
-            if (!row.designation_name || !row.designation_name.trim()) {
-                errors.push(`Row ${rowNum}: Designation name is required`);
-                return;
+            const industry = resolveFk(industryIdRaw, industryName, industryByName, industryNameById);
+            const level = resolveFk(levelIdRaw, seniority, seniorityByName, seniorityNameById);
+
+            // Display resolved names where possible so the preview is human-readable.
+            const values = {
+                designation_name: name,
+                industry_name: industry.display,
+                seniority_level: level.display,
+            };
+
+            if (!name) {
+                return { row: rowNum, valid: false, error: "Designation name is required", values, industry_id: null, level_id: null };
+            }
+            if (industry.error === "missing") {
+                return { row: rowNum, valid: false, error: "Industry is required (industry_id or industry_name)", values, industry_id: null, level_id: null };
+            }
+            if (industry.error) {
+                return { row: rowNum, valid: false, error: `Industry ${industry.error}`, values, industry_id: null, level_id: null };
+            }
+            if (level.error === "missing") {
+                return { row: rowNum, valid: false, error: "Seniority is required (level_id or seniority_level)", values, industry_id: null, level_id: null };
+            }
+            if (level.error) {
+                return {
+                    row: rowNum,
+                    valid: false,
+                    error: levelIdRaw
+                        ? `Seniority ${level.error}`
+                        : `Invalid seniority level "${seniority}". Valid values: ${validSeniorityNames}`,
+                    values,
+                    industry_id: null,
+                    level_id: null,
+                };
             }
 
-            if (!row.industry_name || !row.industry_name.trim()) {
-                errors.push(`Row ${rowNum}: Industry name is required`);
-                return;
-            }
-
-            if (!row.seniority_level || !row.seniority_level.trim()) {
-                errors.push(`Row ${rowNum}: Seniority level is required`);
-                return;
-            }
-
-            const industryId = industryMap.get(row.industry_name.trim().toLowerCase());
-            if (!industryId) {
-                errors.push(`Row ${rowNum}: Industry "${row.industry_name}" not found`);
-                return;
-            }
-
-            const levelId = SENIORITY_LEVELS_MAP[row.seniority_level.trim().toLowerCase()];
-            if (!levelId) {
-                errors.push(
-                    `Row ${rowNum}: Invalid seniority level "${row.seniority_level}". Valid values: Entry Level, Junior, Mid Level, Senior, Lead, Principal`
-                );
-                return;
-            }
-
-            validRows.push({
-                designation_name: row.designation_name.trim(),
-                industry_id: industryId,
-                level_id: levelId,
-            });
+            return { row: rowNum, valid: true, error: null, values, industry_id: industry.id, level_id: level.id };
         });
 
-        if (errors.length > 0) {
+        const validRows = evaluated.filter((e) => e.valid);
+
+        // Preview mode: return per-row validation without writing anything.
+        if (mode === "preview") {
             return NextResponse.json({
-                error: "Validation failed",
-                details: errors,
+                success: true,
+                mode: "preview",
+                summary: {
+                    total: evaluated.length,
+                    valid: validRows.length,
+                    invalid: evaluated.length - validRows.length,
+                },
+                rows: evaluated.map(({ industry_id, level_id, ...rest }) => {
+                    void industry_id;
+                    void level_id;
+                    return rest;
+                }),
+            });
+        }
+
+        if (validRows.length === 0) {
+            return NextResponse.json({
+                error: "No valid rows to import",
+                details: evaluated.filter((e) => !e.valid).map((e) => `Row ${e.row}: ${e.error}`),
             }, { status: 400 });
         }
 
+        const designationsToInsert = validRows.map((row) => ({
+            designation_name: row.values.designation_name,
+            industry_id: row.industry_id as number,
+            level_id: row.level_id as number,
+        }));
+
         const { data: insertedDesignations, error: insertError } = await adminClient
             .from("job_designations")
-            .insert(validRows)
+            .insert(designationsToInsert)
             .select();
 
         if (insertError) {
@@ -150,10 +232,12 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
+        const skipped = evaluated.length - validRows.length;
         return NextResponse.json({
             success: true,
-            message: `Successfully imported ${insertedDesignations.length} designations`,
+            message: `Successfully imported ${insertedDesignations.length} designations${skipped > 0 ? ` (${skipped} skipped)` : ""}`,
             count: insertedDesignations.length,
+            skipped,
         });
     } catch (error) {
         console.error("Error in POST /api/mis/master-data/designations/bulk-upload:", error);

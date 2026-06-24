@@ -114,16 +114,21 @@ export async function universalLogin(
                 .eq("user_id", authData.user.id)
                 .single();
 
-            // Use returnUrl if provided, otherwise use default redirect
-            const defaultRedirect = candidateData?.profile_completed
-                ? "/candidate/dashboard"
-                : "/candidate/create-profile";
+            // If profile is not complete, always go to create-profile regardless of returnUrl
+            if (!candidateData?.profile_completed) {
+                await logAuth("universal_login_success", authData.user.id, "candidate", { email }, ipAddress || undefined);
+                return {
+                    success: true,
+                    message: "Login successful!",
+                    redirectTo: "/candidate/create-profile",
+                };
+            }
 
             await logAuth("universal_login_success", authData.user.id, "candidate", { email }, ipAddress || undefined);
             return {
                 success: true,
                 message: "Login successful!",
-                redirectTo: returnUrl || defaultRedirect,
+                redirectTo: returnUrl || "/candidate/dashboard",
             };
         }
 
@@ -131,7 +136,7 @@ export async function universalLogin(
             // Single query with join for employer + company data
             const { data: employerData } = await adminClient
                 .from("employers")
-                .select("profile_completed, companies!inner(profile_completed)")
+                .select("profile_completed, is_super_admin, companies!inner(profile_completed)")
                 .eq("user_id", authData.user.id)
                 .single();
 
@@ -144,17 +149,25 @@ export async function universalLogin(
             }
 
             const companyData = (employerData as Record<string, unknown>).companies as { profile_completed?: boolean } | null;
-            const isProfileIncomplete =
-                !employerData.profile_completed || !companyData?.profile_completed;
+            const isProfileIncomplete = employerData.is_super_admin
+                ? !companyData?.profile_completed
+                : !employerData.profile_completed;
 
-            // Use returnUrl if provided, otherwise use default redirect
-            const defaultRedirect = isProfileIncomplete ? "/employer/complete-profile" : "/employer/dashboard";
+            // If profile is not complete, always go to complete-profile regardless of returnUrl
+            if (isProfileIncomplete) {
+                await logAuth("universal_login_success", authData.user.id, "employer", { email }, ipAddress || undefined);
+                return {
+                    success: true,
+                    message: "Login successful!",
+                    redirectTo: "/employer/complete-profile",
+                };
+            }
 
             await logAuth("universal_login_success", authData.user.id, "employer", { email }, ipAddress || undefined);
             return {
                 success: true,
                 message: "Login successful!",
-                redirectTo: returnUrl || defaultRedirect,
+                redirectTo: returnUrl || "/employer/dashboard",
             };
         }
 

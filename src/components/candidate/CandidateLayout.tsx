@@ -1,16 +1,18 @@
 import { redirect } from "next/navigation";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 import { CandidateSidebar } from "./CandidateSidebar";
-import { CandidateHeader } from "./CandidateHeader";
-import { PageTransitionWrapper } from "@/components/layout/PageTransitionWrapper";
-import { PortalMain } from "@/components/layout/PortalMain";
-import { Toaster } from "@/components/ui/toaster";
 import { createClient } from "@/lib/supabase/server";
 
 interface CandidateLayoutProps {
     children: React.ReactNode;
     pageTitle?: string;
     pageDescription?: string;
+    /** Right-aligned action buttons in the content title row. */
+    headerActions?: React.ReactNode;
+    /** Overrides the last breadcrumb label (for id-based detail routes). */
+    breadcrumbOverride?: string;
+    /** When true, the layout scroll container is suppressed so the page can manage its own scrolling columns */
+    fullHeight?: boolean;
 }
 
 async function getCurrentUser() {
@@ -39,7 +41,7 @@ async function getCurrentUser() {
     };
 }
 
-export async function CandidateLayout({ children, pageTitle, pageDescription }: CandidateLayoutProps) {
+export async function CandidateLayout({ children, pageTitle, pageDescription, headerActions, breadcrumbOverride, fullHeight }: CandidateLayoutProps) {
     const user = await getCurrentUser();
 
     if (!user) {
@@ -47,23 +49,16 @@ export async function CandidateLayout({ children, pageTitle, pageDescription }: 
     }
 
     return (
-        <SidebarProvider className="h-dvh! min-h-0! overflow-hidden">
-            <CandidateSidebar />
-            <SidebarInset className="flex flex-col min-h-0 overflow-hidden">
-                <CandidateHeader
-                    user={user}
-                    pageTitle={pageTitle}
-                    pageDescription={pageDescription}
-                />
-                <div className="flex-1 overflow-y-auto min-h-0 bg-background">
-                    <PageTransitionWrapper>
-                        <div className="p-5 md:p-6">
-                            {children}
-                        </div>
-                    </PageTransitionWrapper>
-                </div>
-            </SidebarInset>
-            <Toaster />
-        </SidebarProvider>
+        <DashboardShell
+            sidebar={<CandidateSidebar user={user} />}
+            pageTitle={pageTitle}
+            pageDescription={pageDescription}
+            headerActions={headerActions}
+            breadcrumbOverride={breadcrumbOverride}
+            fullHeight={fullHeight}
+            notificationRole="candidate"
+        >
+            {children}
+        </DashboardShell>
     );
 }

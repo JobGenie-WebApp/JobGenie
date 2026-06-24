@@ -136,7 +136,7 @@ export async function getEmployerProfileData(userId: string): Promise<ProfileDat
  */
 export async function completeEmployerProfile(
     companyData: CompanyProfileCompletion | null,
-    employerData: EmployerProfileCompletion
+    employerData: EmployerProfileCompletion | null = null
 ): Promise<ActionState> {
     try {
         // ── EP-09: Resolve actor server-side — never trust caller-supplied userId ──
@@ -151,30 +151,34 @@ export async function completeEmployerProfile(
         }
 
         const userId = user.id;
-        // Validate employer data (always required)
-        const employerValidation = employerProfileCompletionSchema.safeParse(employerData);
+        let validatedEmployerData: EmployerProfileCompletion | null = null;
+        if (employerData) {
+            const employerValidation = employerProfileCompletionSchema.safeParse(employerData);
 
-        if (!employerValidation.success) {
-            const errors: Record<string, string[]> = {};
-            employerValidation.error.issues.forEach((issue) => {
-                const path = `employer.${issue.path.join(".")}`;
-                if (!errors[path]) {
-                    errors[path] = [];
-                }
-                errors[path].push(issue.message);
-            });
+            if (!employerValidation.success) {
+                const errors: Record<string, string[]> = {};
+                employerValidation.error.issues.forEach((issue) => {
+                    const path = `employer.${issue.path.join(".")}`;
+                    if (!errors[path]) {
+                        errors[path] = [];
+                    }
+                    errors[path].push(issue.message);
+                });
 
-            return {
-                success: false,
-                message: "Employer validation failed. Please check your inputs.",
-                errors,
-            };
+                return {
+                    success: false,
+                    message: "Employer validation failed. Please check your inputs.",
+                    errors,
+                };
+            }
+
+            validatedEmployerData = employerValidation.data;
         }
 
         // Validate company data only if provided (super admins only)
-        let companyValidation = null;
+        let validatedCompanyData: CompanyProfileCompletion | null = null;
         if (companyData) {
-            companyValidation = companyProfileCompletionSchema.safeParse(companyData);
+            const companyValidation = companyProfileCompletionSchema.safeParse(companyData);
 
             if (!companyValidation.success) {
                 const errors: Record<string, string[]> = {};
@@ -192,6 +196,8 @@ export async function completeEmployerProfile(
                     errors,
                 };
             }
+
+            validatedCompanyData = companyValidation.data;
         }
 
         const adminClient = createAdminClient();
@@ -213,15 +219,15 @@ export async function completeEmployerProfile(
         const now = new Date().toISOString();
 
         // Update company profile only if data is provided (super admin only)
-        if (companyData && companyValidation) {
+        if (validatedCompanyData) {
             const { error: companyError } = await adminClient
                 .from("companies")
                 .update({
-                    description: companyValidation.data.description,
-                    company_size: companyValidation.data.company_size,
-                    website: companyValidation.data.website || null,
-                    headoffice_location: companyValidation.data.headoffice_location,
-                    logo_url: companyValidation.data.logo_url || null,
+                    description: validatedCompanyData.description,
+                    company_size: validatedCompanyData.company_size,
+                    website: validatedCompanyData.website || null,
+                    headoffice_location: validatedCompanyData.headoffice_location,
+                    logo_url: validatedCompanyData.logo_url || null,
                     profile_completed: true,
                     updated_at: now,
                 })
@@ -236,42 +242,52 @@ export async function completeEmployerProfile(
             }
         }
 
-        // Update employer profile
-        const { error: employerError } = await adminClient
-            .from("employers")
-            .update({
-                department: employerValidation.data.department || null,
-                address: employerValidation.data.address || employerRecord.address, // Keep existing if not provided
-                phone: employerValidation.data.phone || null,
-                profile_completed: true,
-                updated_at: now,
-            })
-            .eq("id", employerRecord.id);
+        // Update employer profile only when explicitly submitted. Company profile
+        // completion should not force personal employer profile completion.
+        if (validatedEmployerData) {
+            const { error: employerError } = await adminClient
+                .from("employers")
+                .update({
+                    department: validatedEmployerData.department || null,
+                    address: validatedEmployerData.address || employerRecord.address, // Keep existing if not provided
+                    phone: validatedEmployerData.phone || null,
+                    profile_completed: true,
+                    updated_at: now,
+                })
+                .eq("id", employerRecord.id);
 
-        if (employerError) {
-            console.error("Employer update error:", employerError);
+            if (employerError) {
+                console.error("Employer update error:", employerError);
 
-            // Rollback company update only if it was updated
-            if (companyData) {
-                await adminClient
-                    .from("companies")
-                    .update({
-                        profile_completed: false,
-                        updated_at: now,
-                    })
-                    .eq("id", employerRecord.company_id);
+                // Rollback company update only if it was updated
+                if (validatedCompanyData) {
+                    await adminClient
+                        .from("companies")
+                        .update({
+                            profile_completed: false,
+                            updated_at: now,
+                        })
+                        .eq("id", employerRecord.company_id);
+                }
+
+                return {
+                    success: false,
+                    message: "Failed to update employer profile. Please try again.",
+                };
             }
-
-            return {
-                success: false,
-                message: "Failed to update employer profile. Please try again.",
-            };
         }
 
-        await logActivity("employer_profile_completed", userId, "employer", "employer", employerRecord.id);
+        if (validatedCompanyData) {
+            await logActivity("company_profile_completed", userId, "employer", "company", employerRecord.company_id);
+        }
+        if (validatedEmployerData) {
+            await logActivity("employer_profile_completed", userId, "employer", "employer", employerRecord.id);
+        }
         return {
             success: true,
-            message: "Profile completed successfully!",
+            message: validatedEmployerData && !validatedCompanyData
+                ? "Employer profile completed successfully!"
+                : "Company profile completed successfully!",
         };
     } catch (error) {
         console.error("Error in completeEmployerProfile:", error);
@@ -388,4 +404,3 @@ export async function updateCompanyInfo(
         };
     }
 }
-
