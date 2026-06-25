@@ -152,7 +152,17 @@ export const misNav: NavGroup[] = [
         label: "Overview",
         items: [
             { title: "Dashboard", href: "/mis/dashboard", icon: LayoutDashboard },
-            { title: "Reports & Analytics", href: "/mis/reports", icon: BarChart3 },
+            {
+                title: "Reports & Analytics", href: "/mis/reports", icon: BarChart3,
+                children: [
+                    { title: "Overview",     section: "all",          href: "/mis/reports?section=all",          icon: BarChart3 },
+                    { title: "Candidates",   section: "candidates",   href: "/mis/reports?section=candidates",   icon: Users },
+                    { title: "Employers",    section: "employers",    href: "/mis/reports?section=employers",    icon: Building2 },
+                    { title: "Companies",    section: "companies",    href: "/mis/reports?section=companies",     icon: Building2 },
+                    { title: "Jobs",         section: "jobs",         href: "/mis/reports?section=jobs",          icon: Briefcase },
+                    { title: "Applications", section: "applications", href: "/mis/reports?section=applications",  icon: Calendar },
+                ],
+            },
         ],
     },
     {
@@ -176,7 +186,16 @@ export const misNav: NavGroup[] = [
         label: "System",
         items: [
             { title: "Audit Logs", href: "/mis/audit", icon: FileText },
-            { title: "Master Data", href: "/mis/settings", icon: Settings },
+            {
+                title: "Master Data", href: "/mis/settings", icon: Settings,
+                children: [
+                    { title: "Industries",          section: "industries",        href: "/mis/settings?section=industries",        icon: Building2 },
+                    { title: "Job Designations",    section: "designations",      href: "/mis/settings?section=designations",      icon: Briefcase },
+                    { title: "Seniority Levels",    section: "seniority",         href: "/mis/settings?section=seniority",         icon: BarChart3 },
+                    { title: "Interview Reminders", section: "reminders",         href: "/mis/settings?section=reminders",         icon: Bell },
+                    { title: "Sidebar Visibility",  section: "sidebar-visibility", href: "/mis/settings?section=sidebar-visibility", icon: Eye },
+                ],
+            },
         ],
     },
 ];

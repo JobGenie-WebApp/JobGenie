@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import {
     Users, Building2, Briefcase, Calendar, TrendingUp, Activity,
     Printer, RefreshCw, Clock, CheckCircle, BarChart3, ChevronDown, ChevronUp,
@@ -1091,7 +1092,13 @@ function LoadingSkeleton() {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export function ReportsClient() {
-    const [filter, setFilter] = useState<FilterDimension>("all");
+    // The section (Overview / Candidates / …) is chosen from the sidebar and
+    // carried in the `?section=` query param; default is the Overview ("all") view.
+    const searchParams = useSearchParams();
+    const sectionParam = searchParams.get("section");
+    const filter: FilterDimension = FILTER_TABS.some((t) => t.id === sectionParam)
+        ? (sectionParam as FilterDimension)
+        : "all";
     const [period, setPeriod] = useState<PeriodPreset>("30d");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
@@ -1130,18 +1137,9 @@ export function ReportsClient() {
     return (
         <div className="space-y-6">
             {/* ── Toolbar (no-print) ──────────────────────────────────────── */}
+            {/* Section tabs moved to the sidebar ("Reports & Analytics" group);
+                only the period/range controls remain here. */}
             <div className="no-print space-y-3">
-                <div className="flex flex-wrap gap-1">
-                    {FILTER_TABS.map(({ id, label, icon: Icon }) => (
-                        <button key={id} onClick={() => setFilter(id)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-                                filter === id ? "bg-primary text-primary-foreground border-primary"
-                                : "border-border hover:bg-muted text-muted-foreground hover:text-foreground"}`}>
-                            <Icon className="h-3.5 w-3.5" />{label}
-                        </button>
-                    ))}
-                </div>
-
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="flex items-center gap-1">
                         {PERIOD_PRESETS.map(({ id, label }) => (
