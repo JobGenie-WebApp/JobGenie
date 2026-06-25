@@ -10,18 +10,19 @@ export const metadata: Metadata = {
 };
 
 export default async function CompleteProfilePage() {
-    // Check authentication
+    // Check authentication. Use getUser() (not getSession()) so the identity is
+    // verified against the Supabase Auth server rather than trusted from cookies.
     const supabase = await createClient();
     const {
-        data: { session },
-    } = await supabase.auth.getSession();
+        data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (!user) {
         redirect("/employer/login");
     }
 
     // Fetch employer and company data
-    const profileData = await getEmployerProfileData(session.user.id);
+    const profileData = await getEmployerProfileData(user.id);
 
     if (!profileData) {
         redirect("/employer/login");
@@ -31,7 +32,7 @@ export default async function CompleteProfilePage() {
     const { data: employerInfo } = await supabase
         .from("employers")
         .select("is_super_admin")
-        .eq("user_id", session.user.id)
+        .eq("user_id", user.id)
         .single();
 
     const isSuperAdmin = employerInfo?.is_super_admin || false;
@@ -39,7 +40,7 @@ export default async function CompleteProfilePage() {
     // If both profiles are complete, redirect to dashboard
     // For sub-admins, only check employer profile completion
     const isProfileComplete = isSuperAdmin
-        ? profileData.employer.profile_completed && profileData.company.profile_completed
+        ? profileData.company.profile_completed
         : profileData.employer.profile_completed;
 
     if (isProfileComplete) {
@@ -48,7 +49,7 @@ export default async function CompleteProfilePage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <div className="container max-w-3xl mx-auto px-4 py-8">
+            <div className="mx-auto w-full max-w-3xl px-4 py-8">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold tracking-tight mb-2">Complete Employer Profile</h1>

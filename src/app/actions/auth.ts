@@ -1544,7 +1544,7 @@ export async function loginEmployer(
         // Check profile completion status - fetch only needed fields
         const { data: employerData, error: employerError } = await adminClient
             .from("employers")
-            .select("profile_completed, companies!inner(profile_completed)")
+            .select("profile_completed, is_super_admin, companies!inner(profile_completed)")
             .eq("user_id", authData.user.id)
             .single();
 
@@ -1559,9 +1559,10 @@ export async function loginEmployer(
         }
 
         // Check if either profile is incomplete
-        const companyData = (employerData as any).companies;
-        const isProfileIncomplete =
-            !employerData.profile_completed || !companyData?.profile_completed;
+        const companyData = (employerData as Record<string, unknown>).companies as { profile_completed?: boolean } | null;
+        const isProfileIncomplete = employerData.is_super_admin
+            ? !companyData?.profile_completed
+            : !employerData.profile_completed;
 
         // Success - redirect based on profile completion
         await logAuth("employer_login_success", authData.user.id, "employer", { email });

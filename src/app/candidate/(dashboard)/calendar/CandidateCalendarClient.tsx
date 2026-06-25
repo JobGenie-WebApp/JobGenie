@@ -463,24 +463,9 @@ export default function CandidateCalendarClient() {
                         </button>
                     </div>
 
-                    {/* Calendar grid */}
+                    {/* Calendar grid — always rendered; empty cells show when there are no events */}
                     <div className="flex-1 overflow-hidden">
-                        {events.length === 0 && view === "Month" ? (
-                            <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-accent/15 ring-1 ring-primary/20">
-                                    <CalendarIcon className="h-7 w-7 text-primary" />
-                                </div>
-                                <div className="max-w-sm space-y-1.5">
-                                    <p className="text-sm font-semibold text-foreground">No interviews on the calendar yet</p>
-                                    <p className="text-xs leading-relaxed text-muted-foreground">
-                                        Accept an invitation with proposed slots and confirmed times will appear here automatically.
-                                    </p>
-                                </div>
-                                <Link href="/candidate/invitations" className="text-xs font-semibold text-primary underline-offset-4 hover:underline">
-                                    Open invitations
-                                </Link>
-                            </div>
-                        ) : view === "Month" ? (
+                        {view === "Month" ? (
                             <MonthView date={date} events={events} onSelectEvent={handleSelectEvent} />
                         ) : view === "Week" ? (
                             <WeekView date={date} events={events} onSelectEvent={handleSelectEvent} />
@@ -493,7 +478,19 @@ export default function CandidateCalendarClient() {
                 {/* Sidebar — hidden on mobile, shown on lg+ */}
                 <div className="hidden lg:flex w-72 flex-shrink-0 flex-col gap-2">
                     <p className="text-sm font-semibold text-foreground px-1">Upcoming</p>
-                    <SidebarList events={events} onSelectEvent={handleSelectEvent} />
+                    {events.length === 0 ? (
+                        <div className="rounded-lg border border-border/50 bg-card/50 px-4 py-5 text-center space-y-2">
+                            <p className="text-xs font-medium text-muted-foreground">No interviews yet</p>
+                            <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+                                Accept an invitation — confirmed times appear here automatically.
+                            </p>
+                            <Link href="/candidate/invitations" className="text-[11px] font-semibold text-primary hover:underline">
+                                Open invitations
+                            </Link>
+                        </div>
+                    ) : (
+                        <SidebarList events={events} onSelectEvent={handleSelectEvent} />
+                    )}
                 </div>
             </div>
 

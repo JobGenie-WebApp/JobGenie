@@ -75,6 +75,7 @@ model Candidate {
   gender            Gender
   current_position  String   @db.VarChar(200)
   industry          String   @db.VarChar(100)
+  industry_id       Int?
   address           String   @db.Text
   phone             String   @db.VarChar(20)
   alternative_phone String?  @db.VarChar(20)
@@ -84,7 +85,7 @@ model Candidate {
   resume_copy_url   String?  @db.VarChar(255)
 
   years_of_experience Int?             @default(0)
-  experience_level    ExperienceLevel? @default(junior)
+  experience_level    String?           @db.VarChar(100) @default("entry")
 
   // Qualifications stored as array for multiple selection
   qualifications        ProfessionalQualification[]
@@ -98,6 +99,7 @@ model Candidate {
 
   professional_summary String? @db.VarChar(1000)
   profile_image_url    String? @db.VarChar(255)
+  cover_image_url      String? @db.VarChar(500)
 
   approval_status   ApprovalStatus @default(pending)
   profile_completed Boolean        @default(false)
@@ -116,6 +118,7 @@ model Candidate {
   // Relations
   user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   reviewer         MisUser?         @relation(fields: [reviewed_by], references: [user_id], onDelete: SetNull)
+  industry_ref     Industry?        @relation(fields: [industry_id], references: [industry_id])
   work_experiences WorkExperience[]
   educations       Education[]
   awards           Award[]
@@ -868,6 +871,7 @@ model Industry {
   industry_name String @db.VarChar(100)
 
   designations JobDesignation[]
+  candidates   Candidate[]
 
   @@map("industries")
 }
@@ -911,15 +915,6 @@ enum UserStatus {
   inactive
   suspended
   pending_verification
-}
-
-enum ExperienceLevel {
-  entry
-  junior
-  mid
-  senior
-  lead
-  principal
 }
 
 enum Gender {

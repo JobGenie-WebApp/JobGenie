@@ -101,8 +101,21 @@ export async function verifyBRCertificate(
         // Extract the data
         const extractedData = parsedData as { companyName?: string; registrationNumber?: string; extractedText?: string };
 
-        // Normalize strings for comparison (trim, lowercase, remove extra spaces)
-        const normalize = (str: string) => str.trim().toLowerCase().replace(/\s+/g, " ");
+        // Normalize a company name for comparison:
+        // - case-insensitive
+        // - punctuation (parentheses, dots, commas, hyphens) treated as spaces
+        // - legal entity suffixes stripped, so "(Pvt) Ltd", "Private Limited",
+        //   "PLC" etc. are optional and don't cause a mismatch.
+        const normalizeCompanyName = (str: string) =>
+            str
+                .toLowerCase()
+                .replace(/[().,\-_/]/g, " ")
+                // legal entity designators (Sri Lankan + common forms)
+                .replace(/\b(private|pvt|public|pub)\b/g, " ")
+                .replace(/\b(limited|ltd)\b/g, " ")
+                .replace(/\bplc\b/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
 
         // Normalize BR number for comparison (remove spaces, convert to uppercase)
         const normalizeBRNumber = (str: string) => str.trim().toUpperCase().replace(/\s+/g, "");
@@ -112,7 +125,7 @@ export async function verifyBRCertificate(
 
         const companyNameMatch =
             extractedCompanyName &&
-            normalize(extractedCompanyName) === normalize(userProvidedCompanyName);
+            normalizeCompanyName(extractedCompanyName) === normalizeCompanyName(userProvidedCompanyName);
 
         const regNumberMatch =
             extractedRegNumber &&

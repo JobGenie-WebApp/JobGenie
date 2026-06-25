@@ -22,10 +22,20 @@ interface CompanyDetailsStepProps {
     onChange: (data: CompanyDetailsStepProps["data"]) => void;
     onFileSelect: (file: File | null) => void; // Separate file handler
     onNext: () => void;
+    nextLabel?: string;
+    isLoading?: boolean;
     companyName: string; // For display
 }
 
-export function CompanyDetailsStep({ data, onChange, onFileSelect, onNext, companyName }: CompanyDetailsStepProps) {
+export function CompanyDetailsStep({
+    data,
+    onChange,
+    onFileSelect,
+    onNext,
+    nextLabel = "Next",
+    isLoading = false,
+    companyName,
+}: CompanyDetailsStepProps) {
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleChange = (field: keyof typeof data, value: string) => {
@@ -168,8 +178,8 @@ export function CompanyDetailsStep({ data, onChange, onFileSelect, onNext, compa
 
                 {/* Navigation */}
                 <div className="flex justify-end pt-4">
-                    <Button onClick={handleNext} className="min-w-24">
-                        Next
+                    <Button onClick={handleNext} className="min-w-24" disabled={isLoading}>
+                        {isLoading ? "Saving..." : nextLabel}
                     </Button>
                 </div>
             </CardContent>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import StoreProvider from "@/components/providers/StoreProvider";
@@ -7,12 +7,6 @@ import { SWRProvider } from "@/components/providers/SWRProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-
-const fontSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "JobGenie - Find Your Perfect Career Match",
@@ -28,6 +22,12 @@ export const metadata: Metadata = {
     icon: "/logo.jpg",
   },
 };
+
+const fontSans = Roboto({
+  subsets: ["latin"],
+  variable: "--font-roboto",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,

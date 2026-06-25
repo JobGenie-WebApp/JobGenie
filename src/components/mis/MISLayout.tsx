@@ -1,14 +1,16 @@
 import { redirect } from "next/navigation";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { DashboardShell } from "@/components/layout/DashboardShell";
 import { MISSidebar } from "./MISSidebar";
-import { MISHeader } from "./MISHeader";
-import { PageTransitionWrapper } from "@/components/layout/PageTransitionWrapper";
 import { createClient } from "@/lib/supabase/server";
 
 interface MISLayoutProps {
     children: React.ReactNode;
     pageTitle?: string;
     pageDescription?: string;
+    /** Right-aligned action buttons in the content title row. */
+    headerActions?: React.ReactNode;
+    /** Overrides the last breadcrumb label (for id-based detail routes). */
+    breadcrumbOverride?: string;
     fullHeight?: boolean;
 }
 
@@ -37,7 +39,7 @@ async function getCurrentUser() {
     };
 }
 
-export async function MISLayout({ children, pageTitle, pageDescription, fullHeight }: MISLayoutProps) {
+export async function MISLayout({ children, pageTitle, pageDescription, headerActions, breadcrumbOverride, fullHeight }: MISLayoutProps) {
     const user = await getCurrentUser();
 
     if (!user) {
@@ -45,28 +47,15 @@ export async function MISLayout({ children, pageTitle, pageDescription, fullHeig
     }
 
     return (
-        <SidebarProvider className="h-dvh! min-h-0! overflow-hidden">
-            <MISSidebar />
-            <SidebarInset className="flex flex-col min-h-0 overflow-hidden">
-                <MISHeader
-                    user={user}
-                    pageTitle={pageTitle}
-                    pageDescription={pageDescription}
-                />
-                <div className={fullHeight ? "flex-1 min-h-0 overflow-hidden flex flex-col" : "flex-1 overflow-y-auto min-h-0"}>
-                    <PageTransitionWrapper>
-                        {fullHeight ? (
-                            <div className="h-full overflow-hidden flex flex-col">
-                                {children}
-                            </div>
-                        ) : (
-                            <div className="bg-muted/30 p-4 md:p-6 min-h-full">
-                                {children}
-                            </div>
-                        )}
-                    </PageTransitionWrapper>
-                </div>
-            </SidebarInset>
-        </SidebarProvider>
+        <DashboardShell
+            sidebar={<MISSidebar user={user} />}
+            pageTitle={pageTitle}
+            pageDescription={pageDescription}
+            headerActions={headerActions}
+            breadcrumbOverride={breadcrumbOverride}
+            fullHeight={fullHeight}
+        >
+            {children}
+        </DashboardShell>
     );
 }

@@ -1,9 +1,5 @@
 {
   "mcpServers": {
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=qqhdpoddfwkqsubmjskg"
-    },
     "resend": {
       "command": "npx",
       "args": [
@@ -13,6 +9,10 @@
       "env": {
         "RESEND_API_KEY": "re_KoUMwwFD_LNXeiM2AfPpvZJGWWgeBZApE"
       }
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp"
     }
   }
 }

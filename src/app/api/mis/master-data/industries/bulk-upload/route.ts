@@ -8,6 +8,13 @@ interface IndustryCSVRow {
     industry_name: string;
 }
 
+interface EvaluatedRow {
+    row: number;
+    valid: boolean;
+    error: string | null;
+    values: { industry_name: string };
+}
+
 export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient();
@@ -30,6 +37,7 @@ export async function POST(request: NextRequest) {
 
         const formData = await request.formData();
         const file = formData.get("file") as File;
+        const mode = (formData.get("mode") as string) || "commit";
 
         if (!file) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -56,23 +64,40 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "No data found in CSV" }, { status: 400 });
         }
 
-        const errors: string[] = [];
-        const validRows: IndustryCSVRow[] = [];
-
-        rows.forEach((row, index) => {
-            if (!row.industry_name || typeof row.industry_name !== "string" || !row.industry_name.trim()) {
-                errors.push(`Row ${index + 2}: Industry name is required`);
-            } else {
-                validRows.push({
-                    industry_name: row.industry_name.trim(),
-                });
+        const evaluated: EvaluatedRow[] = rows.map((row, index) => {
+            const rowNum = index + 2;
+            const name = (row.industry_name || "").trim();
+            if (!name) {
+                return {
+                    row: rowNum,
+                    valid: false,
+                    error: "Industry name is required",
+                    values: { industry_name: row.industry_name || "" },
+                };
             }
+            return { row: rowNum, valid: true, error: null, values: { industry_name: name } };
         });
 
-        if (errors.length > 0) {
+        const validRows = evaluated.filter((e) => e.valid);
+
+        // Preview mode: return per-row validation without writing anything.
+        if (mode === "preview") {
             return NextResponse.json({
-                error: "Validation failed",
-                details: errors,
+                success: true,
+                mode: "preview",
+                summary: {
+                    total: evaluated.length,
+                    valid: validRows.length,
+                    invalid: evaluated.length - validRows.length,
+                },
+                rows: evaluated,
+            });
+        }
+
+        if (validRows.length === 0) {
+            return NextResponse.json({
+                error: "No valid rows to import",
+                details: evaluated.filter((e) => !e.valid).map((e) => `Row ${e.row}: ${e.error}`),
             }, { status: 400 });
         }
 
@@ -88,7 +113,7 @@ export async function POST(request: NextRequest) {
 
         const industriesToInsert = validRows.map((row) => ({
             industry_id: ++currentId,
-            industry_name: row.industry_name,
+            industry_name: row.values.industry_name,
         }));
 
         const { data: insertedIndustries, error: insertError } = await adminClient
@@ -104,10 +129,12 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
+        const skipped = evaluated.length - validRows.length;
         return NextResponse.json({
             success: true,
-            message: `Successfully imported ${insertedIndustries.length} industries`,
+            message: `Successfully imported ${insertedIndustries.length} industries${skipped > 0 ? ` (${skipped} skipped)` : ""}`,
             count: insertedIndustries.length,
+            skipped,
         });
     } catch (error) {
         console.error("Error in POST /api/mis/master-data/industries/bulk-upload:", error);

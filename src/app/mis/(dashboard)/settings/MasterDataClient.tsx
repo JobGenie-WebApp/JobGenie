@@ -12,7 +12,35 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "sonner";
 import { InterviewRemindersSettings } from "./InterviewRemindersSettings";
 import { SidebarVisibilitySettings } from "./SidebarVisibilitySettings";
+import { BulkUploadPreviewDialog, type PreviewColumn, type PreviewRow, type PreviewSummary } from "./BulkUploadPreviewDialog";
 import Papa from "papaparse";
+
+type PreviewType = "industries" | "designations" | "seniority";
+
+const BULK_ENDPOINTS: Record<PreviewType, string> = {
+    industries: "/api/mis/master-data/industries",
+    designations: "/api/mis/master-data/designations",
+    seniority: "/api/mis/master-data/seniority-levels",
+};
+
+const PREVIEW_TITLES: Record<PreviewType, string> = {
+    industries: "Preview Industries Import",
+    designations: "Preview Job Designations Import",
+    seniority: "Preview Seniority Levels Import",
+};
+
+const PREVIEW_COLUMNS: Record<PreviewType, PreviewColumn[]> = {
+    industries: [{ key: "industry_name", label: "Industry Name" }],
+    designations: [
+        { key: "designation_name", label: "Designation Name" },
+        { key: "industry_name", label: "Industry" },
+        { key: "seniority_level", label: "Seniority Level" },
+    ],
+    seniority: [
+        { key: "level_name", label: "Level Name" },
+        { key: "level_order", label: "Order" },
+    ],
+};
 
 interface Industry {
     industry_id: number;
@@ -28,45 +56,127 @@ interface Designation {
     seniority_level: { level_name: string; level_order: number };
 }
 
-const SENIORITY_LEVELS = [
-    { id: 1, name: "Entry Level", order: 1 },
-    { id: 2, name: "Junior", order: 2 },
-    { id: 3, name: "Mid Level", order: 3 },
-    { id: 4, name: "Senior", order: 4 },
-    { id: 5, name: "Lead", order: 5 },
-    { id: 6, name: "Principal", order: 6 },
-];
+interface SeniorityLevel {
+    level_id: number;
+    level_name: string;
+    level_order: number;
+}
 
 export function MasterDataClient() {
     const [industries, setIndustries] = useState<Industry[]>([]);
     const [designations, setDesignations] = useState<Designation[]>([]);
+    const [seniorityLevels, setSeniorityLevels] = useState<SeniorityLevel[]>([]);
     const [loading, setLoading] = useState(true);
     const [addIndustryOpen, setAddIndustryOpen] = useState(false);
     const [addDesignationOpen, setAddDesignationOpen] = useState(false);
+    const [addSeniorityOpen, setAddSeniorityOpen] = useState(false);
     const [newIndustry, setNewIndustry] = useState("");
     const [newDesignation, setNewDesignation] = useState({
         name: "",
         industry_id: "",
         level_id: "",
     });
+    const [newSeniority, setNewSeniority] = useState({ name: "", order: "" });
     const [uploadingIndustries, setUploadingIndustries] = useState(false);
     const [uploadingDesignations, setUploadingDesignations] = useState(false);
+    const [uploadingSeniority, setUploadingSeniority] = useState(false);
     const industryFileInputRef = useRef<HTMLInputElement>(null);
     const designationFileInputRef = useRef<HTMLInputElement>(null);
+    const seniorityFileInputRef = useRef<HTMLInputElement>(null);
+
+    // Bulk-upload preview state (shared across the three tabs)
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [previewType, setPreviewType] = useState<PreviewType | null>(null);
+    const [previewFile, setPreviewFile] = useState<File | null>(null);
+    const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
+    const [previewSummary, setPreviewSummary] = useState<PreviewSummary>({ total: 0, valid: 0, invalid: 0 });
+    const [confirming, setConfirming] = useState(false);
+
+    const generatePreview = async (
+        type: PreviewType,
+        file: File,
+        setUploading: (v: boolean) => void,
+        inputRef: React.RefObject<HTMLInputElement | null>,
+    ) => {
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("mode", "preview");
+
+            const response = await fetch(`${BULK_ENDPOINTS[type]}/bulk-upload`, {
+                method: "POST",
+                body: formData,
+            });
+            const data = await response.json();
+
+            if (data.success && data.mode === "preview") {
+                setPreviewType(type);
+                setPreviewFile(file);
+                setPreviewRows(data.rows);
+                setPreviewSummary(data.summary);
+                setPreviewOpen(true);
+            } else {
+                toast.error(data.error || "Failed to read CSV");
+                if (data.details) console.error("Preview errors:", data.details);
+            }
+        } catch (error) {
+            console.error("Failed to read CSV:", error);
+            toast.error("Failed to read CSV");
+        } finally {
+            setUploading(false);
+            if (inputRef.current) inputRef.current.value = "";
+        }
+    };
+
+    const confirmImport = async () => {
+        if (!previewType || !previewFile) return;
+        setConfirming(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", previewFile);
+            formData.append("mode", "commit");
+
+            const response = await fetch(`${BULK_ENDPOINTS[previewType]}/bulk-upload`, {
+                method: "POST",
+                body: formData,
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success(data.message);
+                setPreviewOpen(false);
+                setPreviewFile(null);
+                setPreviewType(null);
+                fetchData();
+            } else {
+                toast.error(data.error || "Failed to import");
+                if (data.details) console.error("Import errors:", data.details);
+            }
+        } catch (error) {
+            console.error("Failed to import:", error);
+            toast.error("Failed to import");
+        } finally {
+            setConfirming(false);
+        }
+    };
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [industriesRes, designationsRes] = await Promise.all([
+            const [industriesRes, designationsRes, seniorityRes] = await Promise.all([
                 fetch("/api/mis/master-data/industries"),
                 fetch("/api/mis/master-data/designations"),
+                fetch("/api/mis/master-data/seniority-levels"),
             ]);
 
             const industriesData = await industriesRes.json();
             const designationsData = await designationsRes.json();
+            const seniorityData = await seniorityRes.json();
 
             if (industriesData.success) setIndustries(industriesData.industries);
             if (designationsData.success) setDesignations(designationsData.designations);
+            if (seniorityData.success) setSeniorityLevels(seniorityData.seniorityLevels);
         } catch (error) {
             console.error("Failed to fetch data:", error);
             toast.error("Failed to load data");
@@ -141,6 +251,38 @@ export function MasterDataClient() {
         }
     };
 
+    const handleAddSeniority = async () => {
+        if (!newSeniority.name.trim()) {
+            toast.error("Level name is required");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/mis/master-data/seniority-levels", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    level_name: newSeniority.name,
+                    level_order: newSeniority.order ? Number(newSeniority.order) : undefined,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success("Seniority level added successfully");
+                setNewSeniority({ name: "", order: "" });
+                setAddSeniorityOpen(false);
+                fetchData();
+            } else {
+                toast.error(data.error || "Failed to add seniority level");
+            }
+        } catch (error) {
+            console.error("Failed to add seniority level:", error);
+            toast.error("Failed to add seniority level");
+        }
+    };
+
     const downloadIndustryTemplate = () => {
         const csv = Papa.unparse([
             { industry_name: "Banking" },
@@ -191,78 +333,41 @@ export function MasterDataClient() {
         toast.success("Template downloaded");
     };
 
-    const handleIndustryFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleIndustryFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
-
-        setUploadingIndustries(true);
-
-        try {
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const response = await fetch("/api/mis/master-data/industries/bulk-upload", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
-                fetchData();
-            } else {
-                toast.error(data.error || "Failed to upload CSV");
-                if (data.details) {
-                    console.error("Upload errors:", data.details);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to upload CSV:", error);
-            toast.error("Failed to upload CSV");
-        } finally {
-            setUploadingIndustries(false);
-            if (industryFileInputRef.current) {
-                industryFileInputRef.current.value = "";
-            }
-        }
+        generatePreview("industries", file, setUploadingIndustries, industryFileInputRef);
     };
 
-    const handleDesignationFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleDesignationFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
+        generatePreview("designations", file, setUploadingDesignations, designationFileInputRef);
+    };
 
-        setUploadingDesignations(true);
+    const downloadSeniorityTemplate = () => {
+        const csv = Papa.unparse([
+            { level_name: "Entry Level", level_order: 1 },
+            { level_name: "Junior", level_order: 2 },
+            { level_name: "Senior", level_order: 4 },
+        ]);
 
-        try {
-            const formData = new FormData();
-            formData.append("file", file);
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "seniority_levels_template.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        toast.success("Template downloaded");
+    };
 
-            const response = await fetch("/api/mis/master-data/designations/bulk-upload", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(data.message);
-                fetchData();
-            } else {
-                toast.error(data.error || "Failed to upload CSV");
-                if (data.details) {
-                    console.error("Upload errors:", data.details);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to upload CSV:", error);
-            toast.error("Failed to upload CSV");
-        } finally {
-            setUploadingDesignations(false);
-            if (designationFileInputRef.current) {
-                designationFileInputRef.current.value = "";
-            }
-        }
+    const handleSeniorityFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        generatePreview("seniority", file, setUploadingSeniority, seniorityFileInputRef);
     };
 
     return (
@@ -285,7 +390,7 @@ export function MasterDataClient() {
                         Job Designations ({designations.length})
                     </TabsTrigger>
                     <TabsTrigger value="seniority">
-                        Seniority Levels ({SENIORITY_LEVELS.length})
+                        Seniority Levels ({seniorityLevels.length})
                     </TabsTrigger>
                     <TabsTrigger value="reminders">Interview Reminders</TabsTrigger>
                     <TabsTrigger value="sidebar-visibility">Sidebar Visibility</TabsTrigger>
@@ -314,7 +419,7 @@ export function MasterDataClient() {
                                         disabled={uploadingIndustries}
                                     >
                                         <Upload className="h-4 w-4 mr-2" />
-                                        {uploadingIndustries ? "Uploading..." : "Upload CSV"}
+                                        {uploadingIndustries ? "Reading..." : "Upload CSV"}
                                     </Button>
                                 </div>
                             </div>
@@ -421,7 +526,7 @@ export function MasterDataClient() {
                                         disabled={uploadingDesignations}
                                     >
                                         <Upload className="h-4 w-4 mr-2" />
-                                        {uploadingDesignations ? "Uploading..." : "Upload CSV"}
+                                        {uploadingDesignations ? "Reading..." : "Upload CSV"}
                                     </Button>
                                 </div>
                             </div>
@@ -486,9 +591,9 @@ export function MasterDataClient() {
                                                     <SelectValue placeholder="Select level" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {SENIORITY_LEVELS.map((level) => (
-                                                        <SelectItem key={level.id} value={level.id.toString()}>
-                                                            {level.name}
+                                                    {seniorityLevels.map((level) => (
+                                                        <SelectItem key={level.level_id} value={level.level_id.toString()}>
+                                                            {level.level_name}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -507,7 +612,7 @@ export function MasterDataClient() {
 
                         <div className="bg-muted/50 border rounded-lg p-4">
                             <p className="text-sm text-muted-foreground">
-                                <strong>Bulk Upload Instructions:</strong> Download the CSV template, fill in your data, and upload it back. Required columns: <code className="text-xs bg-background px-1 py-0.5 rounded">designation_name</code>, <code className="text-xs bg-background px-1 py-0.5 rounded">industry_name</code>, and <code className="text-xs bg-background px-1 py-0.5 rounded">seniority_level</code> (valid values: Entry Level, Junior, Mid Level, Senior, Lead, Principal).
+                                <strong>Bulk Upload Instructions:</strong> Download the CSV template, fill in your data, and upload it back. Required: <code className="text-xs bg-background px-1 py-0.5 rounded">designation_name</code>, plus an industry (<code className="text-xs bg-background px-1 py-0.5 rounded">industry_id</code> or <code className="text-xs bg-background px-1 py-0.5 rounded">industry_name</code>) and a seniority level (<code className="text-xs bg-background px-1 py-0.5 rounded">level_id</code> or <code className="text-xs bg-background px-1 py-0.5 rounded">seniority_level</code>). Seniority names: {seniorityLevels.map((l) => l.level_name).join(", ") || "add seniority levels first"}.
                             </p>
                         </div>
 
@@ -564,31 +669,137 @@ export function MasterDataClient() {
 
                 {/* Seniority Levels Tab */}
                 <TabsContent value="seniority">
-                    <div className="bg-card border rounded-lg overflow-hidden">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Level ID</TableHead>
-                                    <TableHead>Level Name</TableHead>
-                                    <TableHead>Order</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {SENIORITY_LEVELS.map((level) => (
-                                    <TableRow key={level.id}>
-                                        <TableCell className="font-mono">{level.id}</TableCell>
-                                        <TableCell className="font-medium">{level.name}</TableCell>
-                                        <TableCell>{level.order}</TableCell>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center gap-3">
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={downloadSeniorityTemplate}>
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download Template
+                                </Button>
+                                <div>
+                                    <input
+                                        ref={seniorityFileInputRef}
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleSeniorityFileUpload}
+                                        className="hidden"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => seniorityFileInputRef.current?.click()}
+                                        disabled={uploadingSeniority}
+                                    >
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        {uploadingSeniority ? "Reading..." : "Upload CSV"}
+                                    </Button>
+                                </div>
+                            </div>
+                            <Dialog open={addSeniorityOpen} onOpenChange={setAddSeniorityOpen}>
+                                <DialogTrigger asChild>
+                                    <Button>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Add Seniority Level
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Add New Seniority Level</DialogTitle>
+                                        <DialogDescription>
+                                            Create a new seniority level
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="seniority-name">Level Name</Label>
+                                            <Input
+                                                id="seniority-name"
+                                                placeholder="e.g., Senior"
+                                                value={newSeniority.name}
+                                                onChange={(e) =>
+                                                    setNewSeniority((prev) => ({ ...prev, name: e.target.value }))
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="seniority-order">Order (optional)</Label>
+                                            <Input
+                                                id="seniority-order"
+                                                type="number"
+                                                min={1}
+                                                placeholder="Leave blank to append at the end"
+                                                value={newSeniority.order}
+                                                onChange={(e) =>
+                                                    setNewSeniority((prev) => ({ ...prev, order: e.target.value }))
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setAddSeniorityOpen(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button onClick={handleAddSeniority}>Add Seniority Level</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+
+                        <div className="bg-muted/50 border rounded-lg p-4">
+                            <p className="text-sm text-muted-foreground">
+                                <strong>Bulk Upload Instructions:</strong> Download the CSV template, fill in your data, and upload it back. Required column: <code className="text-xs bg-background px-1 py-0.5 rounded">level_name</code>. Optional column: <code className="text-xs bg-background px-1 py-0.5 rounded">level_order</code> (rows without an order are appended to the end).
+                            </p>
+                        </div>
+
+                        <div className="bg-card border rounded-lg overflow-hidden">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Level ID</TableHead>
+                                        <TableHead>Level Name</TableHead>
+                                        <TableHead>Order</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-center py-8">
+                                                Loading...
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : seniorityLevels.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                                No seniority levels found
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        seniorityLevels.map((level) => (
+                                            <TableRow key={level.level_id}>
+                                                <TableCell className="font-mono">{level.level_id}</TableCell>
+                                                <TableCell className="font-medium">{level.level_name}</TableCell>
+                                                <TableCell>{level.level_order}</TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-4">
-                        Seniority levels are system-defined and cannot be modified through the UI.
-                    </p>
                 </TabsContent>
             </Tabs>
+
+            {previewType && (
+                <BulkUploadPreviewDialog
+                    open={previewOpen}
+                    onOpenChange={setPreviewOpen}
+                    title={PREVIEW_TITLES[previewType]}
+                    columns={PREVIEW_COLUMNS[previewType]}
+                    rows={previewRows}
+                    summary={previewSummary}
+                    confirming={confirming}
+                    onConfirm={confirmImport}
+                />
+            )}
         </div>
     );
 }

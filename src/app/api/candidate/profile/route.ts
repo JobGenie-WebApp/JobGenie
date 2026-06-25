@@ -43,6 +43,7 @@ export async function GET() {
                 employment_type,
                 professional_summary,
                 profile_image_url,
+                cover_image_url,
                 membership_no,
                 approval_status,
                 resume_url,

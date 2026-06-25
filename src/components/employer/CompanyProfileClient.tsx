@@ -36,11 +36,18 @@ export function CompanyProfileClient({ company, isSuperAdmin }: CompanyProfileCl
         <>
             <div className="w-full">
                 <Card variant="glass" className="mb-6 overflow-hidden border-primary/15">
-                    {/* Cover Photo Area */}
+                    {/* Cover Photo Area — -mt-6 cancels the Card's built-in py-6 so the image touches the top border */}
                     <div
-                        className="relative h-28 overflow-hidden bg-gradient-to-r from-primary/35 via-accent/25 to-primary/10"
+                        className="relative h-40 -mt-6 overflow-hidden"
                         aria-hidden
-                    />
+                    >
+                        <img
+                            src="/default-company-cover.svg"
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover"
+                            draggable={false}
+                        />
+                    </div>
 
                     {/* Company Info Section */}
                     <CardContent className="px-6 pb-4">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Mail, Phone, MapPin, Briefcase, Calendar, FileText, Pencil, GraduationCap, TrendingUp } from "lucide-react";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Mail, Phone, MapPin, Briefcase, Calendar, FileText, Pencil, GraduationCap, TrendingUp, Camera, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { CandidateProfile } from "@/types/profile-types";
 import { BasicInfoDialog } from "./dialogs/BasicInfoDialog";
 import { formatIndustry, formatPhoneNumber } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileHeaderProps {
     profile: CandidateProfile;
@@ -16,8 +18,46 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps) {
+    const router = useRouter();
+    const { toast } = useToast();
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [uploadingCover, setUploadingCover] = useState(false);
+    const coverInputRef = useRef<HTMLInputElement>(null);
     const initials = `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+
+    const handleCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+        if (!validTypes.includes(file.type)) {
+            toast({ title: "Invalid file type", description: "Please upload an image (JPEG, PNG, GIF, or WebP).", variant: "destructive" });
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            toast({ title: "File too large", description: "Cover image must be smaller than 5MB.", variant: "destructive" });
+            return;
+        }
+
+        setUploadingCover(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const response = await fetch("/api/candidate/upload-cover-image", { method: "POST", body: formData });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Failed to upload cover image");
+            }
+            toast({ title: "Cover updated", description: "Your cover image has been updated." });
+            router.refresh();
+            onProfileUpdated?.();
+        } catch (error) {
+            toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to upload cover image", variant: "destructive" });
+        } finally {
+            setUploadingCover(false);
+            if (coverInputRef.current) coverInputRef.current.value = "";
+        }
+    };
 
     const getAvailabilityColor = (status: string | null) => {
         switch (status) {
@@ -41,9 +81,55 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
 
     return (
         <>
-            <Card className="overflow-hidden group relative">
-                {/* Cover Image */}
-                <div className="h-32 bg-gradient-to-r from-primary/80 via-primary to-primary/80" />
+            <Card className="overflow-hidden group relative pt-0">
+                {/* Cover Image — shows the candidate's cover photo, or a styled default gradient */}
+                <div className="relative h-48 w-full overflow-hidden sm:h-60">
+                    {profile.cover_image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={profile.cover_image_url}
+                            alt="Profile cover"
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <div className="h-full w-full bg-gradient-to-br from-primary/80 via-primary to-emerald-700">
+                            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.18)_1px,transparent_0)] [background-size:22px_22px]" />
+                        </div>
+                    )}
+
+                    {/* Subtle gradient so overlaid controls stay readable */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+
+                    {/* Hidden file input for cover upload */}
+                    <input
+                        ref={coverInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                        className="hidden"
+                        onChange={handleCoverChange}
+                    />
+
+                    {/* Change cover control — bottom-right, with recommended size hint */}
+                    <div className="absolute bottom-3 right-3 flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <span className="hidden rounded-md bg-black/45 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm sm:inline">
+                            Recommended: 1500 × 400px · max 5MB
+                        </span>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-9 gap-2 shadow-lg"
+                            disabled={uploadingCover}
+                            onClick={() => coverInputRef.current?.click()}
+                        >
+                            {uploadingCover ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Camera className="h-4 w-4" />
+                            )}
+                            {uploadingCover ? "Uploading..." : (profile.cover_image_url ? "Change cover" : "Add cover")}
+                        </Button>
+                    </div>
+                </div>
 
                 {/* Edit Button - visible on hover on desktop, always visible on mobile */}
                 <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
