@@ -146,9 +146,10 @@ ALTER TABLE public.work_experiences                ENABLE ROW LEVEL SECURITY;
 -- ----------------------------------------------------------------------------
 
 -- api_request_logs
+-- Logs are written via the service-role admin client (RLS-bypassing), so no
+-- authenticated INSERT policy is needed. The permissive WITH CHECK (true) policy
+-- was removed in security_hardening_2026_06.sql.
 DROP POLICY IF EXISTS "Authenticated can insert api request logs" ON public.api_request_logs;
-CREATE POLICY "Authenticated can insert api request logs" ON public.api_request_logs AS PERMISSIVE FOR INSERT TO authenticated
-  WITH CHECK (true);
 DROP POLICY IF EXISTS "MIS can read api request logs" ON public.api_request_logs;
 CREATE POLICY "MIS can read api request logs" ON public.api_request_logs AS PERMISSIVE FOR SELECT TO authenticated
   USING (is_mis_user());
@@ -312,7 +313,7 @@ CREATE POLICY "Employers can delete own company" ON public.companies AS PERMISSI
   USING ((id IN ( SELECT employers.company_id FROM employers WHERE (employers.user_id = ( SELECT auth.uid() AS uid)))));
 DROP POLICY IF EXISTS "Employers can insert company" ON public.companies;
 CREATE POLICY "Employers can insert company" ON public.companies AS PERMISSIVE FOR INSERT TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (is_employer());
 DROP POLICY IF EXISTS "Employers can update own company" ON public.companies;
 CREATE POLICY "Employers can update own company" ON public.companies AS PERMISSIVE FOR UPDATE TO authenticated
   USING ((id IN ( SELECT employers.company_id FROM employers WHERE (employers.user_id = ( SELECT auth.uid() AS uid)))))
@@ -375,17 +376,15 @@ CREATE POLICY "MIS can view all employers" ON public.employers AS PERMISSIVE FOR
   USING (is_mis_user());
 
 -- error_logs
+-- Written via admin client; permissive INSERT policy removed (security_hardening_2026_06.sql).
 DROP POLICY IF EXISTS "Authenticated can insert error logs" ON public.error_logs;
-CREATE POLICY "Authenticated can insert error logs" ON public.error_logs AS PERMISSIVE FOR INSERT TO authenticated
-  WITH CHECK (true);
 DROP POLICY IF EXISTS "MIS can read error logs" ON public.error_logs;
 CREATE POLICY "MIS can read error logs" ON public.error_logs AS PERMISSIVE FOR SELECT TO authenticated
   USING (is_mis_user());
 
 -- event_logs
+-- Written via admin client; permissive INSERT policy removed (security_hardening_2026_06.sql).
 DROP POLICY IF EXISTS "Authenticated can insert event logs" ON public.event_logs;
-CREATE POLICY "Authenticated can insert event logs" ON public.event_logs AS PERMISSIVE FOR INSERT TO authenticated
-  WITH CHECK (true);
 DROP POLICY IF EXISTS "MIS can read event logs" ON public.event_logs;
 CREATE POLICY "MIS can read event logs" ON public.event_logs AS PERMISSIVE FOR SELECT TO authenticated
   USING (is_mis_user());
@@ -858,17 +857,13 @@ DROP POLICY IF EXISTS "MIS can read all resumes" ON storage.objects;
 CREATE POLICY "MIS can read all resumes" ON storage.objects AS PERMISSIVE FOR SELECT TO authenticated
   USING (((bucket_id = 'resume'::text) AND is_mis_user()));
 
+-- Broad public SELECT policies on these public buckets were removed in
+-- security_hardening_2026_06.sql: they allowed clients to LIST every object.
+-- Public buckets still serve individual objects by direct URL without an
+-- explicit storage.objects SELECT policy, and all writes use the admin client.
 DROP POLICY IF EXISTS "Public can read company logos" ON storage.objects;
-CREATE POLICY "Public can read company logos" ON storage.objects AS PERMISSIVE FOR SELECT TO public
-  USING ((bucket_id = 'company-logos'::text));
-
 DROP POLICY IF EXISTS "Public can read profile images" ON storage.objects;
-CREATE POLICY "Public can read profile images" ON storage.objects AS PERMISSIVE FOR SELECT TO public
-  USING ((bucket_id = 'profile-images'::text));
-
 DROP POLICY IF EXISTS "Public can read cover images" ON storage.objects;
-CREATE POLICY "Public can read cover images" ON storage.objects AS PERMISSIVE FOR SELECT TO public
-  USING ((bucket_id = 'cover-images'::text));
 
 DROP POLICY IF EXISTS "Candidates can upload own cover image" ON storage.objects;
 CREATE POLICY "Candidates can upload own cover image" ON storage.objects AS PERMISSIVE FOR INSERT TO authenticated

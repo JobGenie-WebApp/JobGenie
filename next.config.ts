@@ -18,7 +18,39 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // Content-Security-Policy starter. Shipped as **Report-Only** so it surfaces
+    // violations in the browser console / reporting without breaking the app.
+    // Once verified clean in production, rename the header key below from
+    // 'Content-Security-Policy-Report-Only' to 'Content-Security-Policy' to enforce.
+    const csp = [
+      "default-src 'self'",
+      // Next.js + react-compiler need inline/eval; Vercel Analytics loads from va.vercel-scripts.com
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.supabase.co",
+      "font-src 'self' data:",
+      // Supabase REST/Realtime (https + wss) and Vercel insights
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://*.vercel-insights.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "object-src 'none'",
+    ].join('; ');
+
     return [
+      // Global security headers on every route.
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()' },
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'Content-Security-Policy-Report-Only', value: csp },
+        ],
+      },
       // Cache static reference data endpoints (industries, job designations don't change frequently)
       {
         source: '/api/industries',

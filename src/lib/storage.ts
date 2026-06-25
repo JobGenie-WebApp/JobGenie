@@ -8,6 +8,48 @@ const RESUME_COPY_BUCKET = "resume_copy";
 const PROFILE_IMAGE_BUCKET = "profile-images";
 const BR_CERTIFICATES_BUCKET = "br-certificates";
 
+// Default per-file upload ceiling (matches the bucket-level limit).
+const DEFAULT_MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+
+// Allowed file extensions per MIME type. Used to reject files whose extension
+// doesn't match their declared MIME type (e.g. a `.exe` renamed to `.pdf`).
+const MIME_EXTENSIONS: Record<string, string[]> = {
+    "application/pdf": ["pdf"],
+    "application/msword": ["doc"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ["docx"],
+    "image/jpeg": ["jpg", "jpeg"],
+    "image/jpg": ["jpg", "jpeg"],
+    "image/png": ["png"],
+    "image/gif": ["gif"],
+    "image/webp": ["webp"],
+};
+
+/**
+ * Validate an uploaded File against an allowlist of MIME types, a size limit,
+ * and an extension⇄MIME consistency check. Throws on the first violation.
+ */
+export function validateUpload(
+    file: File,
+    allowedMimeTypes: string[],
+    maxBytes: number = DEFAULT_MAX_UPLOAD_BYTES,
+): void {
+    if (!file || file.size === 0) {
+        throw new Error("No file provided or file is empty.");
+    }
+    if (file.size > maxBytes) {
+        throw new Error(`File size must be less than ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+    }
+    const mime = (file.type || "").toLowerCase();
+    if (!allowedMimeTypes.includes(mime)) {
+        throw new Error("Unsupported file type.");
+    }
+    const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase() : "";
+    const expected = MIME_EXTENSIONS[mime];
+    if (expected && !expected.includes(ext)) {
+        throw new Error("File extension does not match its content type.");
+    }
+}
+
 /**
  * Watermarks a PDF file with the company logo as a smaller circular badge.
  * @param fileBuffer - The buffer of the PDF file.
@@ -151,6 +193,13 @@ export async function deleteFile(bucket: string, filePath: string) {
 export const StorageService = {
     watermarkPDF,
     uploadResume: async (candidateId: string, file: File) => {
+        const allowedMimeTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ];
+        validateUpload(file, allowedMimeTypes);
+
         const buffer = await file.arrayBuffer();
 
         // Watermark if PDF
@@ -166,12 +215,6 @@ export const StorageService = {
         const fileExt = file.name.split(".").pop();
         const fileName = `resume_${Date.now()}.${fileExt}`;
         const filePath = `${candidateId}/${fileName}`;
-
-        const allowedMimeTypes = [
-            "application/pdf",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        ];
 
         const url = await uploadFile(RESUME_BUCKET, filePath, fileData, file.type || "application/octet-stream", allowedMimeTypes);
         return { url, filePath };
@@ -207,35 +250,28 @@ export const StorageService = {
         await deleteFile(RESUME_COPY_BUCKET, filePath);
     },
     uploadProfileImage: async (candidateId: string, file: File) => {
-        const buffer = await file.arrayBuffer();
-        const fileExt = file.name.split('.').pop();
-        const fileName = `profile_${Date.now()}.${fileExt}`;
-        const filePath = `${candidateId}/${fileName}`;
-
-        // Validate file type
-        if (!file.type.startsWith("image/")) {
-            throw new Error("Invalid file type. Only images are allowed.");
-        }
-
-        const url = await uploadFile(PROFILE_IMAGE_BUCKET, filePath, buffer, file.type, [
+        const allowedMimeTypes = [
             "image/jpeg",
             "image/jpg",
             "image/png",
             "image/gif",
             "image/webp"
-        ]);
+        ];
+        // Profile images: 5 MB ceiling + extension/MIME cross-check.
+        validateUpload(file, allowedMimeTypes, 5 * 1024 * 1024);
+
+        const buffer = await file.arrayBuffer();
+        const fileExt = file.name.split('.').pop();
+        const fileName = `profile_${Date.now()}.${fileExt}`;
+        const filePath = `${candidateId}/${fileName}`;
+
+        const url = await uploadFile(PROFILE_IMAGE_BUCKET, filePath, buffer, file.type, allowedMimeTypes);
         return { url, filePath };
     },
     deleteProfileImage: async (filePath: string) => {
         await deleteFile(PROFILE_IMAGE_BUCKET, filePath);
     },
     uploadBRCertificate: async (file: File) => {
-        const buffer = await file.arrayBuffer();
-        const timestamp = Date.now();
-        const randomString = Math.random().toString(36).substring(2, 15);
-        const fileExt = file.name.split(".").pop();
-        const filePath = `presignup/${timestamp}-${randomString}.${fileExt}`;
-
         const allowedMimeTypes = [
             "application/pdf",
             "image/jpeg",
@@ -243,17 +279,14 @@ export const StorageService = {
             "image/png",
             "image/webp"
         ];
+        // BR certificates: 10 MB ceiling + MIME allowlist + extension cross-check.
+        validateUpload(file, allowedMimeTypes, 10 * 1024 * 1024);
 
-        // Validate file type
-        if (!allowedMimeTypes.includes(file.type)) {
-            throw new Error("Only PDF and image files are accepted for BR certificates.");
-        }
-
-        // Validate file size (10MB limit)
-        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-        if (file.size > MAX_FILE_SIZE) {
-            throw new Error("File size must be less than 10 MB.");
-        }
+        const buffer = await file.arrayBuffer();
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(2, 15);
+        const fileExt = file.name.split(".").pop();
+        const filePath = `presignup/${timestamp}-${randomString}.${fileExt}`;
 
         const url = await uploadFile(BR_CERTIFICATES_BUCKET, filePath, buffer, file.type, allowedMimeTypes);
         return { url, filePath };

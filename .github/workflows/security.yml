@@ -1,0 +1,60 @@
+name: Security Scan
+
+# Free static security scanning on every PR/push to main+dev and weekly.
+# All tools run on GitHub-hosted runners at no cost.
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-audit:
+    name: Dependency audit (npm + OSV)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Fail only on HIGH/critical in the production dependency tree.
+      - name: npm audit (production)
+        run: npm audit --omit=dev --audit-level=high
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v1
+        with:
+          scan-args: "--lockfile=package-lock.json"
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for secret scanning
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep scan
+        run: |
+          semgrep ci --config p/owasp-top-ten --config p/nextjs \
+                     --config p/typescript --config p/secrets
+        env:
+          SEMGREP_RULES: "p/owasp-top-ten p/nextjs p/typescript p/secrets"
