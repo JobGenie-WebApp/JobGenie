@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Plus, RefreshCw, Download, Upload } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +63,17 @@ interface SeniorityLevel {
     level_order: number;
 }
 
+const SECTIONS = ["industries", "designations", "seniority", "reminders", "sidebar-visibility"] as const;
+
 export function MasterDataClient() {
+    // The active section is chosen from the sidebar ("Master Data" group) and
+    // carried in the `?section=` query param; default is Industries.
+    const searchParams = useSearchParams();
+    const sectionParam = searchParams.get("section");
+    const section = SECTIONS.includes(sectionParam as (typeof SECTIONS)[number])
+        ? (sectionParam as string)
+        : "industries";
+
     const [industries, setIndustries] = useState<Industry[]>([]);
     const [designations, setDesignations] = useState<Designation[]>([]);
     const [seniorityLevels, setSeniorityLevels] = useState<SeniorityLevel[]>([]);
@@ -380,22 +391,8 @@ export function MasterDataClient() {
                 </Button>
             </div>
 
-            {/* Tabs */}
-            <Tabs defaultValue="industries" className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="industries">
-                        Industries ({industries.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="designations">
-                        Job Designations ({designations.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="seniority">
-                        Seniority Levels ({seniorityLevels.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="reminders">Interview Reminders</TabsTrigger>
-                    <TabsTrigger value="sidebar-visibility">Sidebar Visibility</TabsTrigger>
-                </TabsList>
-
+            {/* Section is driven by the sidebar ("Master Data" group) via ?section= */}
+            <Tabs value={section} className="space-y-4">
                 {/* Industries Tab */}
                 <TabsContent value="industries">
                     <div className="space-y-4">
