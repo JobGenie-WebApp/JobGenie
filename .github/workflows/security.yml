@@ -1,0 +1,69 @@
+name: Security Scan
+
+# Free static security scanning on every push to main+dev and weekly.
+# All tools run on GitHub-hosted runners at no cost.
+#
+# Triggered on push (not pull_request) to avoid duplicate runs: pushing to
+# dev/main already covers the PR flow, and gitleaks' pull_request mode hits
+# permission limits that push mode does not. Push-context checks still surface
+# on the PR for the head commit.
+
+on:
+  push:
+    branches: [main, dev]
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+
+jobs:
+  dependency-audit:
+    name: Dependency audit (npm + OSV)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Fail only on HIGH/critical in the production dependency tree.
+      - name: npm audit (production)
+        run: npm audit --omit=dev --audit-level=high
+      # Informational: scans the whole lockfile (incl. devDependencies) and
+      # uploads results to the Security tab. Does NOT fail the build — the npm
+      # audit step above is the hard gate for production HIGH+ vulns. Many OSV
+      # findings here are dev-only or need major-version upgrades (next, vercel).
+      - name: OSV-Scanner
+        continue-on-error: true
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        with:
+          scan-args: "--lockfile=package-lock.json"
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for secret scanning
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep scan
+        run: |
+          semgrep ci --config p/owasp-top-ten --config p/nextjs \
+                     --config p/typescript --config p/secrets
+        env:
+          SEMGREP_RULES: "p/owasp-top-ten p/nextjs p/typescript p/secrets"

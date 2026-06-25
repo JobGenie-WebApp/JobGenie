@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { logApiRequest } from '@/lib/logger';
+import {
+    authLimiter,
+    aiLimiter,
+    uploadLimiter,
+    apiLimiter,
+    checkRateLimit,
+    getClientIp,
+    tooManyRequests,
+    type RateLimitResult,
+} from '@/lib/rate-limit';
 
 // PostgREST returns 503 + PGRST002 during schema-cache reloads (triggered by
 // DDL changes like RLS policy updates). Retry the request with exponential
@@ -91,6 +101,22 @@ const authRoutes = [
     '/reset-password',
 ];
 
+// Choose the appropriate rate limiter for a request, or null if it shouldn't be
+// limited. Auth pages are only limited on POST (server-action submissions) so
+// normal page loads are never throttled.
+function selectLimiter(pathname: string, method: string) {
+    if (pathname.startsWith('/api/verify-br-certificate')) return aiLimiter;
+    if (
+        pathname.startsWith('/api/upload-presignup') ||
+        pathname.startsWith('/api/delete-presignup-file')
+    ) {
+        return uploadLimiter;
+    }
+    if (pathname.startsWith('/api/')) return apiLimiter;
+    if (method === 'POST' && authRoutes.includes(pathname)) return authLimiter;
+    return null;
+}
+
 // Get the default dashboard for a role
 function getDashboardForRole(role: string): string {
     switch (role) {
@@ -117,6 +143,18 @@ function getRouteRole(pathname: string): string | null {
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+
+    // --- Rate limiting (DDoS / brute-force / cost-abuse protection) ---
+    // Runs first, before any DB round-trip, keyed by client IP. Fails open if
+    // Upstash is not configured or unavailable (see src/lib/rate-limit.ts).
+    const limiter = selectLimiter(pathname, request.method);
+    if (limiter) {
+        const ip = getClientIp(request.headers);
+        const rl: RateLimitResult = await checkRateLimit(limiter, ip);
+        if (!rl.success) {
+            return tooManyRequests(rl);
+        }
+    }
 
     // Check if accessing a protected route or auth route
     const isProtectedRoute = allProtectedRoutes.some(route => pathname.startsWith(route));
@@ -369,5 +407,10 @@ export const config = {
         '/employer/signup',
         '/mis/login',
         '/mis/register',
+        '/forgot-password',
+        '/reset-password',
+        // API routes — rate limiting + request logging (excludes Next internals
+        // and static assets which Next never routes through here anyway).
+        '/api/:path*',
     ],
 };

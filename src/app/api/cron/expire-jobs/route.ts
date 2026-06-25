@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processJobExpiry } from "@/lib/process-job-expiry";
 import { logError } from "@/lib/logger";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Scheduled job: expire job advertisements whose validity period has ended.
- * Runs daily. Secure with Authorization: Bearer <CRON_SECRET> or ?secret=
+ * Runs daily. Secured with Authorization: Bearer <CRON_SECRET> (header only).
  */
 export async function GET(request: NextRequest) {
     try {
-        const secret =
-            request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
-            request.nextUrl.searchParams.get("secret");
-        const expected = process.env.CRON_SECRET;
-
-        if (!expected || secret !== expected) {
+        if (!verifyCronSecret(request)) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 

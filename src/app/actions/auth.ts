@@ -19,6 +19,11 @@ import { insertCandidateRegistrationDirect } from "@/lib/db/candidate-registrati
 import { verifyEmailCodeDirect } from "@/lib/db/verify-email-direct";
 import { generateMembershipNumber } from "@/lib/utils/membership";
 import { logAuth, logError, getRequestInfo } from "@/lib/logger";
+import {
+    checkLoginLockout,
+    recordLoginFailure,
+    clearLoginFailures,
+} from "@/lib/rate-limit";
 
 export type ActionState = {
     success: boolean;
@@ -502,6 +507,15 @@ export async function loginCandidate(
 
         const { ipAddress } = await getRequestInfo();
 
+        // Brute-force lockout: reject early if this account has too many recent failures.
+        const lockout = await checkLoginLockout(email);
+        if (lockout.locked) {
+            return {
+                success: false,
+                message: `Too many failed attempts. Try again in ${Math.ceil(lockout.retryAfter / 60)} minute(s).`,
+            };
+        }
+
         // First check if user exists and is a candidate with verified email
         const { data: userData, error: userError } = await adminClient
             .from("users")
@@ -549,6 +563,7 @@ export async function loginCandidate(
 
         if (authError) {
             console.error("Supabase auth error:", authError);
+            await recordLoginFailure(email);
             await logAuth("candidate_login_failed", undefined, "candidate", { email, reason: "invalid_credentials" }, ipAddress || undefined);
             return {
                 success: false,
@@ -563,12 +578,8 @@ export async function loginCandidate(
             };
         }
 
-        // Debug: Log session details (remove in production)
-        /*console.log("=== LOGIN DEBUG ===");
-        console.log("Session exists:", !!authData.session);
-        console.log("Access token (first 50 chars):", authData.session.access_token?.substring(0, 50));
-        console.log("User ID:", authData.user?.id);
-        console.log("===================");*/
+        // Successful login — clear any failed-attempt counter.
+        await clearLoginFailures(email);
 
         // Check if profile is completed
         const { data: candidateData } = await supabase
@@ -791,6 +802,15 @@ export async function loginMISUser(
 
         const { ipAddress } = await getRequestInfo();
 
+        // Brute-force lockout: reject early if this account has too many recent failures.
+        const lockout = await checkLoginLockout(email);
+        if (lockout.locked) {
+            return {
+                success: false,
+                message: `Too many failed attempts. Try again in ${Math.ceil(lockout.retryAfter / 60)} minute(s).`,
+            };
+        }
+
         // First check if user exists and is a MIS user
         const { data: userData, error: userError } = await adminClient
             .from("users")
@@ -829,6 +849,7 @@ export async function loginMISUser(
 
         if (authError) {
             console.error("Supabase auth error:", authError);
+            await recordLoginFailure(email);
             return {
                 success: false,
                 message: "Invalid email or password.",
@@ -841,6 +862,9 @@ export async function loginMISUser(
                 message: "Failed to create session. Please try again.",
             };
         }
+
+        // Successful login — clear any failed-attempt counter.
+        await clearLoginFailures(email);
 
         // Success - redirect to MIS dashboard
         await logAuth("mis_login_success", authData.user.id, "mis", { email }, ipAddress || undefined);
@@ -1481,6 +1505,15 @@ export async function loginEmployer(
         const adminClient = createAdminClient();
         const supabase = await createClient();
 
+        // Brute-force lockout: reject early if this account has too many recent failures.
+        const lockout = await checkLoginLockout(email);
+        if (lockout.locked) {
+            return {
+                success: false,
+                message: `Too many failed attempts. Try again in ${Math.ceil(lockout.retryAfter / 60)} minute(s).`,
+            };
+        }
+
         // First check if user exists and is an employer with verified email
         const { data: userData, error: userError } = await adminClient
             .from("users")
@@ -1528,6 +1561,7 @@ export async function loginEmployer(
 
         if (authError) {
             console.error("Supabase auth error:", authError);
+            await recordLoginFailure(email);
             return {
                 success: false,
                 message: "Invalid email or password.",
@@ -1540,6 +1574,9 @@ export async function loginEmployer(
                 message: "Failed to create session. Please try again.",
             };
         }
+
+        // Successful login — clear any failed-attempt counter.
+        await clearLoginFailures(email);
 
         // Check profile completion status - fetch only needed fields
         const { data: employerData, error: employerError } = await adminClient
