@@ -148,7 +148,7 @@ export function PaymentsClient() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 border-b overflow-x-auto">
+            <div className="flex gap-1 border-b">
                 {tabs.map(({ key, label, icon: Icon }) => (
                     <button
                         key={key}

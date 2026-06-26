@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { logBusiness, logError } from "@/lib/logger";
-import { createPaymentRequest } from "@/lib/payments";
+import { createPaymentRequest, getHiringFeePercentage } from "@/lib/payments";
+import { computeHiringFee, type SalaryPeriod } from "@/lib/hiring-fee";
 
 // GET /api/candidate/invitations/[id]/offer
 // Fetch job offer for a specific invitation (candidate view)
@@ -164,7 +165,7 @@ export async function POST(
 
         const { data: offer, error: offerFetchError } = await supabase
             .from("job_offers")
-            .select("id, status, expiry_date")
+            .select("id, status, expiry_date, salary_amount, salary_period, job_title")
             .eq("invitation_id", invitationId)
             .maybeSingle();
 
@@ -257,6 +258,16 @@ export async function POST(
                         .maybeSingle();
 
                     if (sysMis) {
+                        // Hiring fee = configured percentage of the offered monthly
+                        // salary. When the offer has no usable salary amount, fall
+                        // back to the configured hiring_fee pricing (amount omitted).
+                        const hiringFeePct = await getHiringFeePercentage();
+                        const hiringFee = computeHiringFee(
+                            offer.salary_amount as number | null,
+                            offer.salary_period as SalaryPeriod | null,
+                            hiringFeePct
+                        );
+
                         await createPaymentRequest({
                             company_id: invDetails.company_id,
                             employer_id: invDetails.employer_id,
@@ -264,6 +275,12 @@ export async function POST(
                             payment_type_code: "hiring_fee",
                             reference_invitation_id: invitationId,
                             created_by_mis_user_id: sysMis.user_id,
+                            ...(hiringFee != null
+                                ? {
+                                      amount: hiringFee,
+                                      description: `Hiring fee (${hiringFeePct}% of monthly salary): ${offer.job_title}`,
+                                  }
+                                : {}),
                         });
                     }
                 }

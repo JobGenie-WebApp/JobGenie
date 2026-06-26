@@ -475,19 +475,16 @@ export function JobsClient() {
     );
 
     return (
-        <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
+        <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
 
             {/* ── LEFT: Job list ── */}
             <div style={{ width: 280, minWidth: 240, flexShrink: 0, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
                 {/* Top bar */}
                 <div className="px-3 py-3 border-b border-border space-y-2 shrink-0">
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold">Job Postings</p>
-                        <Button size="sm" onClick={() => router.push("/employer/jobs/new")} className="h-7 px-2 text-xs">
-                            <Plus className="h-3.5 w-3.5 mr-1" /> New
-                        </Button>
-                    </div>
+                    <Button size="sm" onClick={() => router.push("/employer/jobs/new")} className="w-full h-8 text-xs">
+                        <Plus className="h-3.5 w-3.5 mr-1" /> New Job
+                    </Button>
                     <div className="relative">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                         <Input

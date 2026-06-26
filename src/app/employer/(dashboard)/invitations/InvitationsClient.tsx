@@ -1242,17 +1242,14 @@ export default function InvitationsClient() {
 
     if (viewMode === "kanban") {
         return (
-            <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-base font-bold leading-tight">Invitations</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            {invitations.length} total
-                            {statusCounts.pending > 0 && (
-                                <> · <span className="text-amber-600 dark:text-amber-400 font-medium">{statusCounts.pending} need action</span></>
-                            )}
-                        </p>
-                    </div>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 pb-4">
+                <div className="flex items-center justify-between shrink-0">
+                    <p className="text-xs text-muted-foreground">
+                        {invitations.length} total
+                        {statusCounts.pending > 0 && (
+                            <> · <span className="text-amber-600 dark:text-amber-400 font-medium">{statusCounts.pending} need action</span></>
+                        )}
+                    </p>
                     <button
                         onClick={() => setViewMode("list")}
                         className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -1272,8 +1269,8 @@ export default function InvitationsClient() {
     return (
         <div className={cn(
             "flex overflow-hidden rounded-2xl border border-border bg-card shadow-sm",
-            "flex-col",
-            "md:flex-row md:h-[calc(100vh-68px-2.5rem*2)] md:min-h-[560px]",
+            "min-h-0 flex-1 flex-col",
+            "md:flex-row",
         )}>
             {/* ── Left panel ── */}
             <div className={cn(
