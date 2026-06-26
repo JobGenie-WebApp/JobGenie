@@ -19,7 +19,7 @@ export async function POST(_request: NextRequest, { params }: Params) {
         const { id } = await params;
         const { data: job } = await admin
             .from("jobs")
-            .select("id, status, company_id, expires_at")
+            .select("id, status, company_id, expires_at, mis_pause_locked")
             .eq("id", id)
             .eq("company_id", employer.company_id)
             .eq("is_deleted", false)
@@ -27,6 +27,15 @@ export async function POST(_request: NextRequest, { params }: Params) {
 
         if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
         if (job.status !== "paused") return NextResponse.json({ error: "Only paused jobs can be resumed" }, { status: 400 });
+
+        // Jobs paused by MIS for a fake/invalid payment document can only be
+        // republished by MIS. The employer must submit a corrected document and
+        // request republication.
+        if (job.mis_pause_locked) {
+            return NextResponse.json({
+                error: "This job was paused by JobGenie. Submit a corrected document and request republication.",
+            }, { status: 403 });
+        }
 
         // Prevent resuming if already past expiry
         if (job.expires_at && new Date(job.expires_at) < new Date()) {

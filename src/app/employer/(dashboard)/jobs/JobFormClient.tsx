@@ -461,7 +461,7 @@ export function JobFormClient({ mode, jobId }: Props) {
     }
 
     if (loading) return (
-        <div className="flex h-full items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin" />
         </div>
     );
@@ -472,14 +472,13 @@ export function JobFormClient({ mode, jobId }: Props) {
     // Each column has its own overflow-y-auto — completely independent scrolling.
     // The MDX editor lives in the left column and grows naturally with content.
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
 
             {/* ── Top bar — fixed height ── */}
             <div style={{ flexShrink: 0 }} className="flex items-center gap-3 px-5 md:px-6 h-14 border-b bg-background">
                 <Button type="button" variant="ghost" size="sm" onClick={() => router.back()}>
                     <ArrowLeft className="h-4 w-4 mr-1" /> Back
                 </Button>
-                <h1 className="text-xl font-bold">{mode === "create" ? "Post New Job" : "Edit Job"}</h1>
                 {hasDraft && (
                     <span className="ml-2 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />

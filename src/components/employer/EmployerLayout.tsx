@@ -13,6 +13,8 @@ interface EmployerLayoutProps {
     breadcrumbOverride?: string;
     /** When true, the layout scroll container is suppressed so the page can manage its own scrolling columns */
     fullHeight?: boolean;
+    /** fullHeight only: set false for full-width bare content (no bordered card), e.g. the kanban board. */
+    fullHeightBordered?: boolean;
 }
 
 async function getCurrentEmployer() {
@@ -55,7 +57,7 @@ async function getCurrentEmployer() {
     };
 }
 
-export async function EmployerLayout({ children, pageTitle, pageDescription, headerActions, breadcrumbOverride, fullHeight }: EmployerLayoutProps) {
+export async function EmployerLayout({ children, pageTitle, pageDescription, headerActions, breadcrumbOverride, fullHeight, fullHeightBordered }: EmployerLayoutProps) {
     const user = await getCurrentEmployer();
 
     if (!user) {
@@ -70,6 +72,7 @@ export async function EmployerLayout({ children, pageTitle, pageDescription, hea
             headerActions={headerActions}
             breadcrumbOverride={breadcrumbOverride}
             fullHeight={fullHeight}
+            fullHeightBordered={fullHeightBordered}
             notificationRole="employer"
         >
             {children}

@@ -21,6 +21,8 @@ export default async function InvitationsPage() {
         <EmployerLayout
             pageTitle="Invitations"
             pageDescription="View and manage interview invitations sent to candidates"
+            fullHeight
+            fullHeightBordered={false}
         >
             <InvitationsClient />
         </EmployerLayout>

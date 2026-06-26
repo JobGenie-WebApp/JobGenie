@@ -45,6 +45,13 @@ export async function GET(_request: NextRequest, { params }: Params) {
                 custom_start_date, custom_end_date, published_at,
                 salary_min, salary_max, salary_currency, experience_level,
                 positions_available, advertisement_link, is_deleted, created_at, updated_at,
+                mis_pause_locked,
+                compliance_flags:job_compliance_flags(
+                    id, status, reason, flagged_at,
+                    flagged_proof_id, payment_request_id,
+                    employer_doc_url, employer_doc_name, employer_note, resubmitted_at,
+                    resolution_notes, resolved_at
+                ),
                 job_applications(
                     id, status, applied_at,
                     candidate:candidates!job_applications_candidate_id_fkey(

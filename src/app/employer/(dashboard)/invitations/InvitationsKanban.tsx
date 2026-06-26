@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Mail, Phone, Briefcase, Calendar, Clock, Video, MapPinned, ExternalLink, Copy, CheckCircle2, X, Pencil, Plus, Trash2, Loader2 } from "lucide-react";
+import { Mail, Phone, Briefcase, Calendar, Clock, Video, MapPinned, ExternalLink, Copy, CheckCircle2, X, Pencil, Plus, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTimestamp, formatUTCDate, formatUTCTime } from "@/lib/date-utils";
 import { formatIndustry, formatPhoneNumber } from "@/lib/utils";
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { InterviewRoundsDisplay } from "@/components/employer/InterviewRoundsDisplay";
 
 const INTERVIEW_TIME_SLOTS = [
@@ -766,6 +766,9 @@ interface InvitationsKanbanProps {
 
 export function InvitationsKanban({ invitations, fetchInvitations }: InvitationsKanbanProps) {
     const [modalInv, setModalInv] = useState<Invitation | null>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
 
     const columns = buildColumns(invitations);
 
@@ -777,32 +780,80 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
         else grouped.get("invited")!.push(inv);
     }
 
-    if (invitations.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 ring-1 ring-border">
-                    <Users className="h-7 w-7 text-muted-foreground/50" />
-                </div>
-                <p className="text-sm font-semibold">No invitations yet</p>
-                <p className="text-xs text-muted-foreground">Send interview invitations to candidates to see them here.</p>
-            </div>
-        );
-    }
+    // Track horizontal overflow so the scroll buttons only show when usable.
+    const updateScrollState = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        setCanLeft(el.scrollLeft > 4);
+        setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    }, []);
 
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        updateScrollState();
+        const raf = requestAnimationFrame(updateScrollState);
+        // Layout can settle a frame or two late (fonts, flex reflow) — re-measure.
+        const t1 = setTimeout(updateScrollState, 150);
+        const t2 = setTimeout(updateScrollState, 400);
+        el.addEventListener("scroll", updateScrollState, { passive: true });
+        const ro = new ResizeObserver(updateScrollState);
+        ro.observe(el);
+        for (const child of Array.from(el.children)) ro.observe(child);
+        window.addEventListener("resize", updateScrollState);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(t1);
+            clearTimeout(t2);
+            el.removeEventListener("scroll", updateScrollState);
+            ro.disconnect();
+            window.removeEventListener("resize", updateScrollState);
+        };
+    }, [updateScrollState, columns.length]);
+
+    const scrollBy = (dir: number) => {
+        scrollRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
+    };
+
+    // When there are no invitations we still render the board itself — empty
+    // columns (each showing "No candidates") rather than a generic empty state.
     return (
         <>
-            <div
-                className="flex gap-3 overflow-x-auto pt-1 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-muted/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:cursor-pointer"
-                style={{ height: "calc(100vh - 68px - 2.5rem * 2 - 56px)", paddingBottom: "12px", cursor: "default" }}
-            >
-                {columns.map((col) => (
-                    <KanbanCol
-                        key={col.id}
-                        col={col}
-                        cards={grouped.get(col.id) ?? []}
-                        onCardClick={setModalInv}
-                    />
-                ))}
+            <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
+                {canLeft && (
+                    <button
+                        type="button"
+                        aria-label="Scroll left"
+                        onClick={() => scrollBy(-1)}
+                        className="absolute left-1 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-muted-foreground shadow-md backdrop-blur transition-colors hover:bg-background hover:text-foreground"
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
+                )}
+                {canRight && (
+                    <button
+                        type="button"
+                        aria-label="Scroll right"
+                        onClick={() => scrollBy(1)}
+                        className="absolute right-1 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-muted-foreground shadow-md backdrop-blur transition-colors hover:bg-background hover:text-foreground"
+                    >
+                        <ChevronRight className="h-5 w-5" />
+                    </button>
+                )}
+                <div
+                    ref={scrollRef}
+                    className="flex min-h-0 min-w-0 flex-1 gap-3 overflow-x-auto pt-1 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-muted/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:cursor-pointer"
+                    style={{ paddingBottom: "12px", cursor: "default" }}
+                >
+                    {columns.map((col) => (
+                        <KanbanCol
+                            key={col.id}
+                            col={col}
+                            cards={grouped.get(col.id) ?? []}
+                            onCardClick={setModalInv}
+                        />
+                    ))}
+                </div>
             </div>
 
             <InvitationModal

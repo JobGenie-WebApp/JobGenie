@@ -682,7 +682,7 @@ export function MisJobsClient() {
     }
 
     return (
-        <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
+        <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
 
             {/* ── LEFT: Job list ── */}
             <div style={{ width: 280, minWidth: 240, flexShrink: 0, borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", overflow: "hidden" }}>

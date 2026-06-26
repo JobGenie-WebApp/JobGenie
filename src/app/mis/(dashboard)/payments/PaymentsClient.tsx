@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
     CreditCard, Building2, User, Calendar, DollarSign, Eye, CheckCircle2,
     XCircle, Clock, RefreshCw, Plus, Pencil, Trash2, AlertTriangle, FileText,
-    ExternalLink, Settings2, Receipt,
+    ExternalLink, Settings2, Receipt, ShieldAlert, Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,16 +38,27 @@ interface PaymentPricing {
 }
 interface PaymentRequest {
     id: string; company_id: string; employer_id: string | null;
+    reference_job_id: string | null;
     amount: number; currency: string; description: string; due_date: string | null;
-    status: string; bank_transfer_reference: string | null;
+    status: string; payment_method: string | null; bank_transfer_reference: string | null;
     created_at: string; updated_at: string;
     companies: { id: string; company_name: string; industry: string } | null;
     employers: { id: string; first_name: string; last_name: string; email: string; designation: string | null } | null;
     payment_types: { id: string; code: string; label: string } | null;
+    reference_job: { id: string; job_title: string; status: string; mis_pause_locked: boolean } | null;
     payment_proofs: {
         id: string; status: string; uploaded_at: string; file_url: string; file_name: string;
         reviewed_at: string | null; review_notes: string | null;
     }[];
+}
+
+interface ComplianceFlag {
+    id: string; job_id: string; status: string; reason: string; flagged_at: string;
+    payment_request_id: string | null; flagged_proof_id: string | null;
+    employer_doc_url: string | null; employer_doc_name: string | null;
+    employer_note: string | null; resubmitted_at: string | null;
+    resolution_notes: string | null; resolved_at: string | null;
+    job: { id: string; job_title: string; status: string; company_id: string; company: { id: string; company_name: string } | null } | null;
 }
 interface Stats {
     total_revenue: number; currency: string;
@@ -95,13 +106,13 @@ function fmtDate(iso: string) {
 // ── Main Component ────────────────────────────────────────────────────────
 
 export function PaymentsClient() {
-    const [activeTab, setActiveTab] = useState<"payments" | "configuration">("payments");
+    const [activeTab, setActiveTab] = useState<"payments" | "compliance" | "configuration">("payments");
 
     return (
         <div className="space-y-6">
             {/* Tab bar */}
             <div className="flex gap-1 border-b">
-                {(["payments", "configuration"] as const).map((t) => (
+                {(["payments", "compliance", "configuration"] as const).map((t) => (
                     <button
                         key={t}
                         onClick={() => setActiveTab(t)}
@@ -113,6 +124,8 @@ export function PaymentsClient() {
                     >
                         {t === "payments" ? (
                             <span className="flex items-center gap-2"><Receipt className="h-4 w-4" />Payments</span>
+                        ) : t === "compliance" ? (
+                            <span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4" />Compliance</span>
                         ) : (
                             <span className="flex items-center gap-2"><Settings2 className="h-4 w-4" />Configuration</span>
                         )}
@@ -120,7 +133,7 @@ export function PaymentsClient() {
                 ))}
             </div>
 
-            {activeTab === "payments" ? <PaymentsTab /> : <ConfigurationTab />}
+            {activeTab === "payments" ? <PaymentsTab /> : activeTab === "compliance" ? <ComplianceTab /> : <ConfigurationTab />}
         </div>
     );
 }
@@ -140,6 +153,9 @@ function PaymentsTab() {
     const [typeFilter, setTypeFilter] = useState("all");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
+    const [jobSearch, setJobSearch] = useState("");
+    const [amountMin, setAmountMin] = useState("");
+    const [amountMax, setAmountMax] = useState("");
     const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState<PaymentRequest | null>(null);
@@ -169,6 +185,9 @@ function PaymentsTab() {
             if (typeFilter && typeFilter !== "all") url.searchParams.set("type", typeFilter);
             if (dateFrom) url.searchParams.set("dateFrom", dateFrom);
             if (dateTo) url.searchParams.set("dateTo", dateTo);
+            if (jobSearch) url.searchParams.set("jobSearch", jobSearch);
+            if (amountMin) url.searchParams.set("amountMin", amountMin);
+            if (amountMax) url.searchParams.set("amountMax", amountMax);
             const res = await fetch(url.toString());
             const json = await res.json();
             if (json.success) {
@@ -178,7 +197,7 @@ function PaymentsTab() {
         } finally {
             setLoading(false);
         }
-    }, [page, limit, search, statusFilter, typeFilter, dateFrom, dateTo]);
+    }, [page, limit, search, statusFilter, typeFilter, dateFrom, dateTo, jobSearch, amountMin, amountMax]);
 
     const loadPaymentTypes = useCallback(async () => {
         const res = await fetch("/api/mis/payment-types");
@@ -269,6 +288,24 @@ function PaymentsTab() {
                     </Select>
                     <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="w-36" />
                     <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="w-36" />
+                    <Input
+                        placeholder="Search job title…"
+                        value={jobSearch}
+                        onChange={(e) => { setJobSearch(e.target.value); setPage(1); }}
+                        className="w-44"
+                    />
+                    <Input
+                        type="number" min="0" placeholder="Min amount"
+                        value={amountMin}
+                        onChange={(e) => { setAmountMin(e.target.value); setPage(1); }}
+                        className="w-28"
+                    />
+                    <Input
+                        type="number" min="0" placeholder="Max amount"
+                        value={amountMax}
+                        onChange={(e) => { setAmountMax(e.target.value); setPage(1); }}
+                        className="w-28"
+                    />
                     <Button variant="ghost" size="sm" onClick={() => { loadPayments(); loadStats(); }}>
                         <RefreshCw className="h-4 w-4" />
                     </Button>
@@ -386,6 +423,7 @@ function PaymentsTab() {
                     open={showDetailDialog}
                     payment={selectedPayment}
                     onClose={() => setShowDetailDialog(false)}
+                    onChanged={() => { loadPayments(); loadStats(); }}
                 />
             )}
             {reviewPayment && (
@@ -568,9 +606,40 @@ function CreatePaymentRequestDialog({
 
 // ── Payment Detail Dialog ─────────────────────────────────────────────────
 
-function PaymentDetailDialog({ open, payment, onClose }: {
-    open: boolean; payment: PaymentRequest; onClose: () => void;
+function PaymentDetailDialog({ open, payment, onClose, onChanged }: {
+    open: boolean; payment: PaymentRequest; onClose: () => void; onChanged?: () => void;
 }) {
+    const [showFlag, setShowFlag] = useState(false);
+    const [flagReason, setFlagReason] = useState("");
+    const [flagging, setFlagging] = useState(false);
+    const [flagError, setFlagError] = useState("");
+
+    const job = payment.reference_job;
+    const canFlag = !!job && ["published", "paused"].includes(job.status) && !job.mis_pause_locked;
+    const latestProofId = payment.payment_proofs?.slice().sort((a, b) =>
+        new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
+    )[0]?.id;
+
+    const submitFlag = async () => {
+        if (!job) return;
+        if (!flagReason.trim()) { setFlagError("Please provide a reason."); return; }
+        setFlagError("");
+        setFlagging(true);
+        try {
+            const res = await fetch(`/api/mis/jobs/${job.id}/compliance-pause`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reason: flagReason.trim(), payment_request_id: payment.id, proof_id: latestProofId }),
+            });
+            const data = await res.json();
+            if (!res.ok) { setFlagError(data.error || "Failed to flag"); return; }
+            onChanged?.();
+            onClose();
+        } finally {
+            setFlagging(false);
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -585,6 +654,12 @@ function PaymentDetailDialog({ open, payment, onClose }: {
                         <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={payment.status} /></div>
                         <div><span className="text-muted-foreground">Amount:</span> <span className="font-bold">{fmtAmount(Number(payment.amount), payment.currency)}</span></div>
                         <div><span className="text-muted-foreground">Due Date:</span> {payment.due_date ? fmtDate(payment.due_date) : "—"}</div>
+                        {payment.payment_method && (
+                            <div><span className="text-muted-foreground">Method:</span> {payment.payment_method === "online_payment" ? "Online payment" : "Bank transfer"}</div>
+                        )}
+                        {job && (
+                            <div><span className="text-muted-foreground">Job:</span> <span className="font-medium">{job.job_title}</span></div>
+                        )}
                         <div className="col-span-2"><span className="text-muted-foreground">Description:</span> {payment.description}</div>
                         {payment.bank_transfer_reference && (
                             <div className="col-span-2"><span className="text-muted-foreground">Bank Ref:</span> {payment.bank_transfer_reference}</div>
@@ -623,6 +698,46 @@ function PaymentDetailDialog({ open, payment, onClose }: {
                             </div>
                         )}
                     </div>
+
+                    {/* Flag fake document → pause job (MIS only) */}
+                    {job && (
+                        <>
+                            <Separator />
+                            <div className="rounded-lg border border-red-200 bg-red-50/40 p-3">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-red-800">
+                                    <ShieldAlert className="h-4 w-4" /> Document compliance
+                                </div>
+                                {job.mis_pause_locked ? (
+                                    <p className="text-xs text-red-700 mt-1">This job is already paused for a compliance review. Manage it in the Compliance tab.</p>
+                                ) : !canFlag ? (
+                                    <p className="text-xs text-muted-foreground mt-1">Flagging is available only while the job is live (published or paused).</p>
+                                ) : !showFlag ? (
+                                    <div className="mt-2">
+                                        <Button variant="destructive" size="sm" onClick={() => setShowFlag(true)}>
+                                            Flag fake document &amp; pause job
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="mt-2 space-y-2">
+                                        {flagError && <p className="text-xs text-destructive">{flagError}</p>}
+                                        <Textarea
+                                            placeholder="Reason shown to the employer (e.g. the bank slip could not be verified)"
+                                            value={flagReason}
+                                            onChange={(e) => setFlagReason(e.target.value)}
+                                            rows={2}
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                            <Button variant="outline" size="sm" onClick={() => setShowFlag(false)} disabled={flagging}>Cancel</Button>
+                                            <Button variant="destructive" size="sm" onClick={submitFlag} disabled={flagging || !flagReason.trim()}>
+                                                {flagging ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                                                Pause job
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>Close</Button>
@@ -719,14 +834,346 @@ function ReviewProofDialog({ open, payment, onClose, onReviewed }: {
     );
 }
 
+// ── Compliance Tab ────────────────────────────────────────────────────────
+
+const FLAG_STATUS_LABELS: Record<string, string> = {
+    paused: "Paused — awaiting document",
+    resubmitted: "Resubmitted — review needed",
+    resolved: "Resolved (republished)",
+    dismissed: "Dismissed (kept paused)",
+};
+
+function ComplianceTab() {
+    const [flags, setFlags] = useState<ComplianceFlag[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState("open");
+    const [jobSearch, setJobSearch] = useState("");
+    const [busyId, setBusyId] = useState<string | null>(null);
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const url = new URL("/api/mis/jobs/compliance", window.location.origin);
+            if (statusFilter && !["open", "all"].includes(statusFilter)) url.searchParams.set("status", statusFilter);
+            if (jobSearch) url.searchParams.set("jobSearch", jobSearch);
+            const res = await fetch(url.toString());
+            const json = await res.json();
+            if (json.success) {
+                let data: ComplianceFlag[] = json.data;
+                if (statusFilter === "open") data = data.filter((f) => ["paused", "resubmitted"].includes(f.status));
+                setFlags(data);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [statusFilter, jobSearch]);
+
+    useEffect(() => { load(); }, [load]);
+
+    const resolve = async (flag: ComplianceFlag, action: "republish" | "dismiss") => {
+        if (!flag.job) return;
+        if (action === "republish" && !confirm(`Republish "${flag.job.job_title}"?`)) return;
+        setBusyId(flag.id);
+        try {
+            const res = await fetch(`/api/mis/jobs/${flag.job.id}/compliance-resolve`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action }),
+            });
+            const data = await res.json();
+            if (!res.ok) { alert(data.error || "Failed"); return; }
+            await load();
+        } finally {
+            setBusyId(null);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-semibold mr-auto">Document Compliance</h2>
+                <Input placeholder="Search job title…" value={jobSearch} onChange={(e) => setJobSearch(e.target.value)} className="w-48" />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="open">Open (action needed)</SelectItem>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="paused">Paused</SelectItem>
+                        <SelectItem value="resubmitted">Resubmitted</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                        <SelectItem value="dismissed">Dismissed</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button variant="ghost" size="sm" onClick={load}><RefreshCw className="h-4 w-4" /></Button>
+            </div>
+
+            {loading ? (
+                <div className="space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
+            ) : flags.length === 0 ? (
+                <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">No compliance flags.</CardContent></Card>
+            ) : (
+                <div className="space-y-3">
+                    {flags.map((flag) => {
+                        const open = ["paused", "resubmitted"].includes(flag.status);
+                        return (
+                            <Card key={flag.id} className={open ? "border-red-200" : ""}>
+                                <CardContent className="p-4 space-y-3">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="font-semibold">{flag.job?.job_title ?? "Job"}</span>
+                                                <Badge variant={open ? "destructive" : "secondary"}>{FLAG_STATUS_LABELS[flag.status] ?? flag.status}</Badge>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                {flag.job?.company?.company_name ?? "—"} · Flagged {fmtDate(flag.flagged_at)}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-sm"><span className="text-muted-foreground">Reason:</span> {flag.reason}</div>
+
+                                    {flag.status === "resubmitted" && (
+                                        <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-1">
+                                            <div className="font-medium">Employer resubmission</div>
+                                            {flag.employer_doc_url && (
+                                                <a href={flag.employer_doc_url} target="_blank" rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-blue-600 hover:underline text-xs">
+                                                    <FileText className="h-3.5 w-3.5" />{flag.employer_doc_name ?? "View document"}
+                                                    <ExternalLink className="h-3 w-3" />
+                                                </a>
+                                            )}
+                                            {flag.employer_note && <p className="text-xs text-muted-foreground">Note: {flag.employer_note}</p>}
+                                            {flag.resubmitted_at && <p className="text-xs text-muted-foreground">Submitted {fmtDate(flag.resubmitted_at)}</p>}
+                                        </div>
+                                    )}
+
+                                    {flag.status === "paused" && (
+                                        <p className="text-xs text-muted-foreground">Waiting for the employer to submit a corrected document.</p>
+                                    )}
+
+                                    {flag.resolution_notes && (
+                                        <p className="text-xs text-muted-foreground italic">Resolution: {flag.resolution_notes}</p>
+                                    )}
+
+                                    {open && (
+                                        <div className="flex justify-end gap-2">
+                                            <Button variant="outline" size="sm" disabled={busyId === flag.id} onClick={() => resolve(flag, "dismiss")}>
+                                                Dismiss
+                                            </Button>
+                                            <Button size="sm" disabled={busyId === flag.id} onClick={() => resolve(flag, "republish")}>
+                                                {busyId === flag.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+                                                Republish
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ── Configuration Tab ─────────────────────────────────────────────────────
 
 function ConfigurationTab() {
     return (
         <div className="space-y-8">
+            <JobAdPricingManager />
+            <Separator />
+            <HiringFeeSettingsManager />
+            <Separator />
             <BankDetailsManager />
             <Separator />
             <PaymentTypesManager />
+        </div>
+    );
+}
+
+// ── Hiring Fee Settings ───────────────────────────────────────────────────
+// MIS sets the percentage of the offered monthly salary charged as the hiring fee.
+
+function HiringFeeSettingsManager() {
+    const [percentage, setPercentage] = useState("");
+    const [saved, setSaved] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/mis/payment-settings");
+            const json = await res.json();
+            if (json.success) {
+                const val = String(json.data.hiring_fee_percentage ?? "");
+                setPercentage(val);
+                setSaved(val);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+    useEffect(() => { load(); }, [load]);
+
+    const save = async () => {
+        const pct = Number(percentage);
+        if (!Number.isFinite(pct) || pct < 0 || pct > 100) { setError("Enter a percentage between 0 and 100."); return; }
+        setError("");
+        setSaving(true);
+        try {
+            const res = await fetch("/api/mis/payment-settings", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ hiring_fee_percentage: pct }),
+            });
+            const json = await res.json();
+            if (!res.ok) { setError(json.error ?? "Failed to save"); return; }
+            setSaved(String(json.data.hiring_fee_percentage));
+            setPercentage(String(json.data.hiring_fee_percentage));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div>
+                <h3 className="text-base font-semibold">Hiring Fee</h3>
+                <p className="text-sm text-muted-foreground">Percentage of the offered monthly salary charged to the employer when a candidate is hired.</p>
+            </div>
+            {error && <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded px-3 py-2">{error}</div>}
+            {loading ? (
+                <Skeleton className="h-20 w-full" />
+            ) : (
+                <div className="rounded-lg border p-4 space-y-3 max-w-md">
+                    <div className="text-sm">
+                        <span className="text-muted-foreground">Current: </span>
+                        <span className="font-semibold">{saved !== null ? `${saved}%` : "—"}</span>
+                    </div>
+                    <div className="flex items-end gap-2">
+                        <div className="space-y-1 flex-1">
+                            <Label className="text-xs">Percentage (%)</Label>
+                            <Input type="number" min="0" max="100" step="0.01" value={percentage} onChange={(e) => setPercentage(e.target.value)} />
+                        </div>
+                        <Button size="sm" onClick={save} disabled={saving || percentage === saved}>
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+                        </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">e.g. 50 → fee is half of the offered monthly salary. Used at the moment a candidate accepts an offer.</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Job Advertisement Pricing ─────────────────────────────────────────────
+// Dedicated, prominent control for the two prices employers pay: publishing a
+// new job ad and extending one. These are the amounts shown on the employer's
+// payment screen before publish/extend.
+
+const JOB_AD_PRICE_ROWS: { code: string; label: string; hint: string }[] = [
+    { code: "JOB_AD_PUBLISH", label: "New Job Advertisement", hint: "Charged before a job ad is published" },
+    { code: "JOB_AD_EXTEND", label: "Extend Job Advertisement", hint: "Charged when an expired ad is extended" },
+];
+
+function JobAdPricingManager() {
+    const [types, setTypes] = useState<PaymentType[]>([]);
+    const [pricing, setPricing] = useState<PaymentPricing[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [drafts, setDrafts] = useState<Record<string, { amount: string; currency: string }>>({});
+    const [savingCode, setSavingCode] = useState<string | null>(null);
+    const [error, setError] = useState("");
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [t, p] = await Promise.all([fetch("/api/mis/payment-types"), fetch("/api/mis/payment-pricing")]);
+            const [tj, pj] = await Promise.all([t.json(), p.json()]);
+            if (tj.success) setTypes(tj.data);
+            if (pj.success) setPricing(pj.data);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+    useEffect(() => { load(); }, [load]);
+
+    const typeFor = (code: string) => types.find((t) => t.code === code);
+    const priceFor = (typeId?: string) => pricing.find((p) => p.payment_types?.id === typeId && p.is_active);
+
+    const save = async (code: string) => {
+        const type = typeFor(code);
+        if (!type) { setError(`Payment type "${code}" is missing. Please contact an administrator.`); return; }
+        const current = priceFor(type.id);
+        const draft = drafts[code] ?? { amount: current ? String(current.amount) : "", currency: current?.currency ?? "LKR" };
+        if (draft.amount === "" || Number(draft.amount) < 0) { setError("Enter a valid amount."); return; }
+        setError("");
+        setSavingCode(code);
+        try {
+            const res = await fetch("/api/mis/payment-pricing", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ payment_type_id: type.id, amount: Number(draft.amount), currency: draft.currency || "LKR" }),
+            });
+            const json = await res.json();
+            if (!res.ok) { setError(json.error ?? "Failed to set price"); return; }
+            setDrafts((d) => { const n = { ...d }; delete n[code]; return n; });
+            await load();
+        } finally {
+            setSavingCode(null);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div>
+                <h3 className="text-base font-semibold">Job Advertisement Pricing</h3>
+                <p className="text-sm text-muted-foreground">Set the amount employers pay to publish and extend job ads. This price is shown on the payment screen before publishing.</p>
+            </div>
+            {error && <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded px-3 py-2">{error}</div>}
+            {loading ? (
+                <Skeleton className="h-28 w-full" />
+            ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {JOB_AD_PRICE_ROWS.map((row) => {
+                        const type = typeFor(row.code);
+                        const current = priceFor(type?.id);
+                        const draft = drafts[row.code];
+                        const amountVal = draft?.amount ?? (current ? String(current.amount) : "");
+                        const currencyVal = draft?.currency ?? current?.currency ?? "LKR";
+                        const setDraft = (patch: Partial<{ amount: string; currency: string }>) =>
+                            setDrafts((d) => ({ ...d, [row.code]: { amount: amountVal, currency: currencyVal, ...patch } }));
+                        return (
+                            <div key={row.code} className="rounded-lg border p-4 space-y-3">
+                                <div>
+                                    <div className="font-medium">{row.label}</div>
+                                    <div className="text-xs text-muted-foreground">{row.hint}</div>
+                                </div>
+                                <div className="text-sm">
+                                    <span className="text-muted-foreground">Current: </span>
+                                    {current ? <span className="font-semibold">{fmtAmount(Number(current.amount), current.currency)}</span> : <span className="text-amber-600">Not set</span>}
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Currency</Label>
+                                        <Input className="w-20" value={currencyVal} onChange={(e) => setDraft({ currency: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-1 flex-1">
+                                        <Label className="text-xs">Amount</Label>
+                                        <Input type="number" min="0" placeholder="0.00" value={amountVal} onChange={(e) => setDraft({ amount: e.target.value })} />
+                                    </div>
+                                    <Button size="sm" onClick={() => save(row.code)} disabled={savingCode === row.code || !type}>
+                                        {savingCode === row.code ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+                                    </Button>
+                                </div>
+                                {!type && <p className="text-xs text-amber-600">Payment type not found.</p>}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

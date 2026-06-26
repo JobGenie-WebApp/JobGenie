@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
+import { ensureCorePaymentTypes } from "@/lib/payments";
 
 // GET /api/mis/payment-types — list all payment types
 export async function GET() {
@@ -13,6 +14,9 @@ export async function GET() {
         const admin = createAdminClient();
         const { data: userData } = await admin.from("users").select("role").eq("id", user.id).single();
         if (userData?.role !== "mis") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+        // Self-heal: ensure the core payment types exist before listing.
+        await ensureCorePaymentTypes();
 
         const { data, error } = await admin
             .from("payment_types")

@@ -1,4 +1,4 @@
-import { resend, EMAIL_JOBS_FROM } from "./resend";
+import { resend, EMAIL_FROM } from "./resend";
 import { getBaseUrl } from "./email";
 
 /**
@@ -245,7 +245,7 @@ export async function sendEmployerApprovalEmail(
         }
 
         const { error } = await resend.emails.send({
-            from: `JobGenie Employer Support <${EMAIL_JOBS_FROM}>`,
+            from: `JobGenie Employer Support <${EMAIL_FROM}>`,
             to: email,
             subject: "🎉 Company Profile Approved - JobGenie",
             html: getEmployerApprovalEmailTemplate(companyName, firstName, loginUrl),
@@ -299,7 +299,7 @@ export async function sendEmployerRejectionEmail(
         }
 
         const { error } = await resend.emails.send({
-            from: `JobGenie Employer Support <${EMAIL_JOBS_FROM}>`,
+            from: `JobGenie Employer Support <${EMAIL_FROM}>`,
             to: email,
             subject: "Action Required: Company Profile Update - JobGenie",
             html: getEmployerRejectionEmailTemplate(companyName, firstName, rejectionReason, loginUrl),

@@ -25,16 +25,21 @@ export async function GET(request: NextRequest) {
         const companyId = url.searchParams.get("companyId") || "";
         const dateFrom = url.searchParams.get("dateFrom") || "";
         const dateTo = url.searchParams.get("dateTo") || "";
+        const jobId = url.searchParams.get("jobId") || "";
+        const jobSearch = url.searchParams.get("jobSearch") || "";
+        const amountMin = url.searchParams.get("amountMin") || "";
+        const amountMax = url.searchParams.get("amountMax") || "";
 
         let query = admin
             .from("payment_requests")
             .select(`
-                id, company_id, employer_id, payment_type_id, amount, currency,
-                description, due_date, status, bank_transfer_reference,
+                id, company_id, employer_id, payment_type_id, reference_job_id, amount, currency,
+                description, due_date, status, payment_method, bank_transfer_reference,
                 created_at, updated_at,
                 companies(id, company_name, industry),
                 employers(id, first_name, last_name, email, designation),
                 payment_types(id, code, label),
+                reference_job:jobs!payment_requests_reference_job_id_fkey(id, job_title, status, mis_pause_locked),
                 payment_proofs(id, status, uploaded_at, file_url, file_name)
             `, { count: "exact" });
 
@@ -45,6 +50,18 @@ export async function GET(request: NextRequest) {
         if (companyId) query = query.eq("company_id", companyId);
         if (dateFrom) query = query.gte("created_at", dateFrom);
         if (dateTo) query = query.lte("created_at", dateTo + "T23:59:59Z");
+        if (amountMin) query = query.gte("amount", amountMin);
+        if (amountMax) query = query.lte("amount", amountMax);
+
+        // Job-wise filtering: by exact job, or by job-title search.
+        if (jobId) {
+            query = query.eq("reference_job_id", jobId);
+        } else if (jobSearch) {
+            const { data: jobs } = await admin.from("jobs").select("id").ilike("job_title", `%${jobSearch}%`).limit(500);
+            const ids = (jobs ?? []).map((j) => j.id);
+            // Use a sentinel that matches nothing when no jobs found.
+            query = query.in("reference_job_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+        }
 
         // Filter by payment type code
         if (typeFilter) {

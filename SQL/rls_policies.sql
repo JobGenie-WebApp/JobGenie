@@ -120,6 +120,7 @@ ALTER TABLE public.industry_specializations        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.interview_reminder_sent         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.interview_rounds                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.job_applications                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.job_compliance_flags            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.job_designations                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.job_invitations                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.job_offers                      ENABLE ROW LEVEL SECURITY;
@@ -135,6 +136,7 @@ ALTER TABLE public.payment_bank_details            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_pricing                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_proofs                  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_requests                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payment_settings                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_types                   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects                        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.seniority_levels                ENABLE ROW LEVEL SECURITY;
@@ -697,10 +699,10 @@ CREATE POLICY "MIS can view all work experiences" ON public.work_experiences AS 
   USING (is_mis_user());
 
 -- NOTE: payment_bank_details, payment_pricing, payment_proofs, payment_requests,
--- and payment_types have RLS ENABLED but no policies in source (so they are
--- effectively locked to anon/authenticated and only reachable via the service
--- role). RLS was enabled for them in section 2; no policies are added here,
--- matching the source database exactly.
+-- payment_settings, payment_types, and job_compliance_flags have RLS ENABLED but
+-- no policies in source (so they are effectively locked to anon/authenticated and
+-- only reachable via the service role). RLS was enabled for them in section 2; no
+-- policies are added here, matching the source database exactly.
 
 -- ----------------------------------------------------------------------------
 -- 4. Storage buckets

@@ -16,6 +16,35 @@ interface CreatePaymentRequestParams {
   created_by_mis_user_id: string;
 }
 
+// The payment types the application relies on. Ensured to exist at runtime so a
+// fresh database (or one missing the seed) self-heals instead of failing.
+const CORE_PAYMENT_TYPES: { code: string; label: string; description: string; sort_order: number }[] = [
+  { code: "JOB_AD_PUBLISH", label: "Job Advertisement Publication", description: "Fee to publish a job advertisement", sort_order: 10 },
+  { code: "JOB_AD_EXTEND", label: "Job Advertisement Extension", description: "Fee to extend an expired job advertisement", sort_order: 11 },
+  { code: "hiring_fee", label: "Hiring Fee", description: "Fee payable when a candidate is hired (percentage of monthly salary)", sort_order: 12 },
+];
+
+// Idempotently create any missing core payment types. Safe to call on any path
+// that needs them (payment creation, MIS config screens, employer quote).
+export async function ensureCorePaymentTypes(): Promise<void> {
+  const supabase = createAdminClient();
+  const { data: existing } = await supabase.from("payment_types").select("code");
+  const have = new Set((existing ?? []).map((r) => r.code));
+  const missing = CORE_PAYMENT_TYPES.filter((t) => !have.has(t.code));
+  if (missing.length === 0) return;
+  await supabase.from("payment_types").insert(
+    missing.map((t) => ({ code: t.code, label: t.label, description: t.description, is_active: true, sort_order: t.sort_order }))
+  );
+}
+
+// Read the MIS-configured hiring fee percentage (defaults to 50 if unset).
+export async function getHiringFeePercentage(): Promise<number> {
+  const supabase = createAdminClient();
+  const { data } = await supabase.from("payment_settings").select("hiring_fee_percentage").eq("id", 1).maybeSingle();
+  const pct = data ? Number(data.hiring_fee_percentage) : 50;
+  return Number.isFinite(pct) && pct >= 0 ? pct : 50;
+}
+
 // Look up the current active price for a payment type code.
 export async function getActivePrice(
   paymentTypeCode: string
@@ -55,6 +84,9 @@ export async function createPaymentRequest(
   } = params;
 
   const supabase = createAdminClient();
+
+  // Self-heal: make sure the core payment types exist before resolving.
+  await ensureCorePaymentTypes();
 
   // Resolve payment type
   const { data: paymentType } = await supabase

@@ -44,6 +44,10 @@ export async function POST(
         const formData = await request.formData();
         const file = formData.get("file") as File | null;
         const bankTransferReference = (formData.get("bank_transfer_reference") as string | null) ?? null;
+        const paymentMethodRaw = (formData.get("payment_method") as string | null) ?? null;
+        const paymentMethod = ["bank_transfer", "online_payment"].includes(paymentMethodRaw ?? "")
+            ? paymentMethodRaw
+            : null;
 
         if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
@@ -103,6 +107,7 @@ export async function POST(
                 status: "under_review",
                 updated_at: now,
                 ...(bankTransferReference ? { bank_transfer_reference: bankTransferReference } : {}),
+                ...(paymentMethod ? { payment_method: paymentMethod } : {}),
             })
             .eq("id", id);
 

@@ -6,6 +6,7 @@ import { PortalHeader } from "./PortalHeader";
 import { PortalPageHeader } from "./PortalPageHeader";
 import { PageTransitionWrapper } from "./PageTransitionWrapper";
 import { Toaster } from "@/components/ui/toaster";
+import { cn } from "@/lib/utils";
 
 interface DashboardShellProps {
     /** The portal's own sidebar element (keeps per-portal logic intact). */
@@ -20,6 +21,9 @@ interface DashboardShellProps {
     /** When true, suppresses document scroll so the page manages its own
      *  scroll columns (calendar, kanban, chat panes, etc.). */
     fullHeight?: boolean;
+    /** fullHeight only: wrap content in a max-width bordered card (split-pane
+     *  pages). Set false for full-width bare content like the kanban board. */
+    fullHeightBordered?: boolean;
     notificationRole?: "candidate" | "employer";
 }
 
@@ -31,6 +35,7 @@ export function DashboardShell({
     headerActions,
     breadcrumbOverride,
     fullHeight,
+    fullHeightBordered = true,
     notificationRole,
 }: DashboardShellProps) {
     const [scrolled, setScrolled] = useState(false);
@@ -50,14 +55,30 @@ export function DashboardShell({
         return (
             <SidebarProvider className="bg-sidebar h-dvh! min-h-0! overflow-hidden">
                 {sidebar}
-                <SidebarInset className="my-2 mr-2 flex min-h-0 flex-col overflow-hidden rounded-xl shadow-sm">
+                <SidebarInset className="my-2 mr-2 flex min-h-0 flex-col overflow-hidden rounded-xl shadow-sm bg-card">
                     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         <PortalHeader
                             notificationRole={notificationRole}
                             breadcrumbOverride={breadcrumbOverride}
                             scrolled={true}
                         />
-                        {children}
+                        {/* Content inset: center the content at the same max-width as normal
+                            pages so split-pane pages get visible left/right side space — no border. */}
+                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 md:px-6 md:pt-5">
+                            <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col overflow-hidden pb-2">
+                                <PortalPageHeader
+                                    title={pageTitle}
+                                    description={pageDescription}
+                                    actions={headerActions}
+                                />
+                                <div className={cn(
+                                    "flex min-h-0 flex-1 overflow-hidden",
+                                    fullHeightBordered && "rounded-t-xl border border-b-0 bg-card",
+                                )}>
+                                    {children}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </SidebarInset>
                 <Toaster />
