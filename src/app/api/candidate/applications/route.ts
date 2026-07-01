@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
             .select(`
                 id, status, cover_letter, resume_url, applied_at, updated_at,
                 job:jobs!job_applications_job_id_fkey(
-                    id, job_title, location, job_type, status, expires_at,
+                    id, job_title, location, industry, job_type, status, expires_at,
+                    salary_min, salary_max, salary_currency, experience_level, published_at,
                     company:companies!jobs_company_id_fkey(
                         company_name, logo_url
                     )

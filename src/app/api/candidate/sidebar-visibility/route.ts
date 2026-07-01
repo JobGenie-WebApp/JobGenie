@@ -5,7 +5,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const DEFAULT_VISIBILITY: Record<string, boolean> = {
     dashboard: true,
     "browse-jobs": true,
-    applications: true,
     invitations: true,
     calendar: true,
     "my-profile": true,

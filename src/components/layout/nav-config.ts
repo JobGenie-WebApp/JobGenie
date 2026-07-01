@@ -19,6 +19,7 @@ import {
     Bell,
     AlertTriangle,
     Eye,
+    Bookmark,
 } from "lucide-react";
 
 /** A sub-section entry rendered inside a collapsible parent item. The page it
@@ -64,8 +65,14 @@ export const candidateNav: NavGroup[] = [
     {
         label: "Job Search",
         items: [
-            { title: "Browse Jobs", href: "/candidate/jobs", icon: Briefcase, requiresApproval: true, visibilityKey: "browse-jobs" },
-            { title: "Applications", href: "/candidate/applications", icon: FileText, requiresApproval: true, visibilityKey: "applications" },
+            {
+                title: "Browse Jobs", href: "/candidate/jobs", icon: Briefcase, requiresApproval: true, visibilityKey: "browse-jobs",
+                children: [
+                    { title: "All Jobs", section: "browse", href: "/candidate/jobs", icon: Briefcase },
+                    { title: "Applied Jobs", section: "applied", href: "/candidate/jobs?section=applied", icon: FileText },
+                    { title: "Saved Jobs", section: "saved", href: "/candidate/jobs?section=saved", icon: Bookmark },
+                ],
+            },
             { title: "Invitations", href: "/candidate/invitations", icon: Mail, requiresApproval: true, visibilityKey: "invitations", badge: "invitations" },
             { title: "Calendar", href: "/candidate/calendar", icon: CalendarDays, requiresApproval: true, visibilityKey: "calendar" },
         ],

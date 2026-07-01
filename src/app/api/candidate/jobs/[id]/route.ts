@@ -40,9 +40,11 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
         if (error || !job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
-        // Check if candidate has already applied
+        // Check if candidate has already applied / saved this job
         let has_applied = false;
         let application_status: string | null = null;
+        let application_id: string | null = null;
+        let is_saved = false;
         if (candidate) {
             const { data: app } = await admin
                 .from("job_applications")
@@ -53,10 +55,18 @@ export async function GET(_request: NextRequest, { params }: Params) {
             if (app) {
                 has_applied = true;
                 application_status = app.status;
+                application_id = app.id;
             }
+            const { data: saved } = await admin
+                .from("saved_jobs")
+                .select("id")
+                .eq("job_id", id)
+                .eq("candidate_id", candidate.id)
+                .maybeSingle();
+            is_saved = !!saved;
         }
 
-        return NextResponse.json({ job, has_applied, application_status });
+        return NextResponse.json({ job, has_applied, application_status, application_id, is_saved });
     } catch (error) {
         await logError({ source: "api/candidate/jobs/[id]:GET", errorType: "APIError", message: error instanceof Error ? error.message : String(error) });
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

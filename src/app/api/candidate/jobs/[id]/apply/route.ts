@@ -114,7 +114,7 @@ export async function POST(request: NextRequest, { params }: Params) {
             candidateName,
             jobTitle: job.job_title,
             companyName,
-            applicationsUrl: `${baseUrl}/candidate/applications`,
+            applicationsUrl: `${baseUrl}/candidate/jobs?section=applied`,
         }).catch(console.error);
 
         if (employer?.email) {

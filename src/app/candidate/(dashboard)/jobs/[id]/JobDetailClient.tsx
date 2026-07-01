@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import {
     ArrowLeft, MapPin, Briefcase, Clock, Calendar, Building2,
-    Loader2, SendHorizonal, CheckCircle2,
+    Loader2, SendHorizonal, CheckCircle2, Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -60,10 +59,14 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
     const [job, setJob] = useState<JobDetail | null>(null);
     const [hasApplied, setHasApplied] = useState(false);
     const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+    const [applicationId, setApplicationId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [applyOpen, setApplyOpen] = useState(false);
     const [coverLetter, setCoverLetter] = useState("");
     const [applying, setApplying] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [withdrawing, setWithdrawing] = useState(false);
 
     const fetchJob = useCallback(async () => {
         setLoading(true);
@@ -73,12 +76,49 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
             setJob(d.job);
             setHasApplied(d.has_applied);
             setApplicationStatus(d.application_status);
+            setApplicationId(d.application_id ?? null);
+            setIsSaved(!!d.is_saved);
         } else {
             toast.error("Job not found");
             router.push("/candidate/jobs");
         }
         setLoading(false);
     }, [jobId, router]);
+
+    // Withdraw is only allowed while the application is still pending/under review.
+    const canWithdraw = hasApplied && !!applicationId && ["pending", "reviewed"].includes(applicationStatus ?? "");
+
+    async function withdrawApplication() {
+        if (!applicationId) return;
+        setWithdrawing(true);
+        try {
+            const res = await fetch(`/api/candidate/applications/${applicationId}`, { method: "DELETE" });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { toast.error(data.error || "Failed to withdraw"); return; }
+            toast.success("Application withdrawn");
+            setHasApplied(false);
+            setApplicationStatus(null);
+            setApplicationId(null);
+        } finally {
+            setWithdrawing(false);
+        }
+    }
+
+    async function toggleSave() {
+        const next = !isSaved;
+        setSaving(true);
+        setIsSaved(next); // optimistic
+        try {
+            const res = await fetch(`/api/candidate/jobs/${jobId}/save`, { method: next ? "POST" : "DELETE" });
+            if (!res.ok) throw new Error();
+            toast.success(next ? "Job saved" : "Removed from saved");
+        } catch {
+            setIsSaved(!next);
+            toast.error("Could not update saved jobs");
+        } finally {
+            setSaving(false);
+        }
+    }
 
     useEffect(() => { fetchJob(); }, [fetchJob]);
 
@@ -135,14 +175,26 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
                         {job.deadline && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />Deadline {fmt(job.deadline)}</span>}
                     </div>
                 </div>
-                <div className="shrink-0">
+                <div className="shrink-0 flex items-center gap-2">
+                    <Button variant="outline" onClick={toggleSave} disabled={saving}>
+                        <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? "fill-current text-primary" : ""}`} />
+                        {isSaved ? "Saved" : "Save"}
+                    </Button>
                     {hasApplied ? (
-                        <div className="flex items-center gap-2 text-green-600 font-medium text-sm">
-                            <CheckCircle2 className="h-5 w-5" />
-                            <div>
-                                <div>Applied</div>
-                                {applicationStatus && <div className="text-xs text-muted-foreground">{APP_STATUS_LABELS[applicationStatus] ?? applicationStatus}</div>}
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 text-green-600 font-medium text-sm">
+                                <CheckCircle2 className="h-5 w-5" />
+                                <div>
+                                    <div>Applied</div>
+                                    {applicationStatus && <div className="text-xs text-muted-foreground">{APP_STATUS_LABELS[applicationStatus] ?? applicationStatus}</div>}
+                                </div>
                             </div>
+                            {canWithdraw && (
+                                <Button variant="outline" className="text-red-500 hover:text-red-600" onClick={withdrawApplication} disabled={withdrawing}>
+                                    {withdrawing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                                    Withdraw
+                                </Button>
+                            )}
                         </div>
                     ) : (
                         <Button onClick={() => setApplyOpen(true)}>

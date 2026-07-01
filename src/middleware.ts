@@ -55,7 +55,6 @@ const roleRoutes: Record<string, string[]> = {
     candidate: [
         '/candidate/dashboard',
         '/candidate/profile',
-        '/candidate/applications',
         '/candidate/settings',
         '/candidate/jobs',
         '/candidate/create-profile',
@@ -364,7 +363,6 @@ export const config = {
         // Candidate routes
         '/candidate/dashboard/:path*',
         '/candidate/profile/:path*',
-        '/candidate/applications/:path*',
         '/candidate/settings/:path*',
         '/candidate/jobs/:path*',
         '/candidate/create-profile/:path*',
