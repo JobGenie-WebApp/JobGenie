@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
                 custom_end_date: d.custom_end_date ?? null,
                 advertisement_link: d.advertisement_link ?? null,
                 status: "draft",
+                updated_at: new Date().toISOString(),
             })
             .select("id")
             .single();
