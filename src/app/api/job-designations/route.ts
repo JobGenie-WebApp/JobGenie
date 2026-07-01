@@ -3,6 +3,22 @@ import { NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
 import { resolveIndustryIdsForProfile } from "@/lib/job-designations-resolve";
 
+// Cache populated reference data at the edge, but never cache an empty result.
+// An empty array cached during a window when the lookup tables were unseeded
+// previously poisoned the CDN and hid all job titles until the cache expired.
+const CACHE_POPULATED = "public, s-maxage=43200, stale-while-revalidate=86400";
+const CACHE_NONE = "no-store";
+
+function jsonWithCache(
+    body: Record<string, unknown>,
+    { status, cacheable }: { status?: number; cacheable: boolean }
+) {
+    return NextResponse.json(body, {
+        status,
+        headers: { "Cache-Control": cacheable ? CACHE_POPULATED : CACHE_NONE },
+    });
+}
+
 export async function GET(request: Request) {
     try {
         const supabase = await createClient();
@@ -19,15 +35,15 @@ export async function GET(request: Request) {
 
             if (industriesError) {
                 console.error("Error fetching industries:", industriesError);
-                return NextResponse.json(
+                return jsonWithCache(
                     { success: false, error: "Failed to resolve industry for job designations" },
-                    { status: 500 }
+                    { status: 500, cacheable: false }
                 );
             }
 
             filterIds = resolveIndustryIdsForProfile(profileIndustry, industriesRows ?? []);
             if (filterIds.length === 0) {
-                return NextResponse.json({ success: true, data: [] });
+                return jsonWithCache({ success: true, data: [] }, { cacheable: false });
             }
         } else if (industryIdParam) {
             const id = parseInt(industryIdParam, 10);
@@ -66,22 +82,20 @@ export async function GET(request: Request) {
 
         if (error) {
             console.error("Error fetching job designations:", error);
-            return NextResponse.json(
+            return jsonWithCache(
                 { success: false, error: "Failed to fetch job designations" },
-                { status: 500 }
+                { status: 500, cacheable: false }
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            data: jobDesignations || []
-        });
+        const rows = jobDesignations || [];
+        return jsonWithCache({ success: true, data: rows }, { cacheable: rows.length > 0 });
     } catch (error) {
         console.error("API error:", error);
         await logError({ source: "api/job-designations:GET", errorType: "APIError", message: error instanceof Error ? error.message : String(error) });
-        return NextResponse.json(
+        return jsonWithCache(
             { success: false, error: "Internal server error" },
-            { status: 500 }
+            { status: 500, cacheable: false }
         );
     }
 }
