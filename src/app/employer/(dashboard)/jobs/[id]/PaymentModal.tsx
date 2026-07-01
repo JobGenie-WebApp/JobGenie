@@ -178,20 +178,26 @@ export function PaymentModal({
                                     <RadioGroupItem value="bank_transfer" id="pm-bank" />
                                     <span>Bank transfer</span>
                                 </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <RadioGroupItem value="online_payment" id="pm-online" />
+                                <label className="flex items-center gap-2 cursor-not-allowed opacity-60">
+                                    <RadioGroupItem value="online_payment" id="pm-online" disabled />
                                     <span>Online payment</span>
+                                    <span className="text-xs text-muted-foreground italic">(Coming soon)</span>
                                 </label>
                             </RadioGroup>
                         </div>
 
                         {/* Bank details */}
-                        {banks.length > 0 && (
+                        {method === "bank_transfer" && banks.length === 0 && (
+                            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                                Bank account details are not available yet. Please contact JobGenie for payment instructions before submitting.
+                            </div>
+                        )}
+                        {method === "bank_transfer" && banks.length > 0 && (
                             <>
                                 <Separator />
                                 <div className="space-y-3">
                                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pay to any of these accounts:</p>
-                                    <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="grid gap-3">
                                         {banks.map((bank) => {
                                             const qrValue = [
                                                 `Bank: ${bank.bank_name}`,
@@ -201,25 +207,27 @@ export function PaymentModal({
                                                 amount != null ? `Amount: ${fmtAmount(amount, currency)}` : null,
                                             ].filter(Boolean).join("\n");
                                             return (
-                                                <div key={bank.id} className="rounded-lg border bg-card p-3 space-y-2">
-                                                    <div className="text-sm font-semibold">{bank.bank_name}</div>
-                                                    <div className="text-sm text-muted-foreground space-y-0.5">
-                                                        <div>{bank.account_name}</div>
-                                                        <div className="font-mono font-medium text-foreground">{bank.account_number}</div>
-                                                        {bank.branch && <div className="text-xs">{bank.branch}</div>}
-                                                        {bank.bank_code && <div className="text-xs">Code: {bank.bank_code}</div>}
-                                                        {bank.swift_code && <div className="text-xs">SWIFT: {bank.swift_code}</div>}
+                                                <div key={bank.id} className="rounded-lg border bg-card p-3 flex items-start justify-between gap-3">
+                                                    <div className="space-y-2 min-w-0">
+                                                        <div className="text-sm font-semibold">{bank.bank_name}</div>
+                                                        <div className="text-sm text-muted-foreground space-y-0.5">
+                                                            <div>{bank.account_name}</div>
+                                                            <div className="font-mono font-medium text-foreground break-all">{bank.account_number}</div>
+                                                            {bank.branch && <div className="text-xs">{bank.branch}</div>}
+                                                            {bank.bank_code && <div className="text-xs">Code: {bank.bank_code}</div>}
+                                                            {bank.swift_code && <div className="text-xs">SWIFT: {bank.swift_code}</div>}
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowQR(showQR === bank.id ? null : bank.id)}
+                                                            className="text-xs text-primary hover:underline"
+                                                        >
+                                                            {showQR === bank.id ? "Hide QR" : "Show QR Code"}
+                                                        </button>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowQR(showQR === bank.id ? null : bank.id)}
-                                                        className="text-xs text-primary hover:underline"
-                                                    >
-                                                        {showQR === bank.id ? "Hide QR" : "Show QR Code"}
-                                                    </button>
                                                     {showQR === bank.id && (
-                                                        <div className="flex justify-center pt-1">
-                                                            <QRCode value={qrValue} size={140} />
+                                                        <div className="shrink-0">
+                                                            <QRCode value={qrValue} size={120} />
                                                         </div>
                                                     )}
                                                 </div>

@@ -302,60 +302,65 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
                 </Card>
             )}
 
-            {/* Description */}
-            {job.description && (
-                <Card>
-                    <CardHeader><CardTitle>Job Description</CardTitle></CardHeader>
-                    <CardContent>
-                        <MDXViewer markdown={job.description} />
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Payment history */}
-            {job.payment_requests && job.payment_requests.length > 0 && (
-                <Card>
-                    <CardHeader><CardTitle>Payment History</CardTitle></CardHeader>
-                    <CardContent className="space-y-3">
-                        {job.payment_requests.map((pr) => (
-                            <div key={pr.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                                <div>
-                                    <p className="text-sm font-medium">{pr.payment_types?.label}</p>
-                                    <p className="text-xs text-muted-foreground">{fmt(pr.created_at)}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-medium">{pr.currency} {Number(pr.amount).toLocaleString()}</p>
-                                    <Badge variant={pr.status === "verified" ? "default" : pr.status === "rejected" ? "destructive" : "secondary"} className="text-xs">
-                                        {pr.status.replace(/_/g, " ")}
-                                    </Badge>
-                                </div>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Applications */}
-            <Card>
-                <CardHeader><CardTitle>Applications ({appCount})</CardTitle></CardHeader>
-                <CardContent>
-                    {appCount === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-6">No applications yet.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {job.job_applications.map((app) => (
-                                <div key={app.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                    <div>
-                                        <p className="font-medium text-sm">{app.candidate.first_name} {app.candidate.last_name}</p>
-                                        <p className="text-xs text-muted-foreground">{app.candidate.current_position || app.candidate.email} · Applied {fmt(app.applied_at)}</p>
-                                    </div>
-                                    <Badge variant="secondary">{APP_STATUS_LABELS[app.status] ?? app.status}</Badge>
-                                </div>
-                            ))}
-                        </div>
+            {/* Description (left) + Applications (right) */}
+            <div className="grid gap-6 lg:grid-cols-2 items-start">
+                <div className="space-y-6">
+                    {/* Description */}
+                    {job.description && (
+                        <Card>
+                            <CardHeader><CardTitle>Job Description</CardTitle></CardHeader>
+                            <CardContent>
+                                <MDXViewer markdown={job.description} />
+                            </CardContent>
+                        </Card>
                     )}
-                </CardContent>
-            </Card>
+
+                    {/* Payment history */}
+                    {job.payment_requests && job.payment_requests.length > 0 && (
+                        <Card>
+                            <CardHeader><CardTitle>Payment History</CardTitle></CardHeader>
+                            <CardContent className="space-y-3">
+                                {job.payment_requests.map((pr) => (
+                                    <div key={pr.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                                        <div>
+                                            <p className="text-sm font-medium">{pr.payment_types?.label}</p>
+                                            <p className="text-xs text-muted-foreground">{fmt(pr.created_at)}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-medium">{pr.currency} {Number(pr.amount).toLocaleString()}</p>
+                                            <Badge variant={pr.status === "verified" ? "default" : pr.status === "rejected" ? "destructive" : "secondary"} className="text-xs">
+                                                {pr.status.replace(/_/g, " ")}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+
+                {/* Applications */}
+                <Card>
+                    <CardHeader><CardTitle>Applications ({appCount})</CardTitle></CardHeader>
+                    <CardContent>
+                        {appCount === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-6">No applications yet.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {job.job_applications.map((app) => (
+                                    <div key={app.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                        <div>
+                                            <p className="font-medium text-sm">{app.candidate.first_name} {app.candidate.last_name}</p>
+                                            <p className="text-xs text-muted-foreground">{app.candidate.current_position || app.candidate.email} · Applied {fmt(app.applied_at)}</p>
+                                        </div>
+                                        <Badge variant="secondary">{APP_STATUS_LABELS[app.status] ?? app.status}</Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
 
             {paymentModal && (
                 <PaymentModal

@@ -374,7 +374,7 @@ function PaymentTable({ payments, onView, onUpload }: {
                                 <td className="py-2 px-3"><StatusBadge status={p.status} /></td>
                                 <td className="py-2 px-3">
                                     {latestProof ? (
-                                        <a href={latestProof.file_url} target="_blank" rel="noopener noreferrer"
+                                        <a href={`/api/payments/proofs/${latestProof.id}`} target="_blank" rel="noopener noreferrer"
                                             className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
                                             <FileText className="h-3 w-3" />{latestProof.file_name.slice(0, 18)}…
                                         </a>
@@ -550,7 +550,7 @@ function PaymentDetailDialog({ open, payment, onClose, onUpload }: {
                                 ).map((proof) => (
                                     <div key={proof.id} className="rounded-lg border p-3 space-y-1">
                                         <div className="flex items-center justify-between gap-2">
-                                            <a href={proof.file_url} target="_blank" rel="noopener noreferrer"
+                                            <a href={`/api/payments/proofs/${proof.id}`} target="_blank" rel="noopener noreferrer"
                                                 className="flex items-center gap-1.5 text-blue-600 hover:underline font-medium">
                                                 <FileText className="h-4 w-4" />{proof.file_name}
                                                 <ExternalLink className="h-3 w-3" />

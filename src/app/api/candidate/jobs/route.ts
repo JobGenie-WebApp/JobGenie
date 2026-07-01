@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
         const industry = url.searchParams.get("industry") || "";
         const jobType = url.searchParams.get("job_type") || "";
         const location = url.searchParams.get("location") || "";
+        const experienceLevel = url.searchParams.get("experience_level") || "";
+        const salaryMin = parseInt(url.searchParams.get("salary_min") || "", 10);
 
         const now = new Date().toISOString();
 
@@ -42,6 +44,10 @@ export async function GET(request: NextRequest) {
         if (industry) query = query.eq("industry", industry);
         if (jobType) query = query.eq("job_type", jobType);
         if (location) query = query.ilike("location", `%${location}%`);
+        if (experienceLevel) query = query.eq("experience_level", experienceLevel);
+        // Jobs whose max salary is at least the requested floor (jobs without a
+        // salary_max are excluded when a floor is selected).
+        if (Number.isFinite(salaryMin)) query = query.gte("salary_max", salaryMin);
 
         const { data, error, count } = await query
             .order("published_at", { ascending: false })
@@ -49,8 +55,28 @@ export async function GET(request: NextRequest) {
 
         if (error) throw error;
 
+        // Flag which of the returned jobs the current candidate has saved / applied to.
+        let jobs = data ?? [];
+        const jobIds = jobs.map((j) => j.id);
+        if (jobIds.length > 0) {
+            const { data: candidate } = await admin
+                .from("candidates")
+                .select("id")
+                .eq("user_id", user.id)
+                .maybeSingle();
+            if (candidate) {
+                const [{ data: saved }, { data: applied }] = await Promise.all([
+                    admin.from("saved_jobs").select("job_id").eq("candidate_id", candidate.id).in("job_id", jobIds),
+                    admin.from("job_applications").select("job_id").eq("candidate_id", candidate.id).in("job_id", jobIds),
+                ]);
+                const savedSet = new Set((saved ?? []).map((s) => s.job_id));
+                const appliedSet = new Set((applied ?? []).map((a) => a.job_id));
+                jobs = jobs.map((j) => ({ ...j, is_saved: savedSet.has(j.id), has_applied: appliedSet.has(j.id) }));
+            }
+        }
+
         return NextResponse.json({
-            jobs: data ?? [],
+            jobs,
             pagination: {
                 page,
                 limit,

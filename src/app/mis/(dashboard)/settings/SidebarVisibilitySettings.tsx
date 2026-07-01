@@ -19,7 +19,6 @@ interface SidebarItem {
 const CANDIDATE_ITEMS: SidebarItem[] = [
     { key: "dashboard", label: "Dashboard", canHide: false },
     { key: "browse-jobs", label: "Browse Jobs", canHide: true },
-    { key: "applications", label: "Applications", canHide: true },
     { key: "invitations", label: "Invitations", canHide: true },
     { key: "calendar", label: "Calendar", canHide: true },
     { key: "my-profile", label: "My Profile", canHide: true },

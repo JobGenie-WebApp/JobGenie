@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Bell, Check, Trash2, Calendar, CheckCircle2, XCircle, Clock, Gift, Send, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -46,6 +47,7 @@ function getNotificationMeta(type: string): {
 
 export function NotificationBell({ role = "candidate" }: NotificationBellProps) {
   const router = useRouter();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const {
     notifications,
     unreadCount,
@@ -59,6 +61,9 @@ export function NotificationBell({ role = "candidate" }: NotificationBellProps) 
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
+
+    // Toggle the detail view for this notification (title-only until clicked).
+    setExpandedId((prev) => (prev === notification.id ? null : notification.id));
 
     const data = notification.data;
     if (!data) return;
@@ -173,8 +178,8 @@ export function NotificationBell({ role = "candidate" }: NotificationBellProps) 
                           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                         )}
                       </div>
-                      {notification.body && (
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {notification.body && expandedId === notification.id && (
+                        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
                           {notification.body}
                         </p>
                       )}

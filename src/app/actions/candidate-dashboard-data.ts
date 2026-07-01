@@ -179,7 +179,7 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
             .select(`
           id, status, sent_at, invitation_canceled, industry, job_designation,
           jobs ( job_title ),
-          companies ( name )
+          companies ( company_name )
         `)
             .eq('candidate_id', candidate.id)
             .order('sent_at', { ascending: false })
@@ -201,15 +201,16 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
             .order('created_at', { ascending: false })
             .limit(3),
 
-        // 6. Fetch active jobs count
+        // 6. Fetch active (published, non-deleted) jobs count
         supabase
             .from('jobs')
             .select('id', { count: 'exact', head: true })
-            .eq('status', 'active'),
+            .eq('status', 'published')
+            .eq('is_deleted', false),
 
-        // 8. Fetch bookmarks count
+        // 8. Fetch saved (bookmarked) jobs count
         supabase
-            .from('job_bookmarks')
+            .from('saved_jobs')
             .select('id', { count: 'exact', head: true })
             .eq('candidate_id', candidate.id),
 
@@ -221,7 +222,7 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
           status, interview_confirmed, invitation_canceled,
           selected_time_slot, mis_rescheduled, mis_reschedule_data,
           given_time_slots,
-          companies ( name )
+          companies ( company_name )
         `)
             .eq('candidate_id', candidate.id)
             .in('status', ['accepted', 'confirmed']),
@@ -240,10 +241,11 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
         const { data: industryJobs } = await supabase
             .from('jobs')
             .select(`
-        id, job_title, employment_type, salary_min, salary_max, location, created_at,
-        companies ( name )
+        id, job_title, job_type, salary_min, salary_max, location, created_at,
+        companies ( company_name )
       `)
-            .eq('status', 'active')
+            .eq('status', 'published')
+            .eq('is_deleted', false)
             .ilike('industry', `%${candidate.industry}%`)
             .order('created_at', { ascending: false })
             .limit(5);
@@ -256,10 +258,11 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
         const { data: fallbackJobs } = await supabase
             .from('jobs')
             .select(`
-        id, job_title, employment_type, salary_min, salary_max, location, created_at,
-        companies ( name )
+        id, job_title, job_type, salary_min, salary_max, location, created_at,
+        companies ( company_name )
       `)
-            .eq('status', 'active')
+            .eq('status', 'published')
+            .eq('is_deleted', false)
             .order('created_at', { ascending: false })
             .limit(5);
         finalJobsRaw = fallbackJobs;
@@ -295,7 +298,7 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
             date: finalDate,
             time: finalTime || '',
             job_designation: (inv.job_designation as string) || 'Interview',
-            company_name: companies?.name || null,
+            company_name: companies?.company_name || null,
             interview_mode: (finalMode as string) || null,
             is_confirmed: (inv.interview_confirmed as boolean) || false,
             is_canceled: (inv.invitation_canceled as boolean) || false,
@@ -334,7 +337,7 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
             status: inv.status as InvitationStatus,
             sent_at: inv.sent_at as string,
             invitation_canceled: inv.invitation_canceled as boolean,
-            company_name: companies?.name || null,
+            company_name: companies?.company_name || null,
         };
     });
 
@@ -346,10 +349,10 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
         return {
             id: job.id as string,
             job_title: job.job_title as string,
-            employment_type: (job.employment_type as string) || null,
+            employment_type: (job.job_type as string) || null,
             salary_min: job.salary_min as number | null,
             salary_max: job.salary_max as number | null,
-            company_name: companies?.name || null,
+            company_name: companies?.company_name || null,
             location: (job.location as string) || null,
             posted_at: postedAt,
             is_new: new Date(postedAt) >= new Date(sevenDaysAgo),

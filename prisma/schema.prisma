@@ -42,7 +42,7 @@ model User {
   // Metadata
   last_login_at DateTime? @db.Timestamptz(6)
   created_at    DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime  @updatedAt @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
   deleted_at    DateTime? @db.Timestamptz(6)
 
   // Relations
@@ -113,7 +113,7 @@ model Candidate {
 
   // Metadata
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   // Relations
   user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -144,6 +144,9 @@ model Candidate {
   // Job applications
   job_applications JobApplication[]
 
+  // Saved / bookmarked jobs
+  saved_jobs SavedJob[]
+
   @@index([user_id])
   @@index([industry])
   @@index([experience_level])
@@ -167,7 +170,7 @@ model CandidateResume {
   is_primary Boolean @default(false)
 
   created_at DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at DateTime  @updatedAt @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -196,7 +199,7 @@ model WorkExperience {
   is_current  Boolean?  @default(false)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -221,7 +224,7 @@ model Education {
   status                     String          @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -243,7 +246,7 @@ model Award {
   description     String? @db.Text
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -265,7 +268,7 @@ model Project {
   is_current   Boolean @default(false)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -291,7 +294,7 @@ model Certificate {
   description       String?   @db.Text
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -314,7 +317,7 @@ model FinanceAcademicEducation {
   status         String                 @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -331,7 +334,7 @@ model FinanceProfessionalEducation {
   status                     String                 @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -352,7 +355,7 @@ model BankingAcademicEducation {
   status         String                 @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -369,7 +372,7 @@ model BankingProfessionalEducation {
   status                     String                 @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -387,7 +390,7 @@ model BankingSpecializedTraining {
   status                  String                 @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -410,7 +413,7 @@ model IndustrySpecialization {
   years_experience Int?         @default(0)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -459,7 +462,7 @@ model Company {
   rejection_reason             String?   @db.Text
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   // Relations
   employers        Employer[]
@@ -492,7 +495,7 @@ model Employer {
   hiring_preferences  Json?   @default("{}")
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   user            User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
   company         Company         @relation(fields: [company_id], references: [id], onDelete: Cascade)
@@ -518,7 +521,7 @@ model MisUser {
   role_id             String?     @db.Uuid // Assigned role
   is_super_admin      Boolean     @default(false) // Super admin flag
   created_at          DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime    @updatedAt @db.Timestamptz(6)
+  updated_at          DateTime    @default(now()) @updatedAt @db.Timestamptz(6)
   user                User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
   role                MisRole?    @relation(fields: [role_id], references: [id], onDelete: SetNull)
   reviewed_candidates Candidate[]
@@ -542,7 +545,7 @@ model MisRole {
   description String?  @db.Text
   is_active   Boolean  @default(true)
   created_at  DateTime @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   created_by  String   @db.Uuid // MIS user who created this role
 
   // Relations
@@ -593,7 +596,7 @@ model MisSidebarVisibilitySettings {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   portal_type        String   @unique // "candidate" or "employer"
   visibility_config  Json     @default("{}")
-  updated_at         DateTime @updatedAt @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   updated_by_user_id String?  @db.Uuid
 
   @@map("mis_sidebar_visibility_settings")
@@ -637,7 +640,7 @@ model Job {
   mis_pause_locked    Boolean  @default(false)
 
   created_at   DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime  @updatedAt @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
   published_at DateTime? @db.Timestamptz(6)
 
   employer         Employer         @relation(fields: [employer_id], references: [id], onDelete: Cascade)
@@ -646,6 +649,7 @@ model Job {
   payment_requests PaymentRequest[]
   job_applications JobApplication[]
   compliance_flags JobComplianceFlag[]
+  saved_by         SavedJob[]
 
   @@index([employer_id])
   @@index([company_id])
@@ -668,7 +672,7 @@ model JobApplication {
   cover_letter String?           @db.Text
   resume_url   String?           @db.VarChar(500)
   applied_at   DateTime          @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime          @updatedAt @db.Timestamptz(6)
+  updated_at   DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
   notes        String?           @db.Text
 
   job       Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
@@ -680,6 +684,22 @@ model JobApplication {
   @@index([status])
   @@index([applied_at])
   @@map("job_applications")
+}
+
+model SavedJob {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id       String   @db.Uuid
+  candidate_id String   @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  job       Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, candidate_id])
+  @@index([job_id])
+  @@index([candidate_id])
+  @@index([created_at])
+  @@map("saved_jobs")
 }
 
 // ============================================
@@ -820,7 +840,7 @@ model MisInterviewReminderSettings {
   id                Int      @id @default(1)
   enabled           Boolean  @default(false)
   offsets_minutes   Int[]    @default([])
-  updated_at        DateTime @updatedAt @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   updated_by_user_id String? @db.Uuid
 
   @@map("mis_interview_reminder_settings")
@@ -861,7 +881,7 @@ model JobOffer {
   responded_at   DateTime?
   created_by     String  @db.Uuid                    // employer user id
   created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  updated_at     DateTime @default(now()) @updatedAt
 
   invitation JobInvitation @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
   round      InterviewRound? @relation(fields: [round_id], references: [id])
@@ -1233,7 +1253,7 @@ model PaymentBankDetails {
   is_active      Boolean  @default(true)
   sort_order     Int      @default(0)
   created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @updatedAt @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   @@index([is_active])
   @@map("payment_bank_details")
@@ -1243,7 +1263,7 @@ model PaymentBankDetails {
 model PaymentSettings {
   id                    Int      @id @default(1)
   hiring_fee_percentage Decimal  @default(50) @db.Decimal(5, 2) // percent of offered monthly salary
-  updated_at            DateTime @updatedAt @db.Timestamptz(6)
+  updated_at            DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   updated_by_user_id    String?  @db.Uuid
 
   @@map("payment_settings")
@@ -1265,7 +1285,7 @@ model PaymentRequest {
   payment_method          PaymentMethod?
   bank_transfer_reference String?              @db.VarChar(200)
   created_at              DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime             @updatedAt @db.Timestamptz(6)
+  updated_at              DateTime             @default(now()) @updatedAt @db.Timestamptz(6)
 
   company              Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
   employer             Employer?      @relation(fields: [employer_id], references: [id], onDelete: SetNull)

@@ -371,7 +371,7 @@ function PaymentsTab() {
                                         <TD><StatusBadge status={p.status} /></TD>
                                         <TD>
                                             {latestProof ? (
-                                                <a href={latestProof.file_url} target="_blank" rel="noopener noreferrer"
+                                                <a href={`/api/payments/proofs/${latestProof.id}`} target="_blank" rel="noopener noreferrer"
                                                     className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
                                                     <FileText className="h-3 w-3" />{latestProof.file_name.slice(0, 16)}…
                                                 </a>
@@ -614,7 +614,34 @@ function PaymentDetailDialog({ open, payment, onClose, onChanged }: {
     const [flagging, setFlagging] = useState(false);
     const [flagError, setFlagError] = useState("");
 
+    const [reviewNotes, setReviewNotes] = useState("");
+    const [reviewing, setReviewing] = useState(false);
+    const [reviewError, setReviewError] = useState("");
+    const [showReject, setShowReject] = useState(false);
+
     const job = payment.reference_job;
+
+    const submitReview = async (action: "approve" | "reject") => {
+        if (action === "reject" && !reviewNotes.trim()) {
+            setReviewError("Please provide a reason for rejection.");
+            return;
+        }
+        setReviewError("");
+        setReviewing(true);
+        try {
+            const res = await fetch(`/api/mis/payments/${payment.id}/review`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action, review_notes: reviewNotes.trim() || undefined }),
+            });
+            const json = await res.json();
+            if (!res.ok) { setReviewError(json.error ?? "Review failed"); return; }
+            onChanged?.();
+            onClose();
+        } finally {
+            setReviewing(false);
+        }
+    };
     const canFlag = !!job && ["published", "paused"].includes(job.status) && !job.mis_pause_locked;
     const latestProofId = payment.payment_proofs?.slice().sort((a, b) =>
         new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
@@ -677,7 +704,7 @@ function PaymentDetailDialog({ open, payment, onClose, onChanged }: {
                                 ).map((proof) => (
                                     <div key={proof.id} className="rounded-lg border p-3 text-sm space-y-1">
                                         <div className="flex items-center justify-between">
-                                            <a href={proof.file_url} target="_blank" rel="noopener noreferrer"
+                                            <a href={`/api/payments/proofs/${proof.id}`} target="_blank" rel="noopener noreferrer"
                                                 className="flex items-center gap-1.5 text-blue-600 hover:underline font-medium">
                                                 <FileText className="h-4 w-4" />{proof.file_name}
                                                 <ExternalLink className="h-3 w-3" />
@@ -698,6 +725,49 @@ function PaymentDetailDialog({ open, payment, onClose, onChanged }: {
                             </div>
                         )}
                     </div>
+
+                    {/* Approve / reject the submitted payment proof (MIS only) */}
+                    {payment.status === "under_review" && (
+                        <>
+                            <Separator />
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-semibold">Review Payment</h4>
+                                {reviewError && <p className="text-xs text-destructive">{reviewError}</p>}
+                                {!showReject ? (
+                                    <div className="flex justify-end gap-2">
+                                        <Button variant="destructive" size="sm" onClick={() => { setReviewError(""); setShowReject(true); }} disabled={reviewing}>
+                                            <XCircle className="h-4 w-4 mr-1" />
+                                            Reject
+                                        </Button>
+                                        <Button size="sm" onClick={() => submitReview("approve")} disabled={reviewing}>
+                                            {reviewing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+                                            Approve
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <Label className="text-xs text-muted-foreground">Reason for rejection (required)</Label>
+                                        <Textarea
+                                            placeholder="Reason shown to the employer (e.g. the bank slip could not be verified)…"
+                                            value={reviewNotes}
+                                            onChange={(e) => setReviewNotes(e.target.value)}
+                                            rows={2}
+                                            autoFocus
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                            <Button variant="outline" size="sm" onClick={() => { setShowReject(false); setReviewNotes(""); setReviewError(""); }} disabled={reviewing}>
+                                                Cancel
+                                            </Button>
+                                            <Button variant="destructive" size="sm" onClick={() => submitReview("reject")} disabled={reviewing || !reviewNotes.trim()}>
+                                                {reviewing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <XCircle className="h-4 w-4 mr-1" />}
+                                                Confirm Reject
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
 
                     {/* Flag fake document → pause job (MIS only) */}
                     {job && (
@@ -797,7 +867,7 @@ function ReviewProofDialog({ open, payment, onClose, onReviewed }: {
                     {latestProof ? (
                         <div className="rounded-lg border p-3 space-y-2">
                             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Submitted Proof</div>
-                            <a href={latestProof.file_url} target="_blank" rel="noopener noreferrer"
+                            <a href={`/api/payments/proofs/${latestProof.id}`} target="_blank" rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-blue-600 hover:underline font-medium">
                                 <FileText className="h-4 w-4" />{latestProof.file_name}
                                 <ExternalLink className="h-3.5 w-3.5" />
@@ -805,7 +875,7 @@ function ReviewProofDialog({ open, payment, onClose, onReviewed }: {
                             <div className="text-xs text-muted-foreground">Uploaded {fmtDate(latestProof.uploaded_at)}</div>
                             {/* Image preview for image files */}
                             {latestProof.file_name.match(/\.(jpg|jpeg|png|webp)$/i) && (
-                                <img src={latestProof.file_url} alt="payment proof" className="rounded border max-h-48 object-contain w-full" />
+                                <img src={`/api/payments/proofs/${latestProof.id}`} alt="payment proof" className="rounded border max-h-48 object-contain w-full" />
                             )}
                         </div>
                     ) : (

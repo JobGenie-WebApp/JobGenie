@@ -51,8 +51,9 @@ export async function POST(_request: NextRequest, { params }: Params) {
             }, { status: 409 });
         }
 
-        const systemMisUserId = process.env.SYSTEM_MIS_USER_ID;
-        if (!systemMisUserId) throw new Error("SYSTEM_MIS_USER_ID env var is not set");
+        // createPaymentRequest validates this against mis_user and falls back to
+        // a valid MIS user if the env id is missing/stale, so an empty env is fine.
+        const systemMisUserId = process.env.SYSTEM_MIS_USER_ID ?? "";
 
         const paymentRequestId = await createPaymentRequest({
             company_id: employer.company_id,

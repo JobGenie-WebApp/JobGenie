@@ -37,6 +37,20 @@ export async function ensureCorePaymentTypes(): Promise<void> {
   );
 }
 
+// Resolve a MIS user id that is guaranteed to exist in `mis_user` (needed to
+// satisfy the created_by_mis_user_id FK). Prefers the provided/env id; if that
+// row is missing, falls back to any existing MIS user.
+export async function resolveSystemMisUserId(preferredUserId?: string): Promise<string> {
+  const supabase = createAdminClient();
+  if (preferredUserId) {
+    const { data } = await supabase.from("mis_user").select("user_id").eq("user_id", preferredUserId).maybeSingle();
+    if (data?.user_id) return data.user_id;
+  }
+  const { data: anyMis } = await supabase.from("mis_user").select("user_id").order("created_at", { ascending: true }).limit(1).maybeSingle();
+  if (!anyMis?.user_id) throw new Error("No MIS user exists to attribute the payment request to");
+  return anyMis.user_id;
+}
+
 // Read the MIS-configured hiring fee percentage (defaults to 50 if unset).
 export async function getHiringFeePercentage(): Promise<number> {
   const supabase = createAdminClient();
@@ -88,6 +102,11 @@ export async function createPaymentRequest(
   // Self-heal: make sure the core payment types exist before resolving.
   await ensureCorePaymentTypes();
 
+  // Resolve a valid "created by" MIS user. The configured id (env) can drift
+  // between environments; if it doesn't reference a real mis_user row, fall back
+  // to any existing MIS user so the FK constraint is always satisfied.
+  const createdByMisUserId = await resolveSystemMisUserId(created_by_mis_user_id);
+
   // Resolve payment type
   const { data: paymentType } = await supabase
     .from("payment_types")
@@ -116,7 +135,7 @@ export async function createPaymentRequest(
     .insert({
       company_id,
       employer_id: employer_id ?? null,
-      created_by_mis_user_id,
+      created_by_mis_user_id: createdByMisUserId,
       payment_type_id: paymentType.id,
       reference_job_id: reference_job_id ?? null,
       reference_invitation_id: reference_invitation_id ?? null,
