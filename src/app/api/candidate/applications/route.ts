@@ -34,6 +34,11 @@ export async function GET(request: NextRequest) {
                     company:companies!jobs_company_id_fkey(
                         company_name, logo_url
                     )
+                ),
+                job_invitation:job_invitations!job_invitations_application_id_fkey(
+                    id, status, pipeline_status, interview_confirmed, invitation_canceled,
+                    current_round_number, mis_rescheduled,
+                    job_offers(id, status)
                 )
             `, { count: "exact" })
             .eq("candidate_id", candidate.id);
@@ -46,8 +51,14 @@ export async function GET(request: NextRequest) {
 
         if (error) throw error;
 
+        // Normalize the embedded invitation (PostgREST returns it as an array)
+        const applications = (data ?? []).map((app) => ({
+            ...app,
+            job_invitation: Array.isArray(app.job_invitation) ? app.job_invitation[0] ?? null : app.job_invitation ?? null,
+        }));
+
         return NextResponse.json({
-            applications: data ?? [],
+            applications,
             pagination: {
                 page,
                 limit,

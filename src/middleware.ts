@@ -63,7 +63,6 @@ const roleRoutes: Record<string, string[]> = {
     employer: [
         '/employer/dashboard',
         '/employer/jobs',
-        '/employer/applications',
         '/employer/candidates',
         '/employer/company',
         '/employer/profile',
@@ -370,7 +369,6 @@ export const config = {
         // Employer routes
         '/employer/dashboard/:path*',
         '/employer/jobs/:path*',
-        '/employer/applications/:path*',
         '/employer/candidates/:path*',
         '/employer/company/:path*',
         '/employer/profile/:path*',

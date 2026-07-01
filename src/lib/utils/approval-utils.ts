@@ -30,7 +30,6 @@ export function isRestrictedPath(pathname: string): boolean {
     const restrictedPaths = [
         "/employer/admins",
         "/employer/jobs", // Assuming these will exist
-        "/employer/applications", // Assuming these will exist
     ];
 
     // Always allow these paths

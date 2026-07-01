@@ -41,6 +41,7 @@ interface TimeSlot {
 
 export interface Invitation {
     id: string;
+    application_id?: string | null;
     industry: string;
     job_designation: string;
     message: string | null;
@@ -155,6 +156,10 @@ function getColumnId(inv: Invitation): string {
     const round = inv.current_round_number;
     if (round && round > 0) return `round_${round}`;
 
+    // Interviews that originated from a job application skip the "Invited" stage —
+    // they enter the board directly at Round 1 (the accept/confirm sub-flow happens there).
+    if (inv.application_id) return "round_1";
+
     return "invited";
 }
 
@@ -188,6 +193,20 @@ function buildColumns(invitations: Invitation[]): KanbanColumn[] {
         }
     }
 
+    // Ensure a column exists for whichever round each invitation actually maps to
+    // (covers application-sourced invitations remapped to round_1 while still at round 0).
+    let hasInvited = false;
+    for (const inv of invitations) {
+        const col = getColumnId(inv);
+        const m = /^round_(\d+)$/.exec(col);
+        if (m) {
+            const n = Number(m[1]);
+            if (!roundMap.has(n)) roundMap.set(n, null);
+        } else if (col === "invited") {
+            hasInvited = true;
+        }
+    }
+
     const roundCols: KanbanColumn[] = Array.from(roundMap.keys())
         .sort((a, b) => a - b)
         .map((n) => ({
@@ -201,7 +220,7 @@ function buildColumns(invitations: Invitation[]): KanbanColumn[] {
         }));
 
     return [
-        {
+        ...(hasInvited ? [{
             id: "invited",
             label: "Invited",
             accent: "bg-sky-500",
@@ -209,7 +228,7 @@ function buildColumns(invitations: Invitation[]): KanbanColumn[] {
             borderCls: "border-sky-200 dark:border-sky-800/60",
             bgCls: "bg-sky-50 dark:bg-sky-950/20",
             countBg: "bg-sky-500",
-        },
+        } as KanbanColumn] : []),
         ...roundCols,
         {
             id: "offered",
@@ -777,7 +796,8 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
     for (const inv of invitations) {
         const id = getColumnId(inv);
         if (grouped.has(id)) grouped.get(id)!.push(inv);
-        else grouped.get("invited")!.push(inv);
+        else if (grouped.has("round_1")) grouped.get("round_1")!.push(inv);
+        else grouped.get(columns[0]?.id ?? id)?.push(inv);
     }
 
     // Track horizontal overflow so the scroll buttons only show when usable.

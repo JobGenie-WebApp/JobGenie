@@ -53,10 +53,15 @@ export async function GET(_request: NextRequest, { params }: Params) {
                     resolution_notes, resolved_at
                 ),
                 job_applications(
-                    id, status, applied_at,
+                    id, status, applied_at, cover_letter, resume_url, notes,
                     candidate:candidates!job_applications_candidate_id_fkey(
                         id, first_name, last_name, email, profile_image_url,
                         current_position, industry, years_of_experience
+                    ),
+                    job_invitation:job_invitations!job_invitations_application_id_fkey(
+                        id, status, pipeline_status, interview_confirmed, invitation_canceled,
+                        current_round_number, mis_rescheduled,
+                        job_offers(id, status)
                     )
                 ),
                 payment_requests(

@@ -282,3 +282,56 @@ export async function sendNewApplicationEmail(params: NewApplicationParams): Pro
         console.error("[job-advertisement-emails] sendNewApplicationEmail failed:", err);
     }
 }
+
+// ============================================
+// Email 6: Application not progressing (rejected) to candidate
+// ============================================
+
+interface ApplicationRejectedParams {
+    to: string;
+    candidateName: string;
+    jobTitle: string;
+    companyName: string;
+    reason?: string;
+    jobsUrl: string;
+}
+
+function getApplicationRejectedTemplate({ candidateName, jobTitle, companyName, reason, jobsUrl }: ApplicationRejectedParams): string {
+    return `${emailHeader("Application Update")}
+<div style="text-align:center;margin-bottom:24px;">
+<div style="display:inline-block;background:linear-gradient(135deg,#f3f4f6 0%,#e5e7eb 100%);border-radius:50%;width:80px;height:80px;line-height:80px;">
+<span style="font-size:40px;">📄</span>
+</div>
+</div>
+<h2 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#1f2937;text-align:center;">Update on Your Application</h2>
+<p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;">Hi <strong>${candidateName}</strong>,</p>
+<p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;">
+Thank you for your interest in the role of <strong>"${jobTitle}"</strong> at <strong>${companyName}</strong>. After careful consideration, the employer has decided not to move forward with your application at this time.
+</p>
+${reason ? `<div style="background-color:#f9fafb;border-left:4px solid #9ca3af;border-radius:0 8px 8px 0;padding:16px 20px;margin:24px 0;">
+<p style="margin:0;font-size:14px;color:#4b5563;"><strong>Note from the employer:</strong> ${reason}</p>
+</div>` : ""}
+<p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;">
+Don't be discouraged — there are plenty of other opportunities waiting for you on JobGenie.
+</p>
+<div style="text-align:center;margin:32px 0;">
+<a href="${jobsUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
+Browse More Jobs
+</a>
+</div>
+${emailFooter()}`;
+}
+
+export async function sendApplicationRejectedEmail(params: ApplicationRejectedParams): Promise<void> {
+    try {
+        const resend = getResend();
+        await resend.emails.send({
+            from: EMAIL_JOBS_FROM,
+            to: params.to,
+            subject: `Update on Your Application for "${params.jobTitle}" - JobGenie`,
+            html: getApplicationRejectedTemplate(params),
+        });
+    } catch (err) {
+        console.error("[job-advertisement-emails] sendApplicationRejectedEmail failed:", err);
+    }
+}

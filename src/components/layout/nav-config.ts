@@ -113,9 +113,8 @@ export const employerNav: NavGroup[] = [
         label: "Hiring",
         items: [
             { title: "Job Postings", href: "/employer/jobs", icon: Briefcase, requiresApproval: true, visibilityKey: "job-postings" },
-            { title: "Applications", href: "/employer/applications", icon: FileText, requiresApproval: true, visibilityKey: "applications" },
             { title: "Candidates", href: "/employer/candidates", icon: Users, requiresApproval: true, visibilityKey: "candidates" },
-            { title: "Invitations", href: "/employer/invitations", icon: Mail, requiresApproval: true, visibilityKey: "invitations", badge: "invitations" },
+            { title: "Applicants", href: "/employer/invitations", icon: FileText, requiresApproval: true, visibilityKey: "invitations", badge: "invitations" },
             { title: "Calendar", href: "/employer/calendar", icon: CalendarDays, requiresApproval: true, visibilityKey: "calendar" },
         ],
     },

@@ -4,25 +4,69 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Loader2, FileText } from "lucide-react";
+import { Briefcase, Loader2, FileText, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { JobCard, type JobCardData } from "./JobCard";
+import {
+    getInvitationJourneyDisplay,
+    journeyVariantToCandidateClasses,
+    normalizeEmbeddedOffer,
+    type JourneyDisplay,
+} from "@/lib/invitation-journey-status";
+
+interface LinkedInvitation {
+    id: string;
+    status: string;
+    pipeline_status: string | null;
+    interview_confirmed: boolean;
+    invitation_canceled: boolean;
+    current_round_number: number | null;
+    mis_rescheduled: boolean;
+    job_offers?: { id: string; status: string }[];
+}
 
 interface Application {
     id: string;
     status: string;
     applied_at: string;
     job: JobCardData | JobCardData[] | null;
+    job_invitation?: LinkedInvitation | null;
 }
 
-const APP_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-    pending: { label: "Applied", variant: "secondary" },
-    reviewed: { label: "Under Review", variant: "outline" },
-    shortlisted: { label: "Shortlisted", variant: "default" },
-    rejected: { label: "Not Progressing", variant: "destructive" },
-    hired: { label: "Hired", variant: "default" },
-    withdrawn: { label: "Withdrawn", variant: "secondary" },
+const APP_STATUS: Record<string, JourneyDisplay> = {
+    pending: { label: "Applied", variant: "pending" },
+    reviewed: { label: "Under Review", variant: "info" },
+    shortlisted: { label: "Shortlisted", variant: "info" },
+    rejected: { label: "Not Progressing", variant: "danger" },
+    hired: { label: "Hired", variant: "success" },
+    withdrawn: { label: "Withdrawn", variant: "muted" },
 };
+
+// Prefer the live interview-invitation stage; fall back to the coarse application status.
+function stageDisplay(app: Application): JourneyDisplay {
+    const inv = app.job_invitation;
+    const terminalApp = ["rejected", "hired", "withdrawn"].includes(app.status);
+    if (inv && !terminalApp) {
+        return getInvitationJourneyDisplay(
+            {
+                status: inv.status,
+                invitation_canceled: inv.invitation_canceled,
+                interview_confirmed: inv.interview_confirmed,
+                mis_rescheduled: inv.mis_rescheduled,
+                pipeline_status: inv.pipeline_status,
+                current_round_number: inv.current_round_number,
+            },
+            normalizeEmbeddedOffer(inv.job_offers)
+        );
+    }
+    return APP_STATUS[app.status] ?? { label: app.status, variant: "pending" };
+}
+
+function hasActiveInvitation(inv: LinkedInvitation | null | undefined): inv is LinkedInvitation {
+    if (!inv) return false;
+    if (inv.invitation_canceled || inv.status === "declined") return false;
+    return !["rejected", "withdrawn", "expired"].includes(inv.pipeline_status ?? "active");
+}
 
 export function AppliedJobsView() {
     const router = useRouter();
@@ -83,24 +127,41 @@ export function AppliedJobsView() {
                 {applications.map((app) => {
                     const job = Array.isArray(app.job) ? app.job[0] : app.job;
                     if (!job) return null;
-                    const statusInfo = APP_STATUS[app.status] ?? { label: app.status, variant: "secondary" as const };
-                    const canWithdraw = ["pending", "reviewed"].includes(app.status);
+                    const stage = stageDisplay(app);
+                    const active = hasActiveInvitation(app.job_invitation);
+                    // Once an interview is underway, withdrawing an application no longer applies.
+                    const canWithdraw = !active && ["pending", "reviewed"].includes(app.status);
                     return (
                         <JobCard
                             key={app.id}
                             job={job}
-                            extraBadges={<Badge variant={statusInfo.variant} className="text-xs">{statusInfo.label}</Badge>}
+                            extraBadges={
+                                <Badge variant="outline" className={`text-xs ${journeyVariantToCandidateClasses(stage.variant)}`}>
+                                    {stage.label}
+                                </Badge>
+                            }
                             footer={
-                                <>
-                                    <Button variant="outline" size="sm" className={canWithdraw ? "w-1/2" : "w-full"} onClick={() => router.push(`/candidate/jobs/${job.id}`)}>
-                                        View Details
+                                active ? (
+                                    <Button
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={() => router.push(`/candidate/invitations/${app.job_invitation!.id}`)}
+                                    >
+                                        View Interview
+                                        <ArrowRight className="ml-1 h-4 w-4" />
                                     </Button>
-                                    {canWithdraw && (
-                                        <Button variant="ghost" size="sm" className="w-1/2 text-red-500 hover:text-red-600" onClick={() => withdraw(app.id)} disabled={withdrawing === app.id}>
-                                            {withdrawing === app.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Withdraw"}
+                                ) : (
+                                    <>
+                                        <Button variant="outline" size="sm" className={canWithdraw ? "w-1/2" : "w-full"} onClick={() => router.push(`/candidate/jobs/${job.id}`)}>
+                                            View Details
                                         </Button>
-                                    )}
-                                </>
+                                        {canWithdraw && (
+                                            <Button variant="ghost" size="sm" className="w-1/2 text-red-500 hover:text-red-600" onClick={() => withdraw(app.id)} disabled={withdrawing === app.id}>
+                                                {withdrawing === app.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Withdraw"}
+                                            </Button>
+                                        )}
+                                    </>
+                                )
                             }
                         />
                     );

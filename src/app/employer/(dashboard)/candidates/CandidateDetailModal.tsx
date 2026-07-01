@@ -87,6 +87,9 @@ interface CandidateDetailModalProps {
     invitationInterviewConfirmed?: boolean;
     invitationCurrentRound?: number | null;
     invitationMisRescheduled?: boolean;
+    // When provided, replaces the default direct-invite button in the footer.
+    // Used by the applicant flow to render application-linked actions instead.
+    actionsSlot?: React.ReactNode;
     onClose: () => void;
 }
 
@@ -94,7 +97,7 @@ function formatQualification(qual: string): string {
     return qual.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDesignation, isInvited = false, isHiredElsewhere = false, invitationStatus, invitationPipelineStatus, invitationInterviewConfirmed, invitationCurrentRound, invitationMisRescheduled, onClose }: CandidateDetailModalProps) {
+export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDesignation, isInvited = false, isHiredElsewhere = false, invitationStatus, invitationPipelineStatus, invitationInterviewConfirmed, invitationCurrentRound, invitationMisRescheduled, actionsSlot, onClose }: CandidateDetailModalProps) {
     const [candidate, setCandidate] = useState<CandidateData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showCVViewer, setShowCVViewer] = useState(false);
@@ -396,21 +399,24 @@ export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDe
                                 </>
                             )}
 
-                            {/* Invitation Section */}
+                            {/* Actions Section — application-linked actions when provided,
+                                otherwise the default direct-invite button */}
                             <Separator />
                             <section className="pb-4">
-                                <InviteCandidateButton
-                                    candidateId={candidateId}
-                                    suggestedIndustry={selectedIndustry}
-                                    suggestedDesignation={selectedDesignation}
-                                    isInvited={isInvited}
-                                    isHiredElsewhere={isHiredElsewhere}
-                                    invitationStatus={invitationStatus}
-                                    invitationPipelineStatus={invitationPipelineStatus}
-                                    invitationInterviewConfirmed={invitationInterviewConfirmed}
-                                    invitationCurrentRound={invitationCurrentRound}
-                                    invitationMisRescheduled={invitationMisRescheduled}
-                                />
+                                {actionsSlot ?? (
+                                    <InviteCandidateButton
+                                        candidateId={candidateId}
+                                        suggestedIndustry={selectedIndustry}
+                                        suggestedDesignation={selectedDesignation}
+                                        isInvited={isInvited}
+                                        isHiredElsewhere={isHiredElsewhere}
+                                        invitationStatus={invitationStatus}
+                                        invitationPipelineStatus={invitationPipelineStatus}
+                                        invitationInterviewConfirmed={invitationInterviewConfirmed}
+                                        invitationCurrentRound={invitationCurrentRound}
+                                        invitationMisRescheduled={invitationMisRescheduled}
+                                    />
+                                )}
                             </section>
                         </div>
                     </ScrollArea>

@@ -16,6 +16,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+    ApplicantDetailModal,
+    type ApplicantApplication,
+    type ApplicantLinkedInvitation,
+} from "@/components/employer/ApplicantDetailModal";
 
 const MDXViewer = dynamic(
     () => import("@/components/employer/MdxViewer").then((m) => m.MdxViewer),
@@ -62,6 +67,9 @@ interface Application {
     id: string;
     status: string;
     applied_at: string;
+    cover_letter: string | null;
+    resume_url: string | null;
+    notes: string | null;
     candidate: {
         id: string;
         first_name: string;
@@ -72,6 +80,7 @@ interface Application {
         industry: string | null;
         years_of_experience: number | null;
     };
+    job_invitation: ApplicantLinkedInvitation | ApplicantLinkedInvitation[] | null;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -296,9 +305,36 @@ function JobDetail({
 
 // ── Right panel: Applications ─────────────────────────────────────────────────
 
-function ApplicationsPanel({ job }: { job: JobDetail }) {
+function normalizeInvitation(raw: Application["job_invitation"]): ApplicantLinkedInvitation | null {
+    if (!raw) return null;
+    return (Array.isArray(raw) ? raw[0] ?? null : raw) as ApplicantLinkedInvitation | null;
+}
+
+function ApplicationsPanel({ job, onRefresh }: { job: JobDetail; onRefresh: () => void }) {
     const apps = Array.isArray(job.job_applications) ? job.job_applications as Application[] : [];
     const [filter, setFilter] = useState<string>("all");
+    const [selectedApp, setSelectedApp] = useState<ApplicantApplication | null>(null);
+
+    // Open the applicant profile; a still-"pending" application is auto-marked reviewed.
+    const openApplicant = (app: Application) => {
+        setSelectedApp({
+            id: app.id,
+            status: app.status,
+            cover_letter: app.cover_letter,
+            resume_url: app.resume_url,
+            notes: app.notes,
+            applied_at: app.applied_at,
+            job: { id: job.id, job_title: job.job_title, industry: job.industry },
+            candidate: { id: app.candidate.id, first_name: app.candidate.first_name, last_name: app.candidate.last_name },
+            job_invitation: normalizeInvitation(app.job_invitation),
+        });
+        if (app.status === "pending") {
+            fetch(`/api/employer/applications/${app.id}/review`, { method: "POST" })
+                .then((r) => r.json())
+                .then((d) => { if (d.success) onRefresh(); })
+                .catch(() => {});
+        }
+    };
 
     const filtered = filter === "all" ? apps : apps.filter((a) => a.status === filter);
 
@@ -353,7 +389,11 @@ function ApplicationsPanel({ job }: { job: JobDetail }) {
                         const initials = `${app.candidate.first_name[0] ?? ""}${app.candidate.last_name[0] ?? ""}`.toUpperCase();
 
                         return (
-                            <div key={app.id} className="flex items-start gap-3 px-4 py-3 border-b border-border hover:bg-muted/30 transition-colors">
+                            <button
+                                key={app.id}
+                                onClick={() => openApplicant(app)}
+                                className="flex w-full items-start gap-3 px-4 py-3 border-b border-border text-left cursor-pointer hover:bg-muted/30 transition-colors"
+                            >
                                 <Avatar className="h-9 w-9 shrink-0">
                                     <AvatarImage src={app.candidate.profile_image_url ?? undefined} />
                                     <AvatarFallback className="text-xs">{initials}</AvatarFallback>
@@ -375,11 +415,17 @@ function ApplicationsPanel({ job }: { job: JobDetail }) {
                                         <span>· {fmt(app.applied_at, { day: "numeric", month: "short" })}</span>
                                     </div>
                                 </div>
-                            </div>
+                            </button>
                         );
                     })
                 )}
             </div>
+
+            <ApplicantDetailModal
+                app={selectedApp}
+                onClose={() => setSelectedApp(null)}
+                onRefresh={onRefresh}
+            />
         </div>
     );
 }
@@ -416,15 +462,21 @@ export function JobsClient() {
     useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
     // Fetch detail when selection changes
-    useEffect(() => {
+    const fetchJobDetail = useCallback(async () => {
         if (!selectedId) { setJobDetail(null); return; }
         setDetailLoading(true);
-        fetch(`/api/employer/jobs/${selectedId}`)
-            .then((r) => r.json())
-            .then((d) => setJobDetail(d.job ?? null))
-            .catch(() => setJobDetail(null))
-            .finally(() => setDetailLoading(false));
+        try {
+            const r = await fetch(`/api/employer/jobs/${selectedId}`);
+            const d = await r.json();
+            setJobDetail(d.job ?? null);
+        } catch {
+            setJobDetail(null);
+        } finally {
+            setDetailLoading(false);
+        }
     }, [selectedId]);
+
+    useEffect(() => { fetchJobDetail(); }, [fetchJobDetail]);
 
     async function doAction(jobId: string, endpoint: string, method = "POST") {
         setActionLoading(jobId + endpoint);
@@ -565,7 +617,7 @@ export function JobsClient() {
             {/* ── RIGHT: Applications ── */}
             <div style={{ width: 300, minWidth: 260, flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 {jobDetail ? (
-                    <ApplicationsPanel job={jobDetail} />
+                    <ApplicationsPanel job={jobDetail} onRefresh={fetchJobDetail} />
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                         <Users className="h-10 w-10 opacity-20 mb-2" />
