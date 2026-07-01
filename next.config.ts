@@ -58,12 +58,10 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, s-maxage=86400, stale-while-revalidate=604800' },
         ],
       },
-      {
-        source: '/api/job-designations',
-        headers: [
-          { key: 'Cache-Control', value: 'public, s-maxage=43200, stale-while-revalidate=86400' },
-        ],
-      },
+      // NOTE: /api/job-designations sets its own Cache-Control per response
+      // (populated results are cached; empty/error results are not) so a
+      // transient empty response can't poison the CDN. Do not add a blanket
+      // cache header for it here.
       {
         source: '/api/seniority-levels',
         headers: [
