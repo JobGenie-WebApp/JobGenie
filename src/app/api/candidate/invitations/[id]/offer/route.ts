@@ -236,6 +236,22 @@ export async function POST(
             console.error("Error updating invitation pipeline:", invUpdateError);
         }
 
+        // Keep the source application (if any) in sync with the pipeline outcome
+        const { data: bridgedInvitation } = await supabase
+            .from("job_invitations")
+            .select("application_id")
+            .eq("id", invitationId)
+            .maybeSingle();
+        if (bridgedInvitation?.application_id) {
+            await supabase
+                .from("job_applications")
+                .update({
+                    status: action === "accept" ? "hired" : "withdrawn",
+                    updated_at: now,
+                })
+                .eq("id", bridgedInvitation.application_id);
+        }
+
         // Auto-generate hiring fee payment request when offer is accepted
         if (action === "accept") {
             try {

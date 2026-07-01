@@ -16,6 +16,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { PaymentModal } from "./PaymentModal";
+import {
+    ApplicantDetailModal,
+    type ApplicantApplication,
+    type ApplicantLinkedInvitation,
+} from "@/components/employer/ApplicantDetailModal";
+import {
+    getInvitationJourneyDisplay,
+    journeyVariantToEmployerBadgeProps,
+    normalizeEmbeddedOffer,
+    type JourneyDisplay,
+} from "@/lib/invitation-journey-status";
 
 const MDXViewer = dynamic(
     () => import("@/components/employer/MdxViewer").then((m) => m.MdxViewer),
@@ -29,10 +40,39 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
     expired: { label: "Expired", variant: "destructive" },
 };
 
-const APP_STATUS_LABELS: Record<string, string> = {
-    pending: "Pending", reviewed: "Reviewed", shortlisted: "Shortlisted",
-    rejected: "Rejected", hired: "Hired", withdrawn: "Withdrawn",
+const APP_STAGE: Record<string, JourneyDisplay> = {
+    pending: { label: "Applied", variant: "pending" },
+    reviewed: { label: "Under Review", variant: "info" },
+    shortlisted: { label: "Shortlisted", variant: "info" },
+    rejected: { label: "Not Selected", variant: "danger" },
+    hired: { label: "Hired", variant: "success" },
+    withdrawn: { label: "Withdrawn", variant: "muted" },
 };
+
+function normalizeInvitation(raw: Application["job_invitation"]): ApplicantLinkedInvitation | null {
+    if (!raw) return null;
+    return (Array.isArray(raw) ? raw[0] ?? null : raw) as ApplicantLinkedInvitation | null;
+}
+
+// Live stage: prefer the linked interview-invitation journey; else the coarse application status.
+function applicantStage(app: Application): JourneyDisplay {
+    const inv = normalizeInvitation(app.job_invitation);
+    const terminal = ["rejected", "hired", "withdrawn"].includes(app.status);
+    if (inv && !terminal) {
+        return getInvitationJourneyDisplay(
+            {
+                status: inv.status,
+                invitation_canceled: inv.invitation_canceled,
+                interview_confirmed: inv.interview_confirmed,
+                mis_rescheduled: inv.mis_rescheduled,
+                pipeline_status: inv.pipeline_status,
+                current_round_number: inv.current_round_number,
+            },
+            normalizeEmbeddedOffer(inv.job_offers)
+        );
+    }
+    return APP_STAGE[app.status] ?? { label: app.status, variant: "pending" };
+}
 
 const JOB_TYPE_LABELS: Record<string, string> = {
     full_time: "Full Time", part_time: "Part Time", contract: "Contract",
@@ -60,7 +100,9 @@ interface ComplianceFlag {
 
 interface Application {
     id: string; status: string; applied_at: string;
+    cover_letter: string | null; resume_url: string | null; notes: string | null;
     candidate: { id: string; first_name: string; last_name: string; email: string; current_position: string | null; profile_image_url: string | null };
+    job_invitation: ApplicantLinkedInvitation | ApplicantLinkedInvitation[] | null;
 }
 
 interface PaymentRequest {
@@ -85,6 +127,7 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
     const [republishFile, setRepublishFile] = useState<File | null>(null);
     const [republishNote, setRepublishNote] = useState("");
     const [republishSubmitting, setRepublishSubmitting] = useState(false);
+    const [selectedApp, setSelectedApp] = useState<ApplicantApplication | null>(null);
 
     const fetchJob = useCallback(async () => {
         setLoading(true);
@@ -94,6 +137,28 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
     }, [jobId]);
 
     useEffect(() => { fetchJob(); }, [fetchJob]);
+
+    // Open the applicant profile; a still-"pending" application is auto-marked reviewed.
+    const openApplicant = (app: Application) => {
+        if (!job) return;
+        setSelectedApp({
+            id: app.id,
+            status: app.status,
+            cover_letter: app.cover_letter,
+            resume_url: app.resume_url,
+            notes: app.notes,
+            applied_at: app.applied_at,
+            job: { id: job.id, job_title: job.job_title, industry: job.industry },
+            candidate: { id: app.candidate.id, first_name: app.candidate.first_name, last_name: app.candidate.last_name },
+            job_invitation: normalizeInvitation(app.job_invitation),
+        });
+        if (app.status === "pending") {
+            fetch(`/api/employer/applications/${app.id}/review`, { method: "POST" })
+                .then((r) => r.json())
+                .then((d) => { if (d.success) fetchJob(); })
+                .catch(() => {});
+        }
+    };
 
     // Show extend dialog if ?extend=1
     const showExtend = searchParams.get("extend") === "1";
@@ -341,26 +406,42 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
 
                 {/* Applications */}
                 <Card>
-                    <CardHeader><CardTitle>Applications ({appCount})</CardTitle></CardHeader>
+                    <CardHeader>
+                        <CardTitle>Applicants ({appCount})</CardTitle>
+                    </CardHeader>
                     <CardContent>
                         {appCount === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-6">No applications yet.</p>
                         ) : (
-                            <div className="space-y-3">
-                                {job.job_applications.map((app) => (
-                                    <div key={app.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                        <div>
-                                            <p className="font-medium text-sm">{app.candidate.first_name} {app.candidate.last_name}</p>
-                                            <p className="text-xs text-muted-foreground">{app.candidate.current_position || app.candidate.email} · Applied {fmt(app.applied_at)}</p>
-                                        </div>
-                                        <Badge variant="secondary">{APP_STATUS_LABELS[app.status] ?? app.status}</Badge>
-                                    </div>
-                                ))}
+                            <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+                                {job.job_applications.map((app) => {
+                                    const stage = applicantStage(app);
+                                    const badge = journeyVariantToEmployerBadgeProps(stage.variant);
+                                    return (
+                                        <button
+                                            key={app.id}
+                                            onClick={() => openApplicant(app)}
+                                            className="flex w-full items-center justify-between gap-2 rounded-lg border p-3 text-left cursor-pointer transition-colors hover:border-primary/40 hover:bg-muted/40"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-sm truncate">{app.candidate.first_name} {app.candidate.last_name}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{app.candidate.current_position || app.candidate.email} · Applied {fmt(app.applied_at)}</p>
+                                            </div>
+                                            <Badge variant={badge.variant} className={`shrink-0 ${badge.className}`}>{stage.label}</Badge>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </CardContent>
                 </Card>
             </div>
+
+            <ApplicantDetailModal
+                app={selectedApp}
+                onClose={() => setSelectedApp(null)}
+                onRefresh={fetchJob}
+            />
 
             {paymentModal && (
                 <PaymentModal

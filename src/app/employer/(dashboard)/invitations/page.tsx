@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import InvitationsClient from "./InvitationsClient";
 
 export const metadata: Metadata = {
-    title: "Invitations | JobGenie",
-    description: "View all interview invitations sent to candidates",
+    title: "Applicants | JobGenie",
+    description: "Review applicants and manage your interview pipeline",
 };
 
 export default async function InvitationsPage() {
@@ -19,8 +19,8 @@ export default async function InvitationsPage() {
 
     return (
         <EmployerLayout
-            pageTitle="Invitations"
-            pageDescription="View and manage interview invitations sent to candidates"
+            pageTitle="Applicants"
+            pageDescription="Review applicants and manage your interview pipeline"
             fullHeight
             fullHeightBordered={false}
         >

@@ -1282,7 +1282,7 @@ export default function InvitationsClient() {
                 <div className="px-4 pt-4 pb-3 border-b border-border shrink-0">
                     <div className="flex items-center justify-between mb-3">
                         <div>
-                            <h2 className="text-base font-bold leading-tight">Invitations</h2>
+                            <h2 className="text-base font-bold leading-tight">Applicants</h2>
                             <p className="text-xs text-muted-foreground mt-0.5">
                                 {invitations.length} total
                                 {statusCounts.pending > 0 && <> · <span className="text-amber-600 dark:text-amber-400 font-medium">{statusCounts.pending} need action</span></>}

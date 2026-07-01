@@ -43,6 +43,7 @@ export async function GET(request: Request) {
             .from('job_invitations')
             .select(`
                 id,
+                application_id,
                 industry,
                 job_designation,
                 message,

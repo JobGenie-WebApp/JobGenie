@@ -124,6 +124,26 @@ export async function POST(
             );
         }
 
+        // On rejection, close the pipeline and keep the source application (if any) in sync.
+        if (outcome === 'reject') {
+            await supabase
+                .from('job_invitations')
+                .update({ pipeline_status: 'rejected', employer_last_seen_at: null })
+                .eq('id', invitation.id);
+
+            const { data: bridgedInvitation } = await supabase
+                .from('job_invitations')
+                .select('application_id')
+                .eq('id', invitation.id)
+                .maybeSingle();
+            if (bridgedInvitation?.application_id) {
+                await supabase
+                    .from('job_applications')
+                    .update({ status: 'rejected', updated_at: new Date().toISOString() })
+                    .eq('id', bridgedInvitation.application_id);
+            }
+        }
+
         await logBusiness(
             "interview_feedback_added",
             user.id,
