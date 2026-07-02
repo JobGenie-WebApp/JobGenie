@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1154,9 +1155,9 @@ export function ReportsClient() {
 
                     {period === "custom" && (
                         <div className="flex items-center gap-2">
-                            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs w-36" />
+                            <DateField value={dateFrom} onChange={setDateFrom} placeholder="From" clearable className="w-36" triggerClassName="h-8 text-xs" />
                             <span className="text-muted-foreground text-xs">to</span>
-                            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs w-36" />
+                            <DateField value={dateTo} onChange={setDateTo} placeholder="To" clearable className="w-36" triggerClassName="h-8 text-xs" />
                         </div>
                     )}
 

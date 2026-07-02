@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -637,20 +638,20 @@ export function JobFormClient({ mode, jobId }: Props) {
                                             <div className="grid grid-cols-2 gap-2 pt-1">
                                                 <div className="space-y-1">
                                                     <Label className="text-xs text-muted-foreground">Start Date</Label>
-                                                    <Input
-                                                        type="date"
+                                                    <DateField
                                                         value={form.custom_start_date}
-                                                        min={new Date().toISOString().slice(0, 10)}
-                                                        onChange={(e) => set("custom_start_date", e.target.value)}
+                                                        minDate={new Date().toISOString().slice(0, 10)}
+                                                        onChange={(v) => set("custom_start_date", v)}
+                                                        placeholder="Start date"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
                                                     <Label className="text-xs text-muted-foreground">End Date</Label>
-                                                    <Input
-                                                        type="date"
+                                                    <DateField
                                                         value={form.custom_end_date}
-                                                        min={form.custom_start_date || new Date().toISOString().slice(0, 10)}
-                                                        onChange={(e) => set("custom_end_date", e.target.value)}
+                                                        minDate={form.custom_start_date || new Date().toISOString().slice(0, 10)}
+                                                        onChange={(v) => set("custom_end_date", v)}
+                                                        placeholder="End date"
                                                     />
                                                 </div>
                                                 {form.custom_start_date && form.custom_end_date && (() => {

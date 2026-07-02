@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { DateField } from "@/components/ui/date-field";
 import {
     Calendar,
     Clock,
@@ -1123,7 +1124,7 @@ export function InterviewRoundsDisplay({
                             </div>
                             {editRoundSlots.map((slot) => (
                                 <div key={slot.id} className="flex items-center gap-2">
-                                    <input type="date" value={slot.date} onChange={e => setEditRoundSlots(editRoundSlots.map(s => s.id === slot.id ? { ...s, date: e.target.value } : s))} className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs" />
+                                    <DateField value={slot.date} onChange={v => setEditRoundSlots(editRoundSlots.map(s => s.id === slot.id ? { ...s, date: v } : s))} placeholder="Date" disablePast className="flex-1" triggerClassName="h-8 rounded-md bg-background px-2 text-xs" />
                                     <select value={slot.time} onChange={e => setEditRoundSlots(editRoundSlots.map(s => s.id === slot.id ? { ...s, time: e.target.value } : s))} className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs cursor-pointer">
                                         <option value="">Select time</option>
                                         {INTERVIEW_TIME_SLOTS.map(t => (

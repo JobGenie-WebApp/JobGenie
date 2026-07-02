@@ -21,6 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -257,13 +258,12 @@ export function ScheduleInterviewDialog({
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-2">
                                         <Label className="text-xs text-muted-foreground">Date *</Label>
-                                        <Input
-                                            type="date"
+                                        <DateField
                                             value={slot.date}
-                                            onChange={(e) => updateSlotDate(slot.id, e.target.value)}
-                                            min={today}
+                                            onChange={(v) => updateSlotDate(slot.id, v)}
+                                            placeholder="Select date"
+                                            minDate={today}
                                             disabled={sending}
-                                            required
                                         />
                                     </div>
                                     <div className="space-y-2">
