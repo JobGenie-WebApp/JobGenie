@@ -52,6 +52,7 @@ export async function POST(
                 status,
                 selected_time_slot,
                 interview_mode,
+                meeting_link,
                 interview_address,
                 invitation:job_invitations!inner(
                     id,
@@ -104,7 +105,12 @@ export async function POST(
             );
         }
 
-        if (round.interview_mode === 'online' && !meeting_link) {
+        // Prefer a link submitted at confirm time, otherwise reuse the one attached at scheduling.
+        const resolvedMeetingLink = (meeting_link && meeting_link.trim() !== '')
+            ? meeting_link.trim()
+            : (round.meeting_link || null);
+
+        if (round.interview_mode === 'online' && !resolvedMeetingLink) {
             return NextResponse.json(
                 { success: false, error: "Meeting link is required for online interviews" },
                 { status: 400 }
@@ -122,8 +128,8 @@ export async function POST(
         if (confirmed_time) {
             updateData.confirmed_time = confirmed_time;
         }
-        if (meeting_link) {
-            updateData.meeting_link = meeting_link;
+        if (round.interview_mode === 'online' && resolvedMeetingLink) {
+            updateData.meeting_link = resolvedMeetingLink;
         }
 
         const { error: updateError } = await supabase
@@ -155,7 +161,7 @@ export async function POST(
             
             // For online use the newly provided meeting link; for physical use address already on the round
             const meetingLinkOrAddress = round.interview_mode === 'online'
-                ? meeting_link
+                ? (resolvedMeetingLink ?? '')
                 : (round.interview_address ?? '');
             
             sendInterviewConfirmedEmail(

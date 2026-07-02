@@ -185,6 +185,12 @@ function InvitationDetailPanel({
     const awaitingConfirm = inv.status === 'accepted' && !inv.invitation_canceled && inv.selected_time_slot && !hasInterviewOutcome && inv.interview_confirmed;
     const canEdit = (inv.status === 'pending' || inv.status === 'viewed') && !isCanceled;
 
+    // Cancellation is only allowed up to the day BEFORE the scheduled interview date.
+    const cancelInterviewDate = (inv.mis_rescheduled && inv.mis_reschedule_data?.date)
+        ? inv.mis_reschedule_data.date
+        : inv.selected_time_slot?.date;
+    const canCancel = !!cancelInterviewDate && cancelInterviewDate.slice(0, 10) > new Date().toISOString().slice(0, 10);
+
     // Edit invitation dialog state
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [editSlots, setEditSlots] = useState<{ id: string; date: string; time: string }[]>([]);
@@ -410,6 +416,7 @@ function InvitationDetailPanel({
                                         <div>
                                             <label className="text-xs font-semibold mb-1.5 block text-blue-900 dark:text-blue-200">Meeting Link *</label>
                                             <Input type="url" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} className="h-9 text-sm bg-white dark:bg-blue-950/30" placeholder="https://zoom.us/j/... or Google Meet link" />
+                                            <p className="mt-1 text-[11px] text-blue-700/80 dark:text-blue-400">{inv.meeting_link ? "Pre-filled from scheduling — edit if needed. The candidate sees it once you confirm." : "The candidate sees this link once you confirm."}</p>
                                         </div>
                                     )}
 
@@ -430,7 +437,7 @@ function InvitationDetailPanel({
                                         <Button onClick={handleConfirmInterview} disabled={isConfirming} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="sm">
                                             {isConfirming ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Confirming...</> : <><CheckCircle2 className="h-4 w-4 mr-2" />Confirm Interview</>}
                                         </Button>
-                                        <Button variant="outline" size="sm" className="border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={() => setShowCancelDialog(true)} disabled={isCanceling}>
+                                        <Button variant="outline" size="sm" className="border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={() => setShowCancelDialog(true)} disabled={isCanceling || !canCancel} title={!canCancel ? "Interviews can only be cancelled before the scheduled day" : undefined}>
                                             <X className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -489,9 +496,14 @@ function InvitationDetailPanel({
                                         </div>
                                     )}
                                     <div className="pt-2 border-t border-green-200 dark:border-green-800">
-                                        <Button variant="outline" size="sm" className="w-full h-8 text-xs border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={() => setShowCancelDialog(true)}>
+                                        <Button variant="outline" size="sm" className="w-full h-8 text-xs border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 disabled:opacity-50" onClick={() => setShowCancelDialog(true)} disabled={!canCancel}>
                                             <X className="h-3 w-3 mr-1.5" />Cancel Interview
                                         </Button>
+                                        {!canCancel && (
+                                            <p className="mt-1.5 text-[11px] text-muted-foreground text-center">
+                                                Interviews can only be cancelled before the scheduled day.
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </StatusCard>
@@ -1014,6 +1026,13 @@ export default function InvitationsClient() {
             setHasInterviewOutcome(false);
         }
     }, [selectedInvitation]);
+
+    // Pre-fill the confirm form with any meeting link that was attached at scheduling time
+    // so the employer only has to review it (matching how the physical address is prefilled).
+    useEffect(() => {
+        setMeetingLink(selectedInvitation?.meeting_link || "");
+        setConfirmedTime("");
+    }, [selectedInvitation?.id, selectedInvitation?.meeting_link]);
 
     useEffect(() => {
         fetchInvitations();

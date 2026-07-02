@@ -149,6 +149,26 @@ function formatTimeSlotLabel(t: string) {
     return `${hour}:${m === 0 ? "00" : m} ${ampm}`;
 }
 
+/** Inline meeting link that becomes a non-clickable, struck-through label once the pipeline is
+ *  concluded (candidate rejected or an offer made) — the interview is over, so links are inert. */
+function MeetingLinkChip({ link, disabled }: { link: string; disabled?: boolean }) {
+    if (disabled) {
+        return (
+            <span className="text-xs text-muted-foreground/60 truncate flex items-center gap-1 line-through decoration-muted-foreground/40">
+                <ExternalLink className="h-3 w-3 shrink-0" />
+                {link}
+            </span>
+        );
+    }
+    return (
+        <a href={link} target="_blank" rel="noopener noreferrer"
+            className="text-xs text-primary underline underline-offset-2 truncate flex items-center gap-1">
+            <ExternalLink className="h-3 w-3 shrink-0" />
+            {link}
+        </a>
+    );
+}
+
 export function InterviewRoundsDisplay({
     invitationId,
     candidateName,
@@ -190,13 +210,15 @@ export function InterviewRoundsDisplay({
         roundLabel: string | null;
         interviewMode: string | null;
         selectedTimeSlot: InterviewTimeSlot | null;
+        meetingLink: string | null;
     }>({
         isOpen: false,
         roundId: "",
         roundNumber: 0,
         roundLabel: null,
         interviewMode: null,
-        selectedTimeSlot: null
+        selectedTimeSlot: null,
+        meetingLink: null
     });
 
     const [cancelRoundDialog, setCancelRoundDialog] = useState<{
@@ -426,8 +448,64 @@ export function InterviewRoundsDisplay({
         ? [...rounds].sort((a, b) => b.round_number - a.round_number).find(r => !r.outcome && !r.round_canceled)
         : null;
 
+    // The most recent round, used to surface the pipeline's next required action prominently.
+    const latestRound = rounds.length > 0
+        ? [...rounds].sort((a, b) => b.round_number - a.round_number)[0]
+        : null;
+    const advanceNeedsSchedule = !!latestRound
+        && latestRound.outcome === "advance"
+        && !latestRound.round_canceled
+        && !rounds.some(r => r.round_number === latestRound.round_number + 1);
+    const offerNeedsCreation = !!latestRound
+        && latestRound.outcome === "offer"
+        && !offerExists;
+    // Pipeline is concluded once the candidate is rejected or an offer stage is reached — after
+    // that all meeting links / interview actions are inert.
+    const pipelineConcluded = offerExists || rounds.some(r => r.outcome === "reject" || r.outcome === "offer");
+
     return (
         <>
+            {/* Next-step action banner — surfaces the pipeline's next action up front instead of
+                hiding it inside the completed round's card. */}
+            {advanceNeedsSchedule && latestRound && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-4 flex flex-wrap items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                        <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold">{(latestRound.round_label || `Round ${latestRound.round_number}`)} passed</p>
+                        <p className="text-xs text-muted-foreground">Ready to schedule the next interview round for {candidateName}.</p>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={() => setNextRoundDialog({ isOpen: true, previousRoundId: latestRound.id, nextRoundNumber: latestRound.round_number + 1 })}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                        <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                        Schedule Next Round
+                    </Button>
+                </div>
+            )}
+            {offerNeedsCreation && latestRound && (
+                <div className="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/25 dark:border-blue-800 p-4 mb-4 flex flex-wrap items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/15 shrink-0">
+                        <Briefcase className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Ready to make an offer</p>
+                        <p className="text-xs text-blue-800/80 dark:text-blue-300">{candidateName} passed the interviews — create and send the job offer.</p>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={() => setOfferDialog({ isOpen: true, roundId: latestRound.id })}
+                        className="bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                        <Briefcase className="h-3.5 w-3.5 mr-1.5" />
+                        Create Job Offer
+                    </Button>
+                </div>
+            )}
+
             {/* Active round card — shown above the rounds list when showActiveRoundCard=true */}
             {activeRound && activeRound.round_number > 1 && (() => {
                 const slot = activeRound.selected_time_slot;
@@ -642,8 +720,10 @@ export function InterviewRoundsDisplay({
                     const isPending = round.status === 'pending' || round.status === 'viewed' || round.status === 'accepted';
                     const canAddFeedback = (isConfirmedOrRescheduled || isPending) && !round.outcome && !isCanceled;
                     const needsConfirmation = round.status === 'accepted' && !round.confirmed_at && !isCanceled;
-                    // Cancel allowed for any active round (pending, confirmed, etc.)
-                    const canCancelRound = (isConfirmedOrRescheduled || isPending) && !round.outcome && !isCanceled;
+                    // Cancel allowed for any active round (pending, confirmed, etc.) — except Round 1,
+                    // which is the initial interview and is cancelled via the invitation-level
+                    // "Cancel Interview" action (that properly cancels the whole invitation).
+                    const canCancelRound = round.round_number > 1 && (isConfirmedOrRescheduled || isPending) && !round.outcome && !isCanceled;
                     // Edit allowed before candidate accepts (pending/viewed)
                     const canEditRound = isPending && !round.outcome && !isCanceled;
                     
@@ -734,11 +814,7 @@ export function InterviewRoundsDisplay({
                                                             )}
                                                             {mode === 'online' && meetingLink && (
                                                                 <div className="flex items-center gap-2">
-                                                                    <a href={meetingLink} target="_blank" rel="noopener noreferrer"
-                                                                        className="text-xs text-primary underline underline-offset-2 truncate flex items-center gap-1">
-                                                                        <ExternalLink className="h-3 w-3 shrink-0" />
-                                                                        {meetingLink}
-                                                                    </a>
+                                                                    <MeetingLinkChip link={meetingLink} disabled={pipelineConcluded} />
                                                                 </div>
                                                             )}
                                                             {mode === 'physical' && address && (
@@ -781,11 +857,7 @@ export function InterviewRoundsDisplay({
                                                             </div>
                                                         )}
                                                         {mode === 'online' && meetingLink && (
-                                                            <a href={meetingLink} target="_blank" rel="noopener noreferrer"
-                                                                className="text-xs text-primary underline underline-offset-2 truncate flex items-center gap-1">
-                                                                <ExternalLink className="h-3 w-3 shrink-0" />
-                                                                {meetingLink}
-                                                            </a>
+                                                            <MeetingLinkChip link={meetingLink} disabled={pipelineConcluded} />
                                                         )}
                                                         {mode === 'physical' && address && (
                                                             <div className="flex items-start gap-2">
@@ -832,7 +904,8 @@ export function InterviewRoundsDisplay({
                                                             roundNumber: round.round_number,
                                                             roundLabel: round.round_label,
                                                             interviewMode: round.interview_mode,
-                                                            selectedTimeSlot: round.selected_time_slot
+                                                            selectedTimeSlot: round.selected_time_slot,
+                                                            meetingLink: round.meeting_link
                                                         });
                                                     }}
                                                     className="flex-1 bg-green-600 hover:bg-green-700"
@@ -860,24 +933,15 @@ export function InterviewRoundsDisplay({
                                                 </Button>
                                             )}
 
+                                            {/* Advance/offer next-step actions live in the prominent banner at the top
+                                                of the rounds section — the completed card only shows passive status. */}
                                             {round.outcome === 'advance' && !nextRoundExists && (
-                                                <Button
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setNextRoundDialog({
-                                                            isOpen: true,
-                                                            previousRoundId: round.id,
-                                                            nextRoundNumber: round.round_number + 1
-                                                        });
-                                                    }}
-                                                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                                                >
-                                                    <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                                                    Schedule Next Round
-                                                </Button>
+                                                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                    <ArrowRight className="h-3.5 w-3.5 text-primary" />
+                                                    Advanced — next round pending
+                                                </p>
                                             )}
-                                            
+
                                             {round.outcome === 'advance' && nextRoundExists && (
                                                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center dark:bg-green-950/20 dark:border-green-800">
                                                     <p className="text-sm text-green-800 dark:text-green-200 flex items-center justify-center gap-2">
@@ -888,21 +952,10 @@ export function InterviewRoundsDisplay({
                                             )}
 
                                             {round.outcome === 'offer' && !offerExists && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setOfferDialog({
-                                                            isOpen: true,
-                                                            roundId: round.id
-                                                        });
-                                                    }}
-                                                    className="flex-1"
-                                                >
-                                                    <Briefcase className="h-3.5 w-3.5 mr-1.5" />
-                                                    Create Job Offer
-                                                </Button>
+                                                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                    <Briefcase className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                                    Ready for offer — create it from the banner above
+                                                </p>
                                             )}
 
                                             {round.outcome === 'offer' && offerExists && offerDetails && (
@@ -998,7 +1051,18 @@ export function InterviewRoundsDisplay({
                 candidateName={candidateName}
                 isOpen={feedbackDialog.isOpen}
                 onClose={() => setFeedbackDialog({ isOpen: false, roundId: "", roundNumber: 0 })}
-                onSuccess={handleFeedbackSuccess}
+                onSuccess={(outcome) => {
+                    // Capture before the dialog resets its parent state on close.
+                    const roundId = feedbackDialog.roundId;
+                    const roundNumber = feedbackDialog.roundNumber;
+                    handleFeedbackSuccess();
+                    // Flow straight into the next step so the employer doesn't have to hunt for it.
+                    if (outcome === "advance") {
+                        setNextRoundDialog({ isOpen: true, previousRoundId: roundId, nextRoundNumber: roundNumber + 1 });
+                    } else if (outcome === "offer") {
+                        setOfferDialog({ isOpen: true, roundId });
+                    }
+                }}
             />
 
             <NextRoundDialog
@@ -1026,6 +1090,7 @@ export function InterviewRoundsDisplay({
                 candidateName={candidateName}
                 interviewMode={confirmDialog.interviewMode}
                 selectedTimeSlot={confirmDialog.selectedTimeSlot}
+                existingMeetingLink={confirmDialog.meetingLink}
                 isOpen={confirmDialog.isOpen}
                 onClose={() => setConfirmDialog({
                     isOpen: false,
@@ -1033,7 +1098,8 @@ export function InterviewRoundsDisplay({
                     roundNumber: 0,
                     roundLabel: null,
                     interviewMode: null,
-                    selectedTimeSlot: null
+                    selectedTimeSlot: null,
+                    meetingLink: null
                 })}
                 onSuccess={handleConfirmSuccess}
             />

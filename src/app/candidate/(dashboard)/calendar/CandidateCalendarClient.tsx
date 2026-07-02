@@ -98,7 +98,7 @@ function EventDetailModal({ event, onClose }: EventDetailModalProps) {
                             <Clock className="h-4 w-4 flex-shrink-0 text-primary" />
                             <span>{format(event.start, "h:mm a")} – {format(event.end, "h:mm a")}</span>
                         </div>
-                        {r.interviewMode === "online" && r.meetingLink && (
+                        {r.interviewMode === "online" && r.meetingLink && r.isConfirmed && (
                             <a href={r.meetingLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary hover:underline font-medium">
                                 <Video className="h-4 w-4 flex-shrink-0" />Join Meeting<ExternalLink className="h-3 w-3" />
                             </a>

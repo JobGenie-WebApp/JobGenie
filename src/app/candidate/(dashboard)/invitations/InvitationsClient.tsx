@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Loader2, Mail, MapPin } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Building2, Mail, ChevronRight } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -100,8 +100,28 @@ export default function InvitationsClient() {
 
     if (isLoading) {
         return (
-            <div className="flex min-h-[50vh] items-center justify-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:flex-row md:h-[calc(100vh-68px-2.5rem*2)] md:min-h-[560px]">
+                <div className="w-full md:w-80 xl:w-96 border-border md:border-r flex flex-col">
+                    <div className="px-4 pt-4 pb-3 border-b border-border space-y-3">
+                        <Skeleton className="h-5 w-28" />
+                        <Skeleton className="h-8 w-full rounded-lg" />
+                    </div>
+                    <div className="divide-y divide-border/60">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="flex gap-2.5 items-start px-4 py-3.5">
+                                <Skeleton className="h-9 w-9 rounded-lg flex-shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-3.5 w-3/4" />
+                                    <Skeleton className="h-3 w-1/2" />
+                                    <Skeleton className="h-4 w-24 rounded-full" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="hidden md:flex flex-1 items-center justify-center bg-muted/10">
+                    <Skeleton className="h-40 w-2/3 rounded-2xl" />
+                </div>
             </div>
         );
     }
@@ -225,7 +245,7 @@ export default function InvitationsClient() {
 
                                         <div className="flex gap-2.5 items-start">
                                             {/* Logo */}
-                                            <div className="h-9 w-9 rounded-lg border border-border/70 bg-muted/30 flex items-center justify-center overflow-hidden flex-shrink-0 mt-0.5">
+                                            <div className="h-9 w-9 rounded-lg border border-border/70 bg-white dark:bg-zinc-800 flex items-center justify-center overflow-hidden flex-shrink-0 mt-0.5">
                                                 {inv.company.logo_url
                                                     ? <img src={inv.company.logo_url} alt="" className="h-full w-full object-contain p-1" />
                                                     : <Building2 className="h-4 w-4 text-muted-foreground/60" />
@@ -261,6 +281,11 @@ export default function InvitationsClient() {
                                                     </span>
                                                 </div>
                                             </div>
+
+                                            <ChevronRight className={cn(
+                                                "h-4 w-4 self-center flex-shrink-0 transition-colors",
+                                                isSelected ? "text-primary" : "text-muted-foreground/25 group-hover:text-muted-foreground/60",
+                                            )} />
                                         </div>
                                     </button>
                                 );

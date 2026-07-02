@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -23,6 +23,8 @@ interface RoundConfirmDialogProps {
     candidateName: string;
     interviewMode: string | null;
     selectedTimeSlot: { date: string; time: string; is_alternative?: boolean } | null;
+    /** Meeting link already attached when the round was scheduled/edited (pre-fills the input). */
+    existingMeetingLink?: string | null;
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
@@ -35,6 +37,7 @@ export function RoundConfirmDialog({
     candidateName,
     interviewMode,
     selectedTimeSlot,
+    existingMeetingLink,
     isOpen,
     onClose,
     onSuccess,
@@ -43,6 +46,11 @@ export function RoundConfirmDialog({
     const [submitting, setSubmitting] = useState(false);
 
     const isOnline = interviewMode === "online";
+
+    // Pre-fill with any meeting link attached at scheduling time so the employer only reviews it.
+    useEffect(() => {
+        if (isOpen) setMeetingLink(existingMeetingLink || "");
+    }, [isOpen, existingMeetingLink]);
 
     const handleSubmit = async () => {
         if (isOnline && !meetingLink.trim()) {
@@ -128,7 +136,7 @@ export function RoundConfirmDialog({
                                 onChange={e => setMeetingLink(e.target.value)}
                                 disabled={submitting}
                             />
-                            <p className="text-xs text-muted-foreground">Google Meet, Zoom, Teams, or any video call link</p>
+                            <p className="text-xs text-muted-foreground">{existingMeetingLink ? "Pre-filled from scheduling — edit if needed. The candidate sees it once confirmed." : "Google Meet, Zoom, Teams, or any video call link"}</p>
                         </div>
                     )}
 

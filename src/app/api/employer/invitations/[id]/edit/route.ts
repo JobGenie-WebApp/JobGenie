@@ -19,10 +19,10 @@ export async function PATCH(
 
         const supabase = createAdminClient();
 
-        // Fetch invitation and verify ownership
+        // Fetch invitation
         const { data: invitation, error: invError } = await supabase
             .from("job_invitations")
-            .select("id, status, interview_confirmed, invitation_canceled, employer_id, employers!inner(user_id)")
+            .select("id, status, interview_confirmed, invitation_canceled, company_id")
             .eq("id", invitationId)
             .single();
 
@@ -30,8 +30,13 @@ export async function PATCH(
             return NextResponse.json({ success: false, error: "Invitation not found" }, { status: 404 });
         }
 
-        const emp = (invitation as unknown as { employers: { user_id: string }[] }).employers?.[0];
-        if (emp?.user_id !== user.id) {
+        // Authorize by company (any employer in the owning company may edit)
+        const { data: employer } = await supabase
+            .from("employers")
+            .select("company_id")
+            .eq("user_id", user.id)
+            .single();
+        if (!employer || employer.company_id !== (invitation as unknown as { company_id: string }).company_id) {
             return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
         }
 
