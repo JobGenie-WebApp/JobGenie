@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar, Clock, Loader2, Mail, User, Video, MapPinned, Phone, Briefcase, ExternalLink, Copy, CheckCircle2, X, ChevronDown, LayoutList, Kanban, Pencil, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { DateField } from "@/components/ui/date-field";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -640,11 +641,13 @@ function InvitationDetailPanel({
                             </div>
                             {editSlots.map((slot, i) => (
                                 <div key={slot.id} className="flex items-center gap-2">
-                                    <input
-                                        type="date"
+                                    <DateField
                                         value={slot.date}
-                                        onChange={e => setEditSlots(editSlots.map(s => s.id === slot.id ? { ...s, date: e.target.value } : s))}
-                                        className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs"
+                                        onChange={v => setEditSlots(editSlots.map(s => s.id === slot.id ? { ...s, date: v } : s))}
+                                        placeholder="Date"
+                                        disablePast
+                                        className="flex-1"
+                                        triggerClassName="h-8 rounded-md bg-background px-2 text-xs"
                                     />
                                     <select
                                         value={slot.time}

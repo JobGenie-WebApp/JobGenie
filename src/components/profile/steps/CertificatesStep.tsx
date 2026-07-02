@@ -2,6 +2,7 @@
 
 import { Medal } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSection } from "../shared/FormSection";
@@ -113,21 +114,24 @@ export function CertificatesStep({ certificates, onChange, onNext, onPrevious }:
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor={`issueDate-${index}`}>Issue Date</Label>
-                                    <Input
+                                    <DateField
                                         id={`issueDate-${index}`}
-                                        type="date"
                                         value={cert.issueDate || ""}
-                                        onChange={(e) => handleUpdate(index, "issueDate", e.target.value)}
+                                        onChange={(v) => handleUpdate(index, "issueDate", v)}
+                                        placeholder="Select date"
+                                        disableFuture
+                                        clearable
                                     />
                                     {errors[`${index}.issueDate`] && <p className="text-sm text-destructive">{errors[`${index}.issueDate`]}</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor={`expiryDate-${index}`}>Expiry Date</Label>
-                                    <Input
+                                    <DateField
                                         id={`expiryDate-${index}`}
-                                        type="date"
                                         value={cert.expiryDate || ""}
-                                        onChange={(e) => handleUpdate(index, "expiryDate", e.target.value)}
+                                        onChange={(v) => handleUpdate(index, "expiryDate", v)}
+                                        placeholder="Select date"
+                                        clearable
                                     />
                                     {errors[`${index}.expiryDate`] && <p className="text-sm text-destructive">{errors[`${index}.expiryDate`]}</p>}
                                 </div>

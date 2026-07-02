@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,7 +138,7 @@ export function MisJobEditClient({ jobId }: { jobId: string }) {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div><Label>Positions Available</Label><Input type="number" min="1" value={form.positions_available} onChange={(e) => set("positions_available", e.target.value)} /></div>
-                        <div><Label>Deadline</Label><Input type="date" value={form.deadline} onChange={(e) => set("deadline", e.target.value)} /></div>
+                        <div><Label>Deadline</Label><DateField value={form.deadline} onChange={(v) => set("deadline", v)} placeholder="Select deadline" clearable /></div>
                     </div>
                 </CardContent>
             </Card>

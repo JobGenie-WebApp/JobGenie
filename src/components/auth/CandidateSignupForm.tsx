@@ -17,6 +17,7 @@ import {
     getStrengthColor,
 } from "@/lib/validations/candidate-schema";
 import { registerCandidate, type ActionState } from "@/app/actions/auth";
+import { DateField } from "@/components/ui/date-field";
 import { cn } from "@/lib/utils";
 
 // ── Shared input style ────────────────────────────────────────────────────────
@@ -162,10 +163,14 @@ export function CandidateSignupForm() {
 
             {/* Date of Birth */}
             <Field label="Date of Birth" id="dateOfBirth" error={errors.dateOfBirth}>
-                <input id="dateOfBirth" name="dateOfBirth" type="date" max="9999-12-31"
-                    value={formData.dateOfBirth} onChange={e => set("dateOfBirth", e.target.value)}
-                    onBlur={e => validateField("dateOfBirth", e.target.value)}
-                    className={cn(inputCls, "[color-scheme:dark]", errors.dateOfBirth && "border-red-500/50 focus:ring-red-500/30")} />
+                <DateField id="dateOfBirth" name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={v => set("dateOfBirth", v)}
+                    onBlur={v => validateField("dateOfBirth", v)}
+                    placeholder="Select date of birth"
+                    disableFuture
+                    error={!!errors.dateOfBirth}
+                    triggerClassName={cn("h-auto rounded-xl border-border bg-muted/40 px-4 py-2.5 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/60", errors.dateOfBirth && "border-red-500/50 focus-visible:ring-red-500/30")} />
             </Field>
 
             {/* Address */}

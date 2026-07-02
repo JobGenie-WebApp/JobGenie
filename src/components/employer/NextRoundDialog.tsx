@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
@@ -274,11 +275,11 @@ export function NextRoundDialog({
                                 <div key={slot.id} className="flex items-end gap-2 rounded-xl border border-border bg-card px-3 py-3">
                                     <div className="flex-1 space-y-1.5">
                                         <Label className="text-xs text-muted-foreground">Date <span className="text-destructive">*</span></Label>
-                                        <Input
-                                            type="date"
+                                        <DateField
                                             value={slot.date}
-                                            onChange={e => updateSlot(slot.id, "date", e.target.value)}
-                                            min={today}
+                                            onChange={v => updateSlot(slot.id, "date", v)}
+                                            placeholder="Select date"
+                                            minDate={today}
                                             disabled={submitting}
                                         />
                                     </div>

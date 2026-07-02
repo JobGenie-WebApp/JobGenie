@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -388,19 +389,21 @@ export function AuditLogsClient() {
                     <>
                         <div className="space-y-1.5">
                             <div className="text-xs text-muted-foreground">From</div>
-                            <Input
-                                type="date"
+                            <DateField
                                 value={customFrom}
-                                onChange={(e) => setCustomFrom(e.target.value)}
+                                onChange={setCustomFrom}
+                                placeholder="From"
+                                clearable
                                 className="w-[160px]"
                             />
                         </div>
                         <div className="space-y-1.5">
                             <div className="text-xs text-muted-foreground">To</div>
-                            <Input
-                                type="date"
+                            <DateField
                                 value={customTo}
-                                onChange={(e) => setCustomTo(e.target.value)}
+                                onChange={setCustomTo}
+                                placeholder="To"
+                                clearable
                                 className="w-[160px]"
                             />
                         </div>

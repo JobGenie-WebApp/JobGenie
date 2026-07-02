@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DateField } from "@/components/ui/date-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
@@ -186,23 +187,23 @@ export function JobOfferDialog({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
                             <Label htmlFor="start_date">Proposed Start Date</Label>
-                            <Input
+                            <DateField
                                 id="start_date"
-                                type="date"
                                 value={formData.start_date}
-                                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                min={today}
+                                onChange={(v) => setFormData({ ...formData, start_date: v })}
+                                placeholder="Select date"
+                                minDate={today}
                                 disabled={submitting}
                             />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="expiry_date">Offer Expiry Date</Label>
-                            <Input
+                            <DateField
                                 id="expiry_date"
-                                type="date"
                                 value={formData.expiry_date}
-                                onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
-                                min={today}
+                                onChange={(v) => setFormData({ ...formData, expiry_date: v })}
+                                placeholder="Select date"
+                                minDate={today}
                                 disabled={submitting}
                             />
                             <p className="text-xs text-muted-foreground">

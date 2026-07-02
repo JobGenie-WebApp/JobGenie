@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DateField } from "@/components/ui/date-field";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -286,8 +287,8 @@ function PaymentsTab() {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="w-36" />
-                    <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="w-36" />
+                    <DateField value={dateFrom} onChange={(v) => { setDateFrom(v); setPage(1); }} placeholder="From" clearable className="w-36" />
+                    <DateField value={dateTo} onChange={(v) => { setDateTo(v); setPage(1); }} placeholder="To" clearable className="w-36" />
                     <Input
                         placeholder="Search job title…"
                         value={jobSearch}
@@ -585,7 +586,7 @@ function CreatePaymentRequestDialog({
                         </div>
                         <div className="space-y-1.5">
                             <Label>Due Date (optional)</Label>
-                            <Input type="date" value={form.due_date} onChange={(e) => setForm(f => ({ ...f, due_date: e.target.value }))} />
+                            <DateField value={form.due_date} onChange={(v) => setForm(f => ({ ...f, due_date: v }))} placeholder="Select due date" clearable />
                         </div>
                     </div>
                     <div className="space-y-1.5">
