@@ -255,5 +255,32 @@ export function monthBoundsUTC(
     };
 }
 
+/**
+ * Human-friendly countdown to a future instant, e.g. "in 45 min", "in 3 hours",
+ * "Tomorrow", "in 5 days", "in 2 weeks". Returns "" for instants in the past.
+ */
+export function formatCountdown(target: Date, now: Date = new Date()): string {
+    const ms = target.getTime() - now.getTime();
+    if (!isValid(target) || ms <= 0) return "";
+
+    const minutes = Math.round(ms / 60000);
+    if (minutes < 60) return `in ${minutes} min`;
+
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dayDiff = Math.round(
+        (startOfDay(target).getTime() - startOfDay(now).getTime()) / 86400000
+    );
+
+    if (dayDiff <= 0) {
+        const hours = Math.round(ms / 3600000);
+        return hours <= 1 ? "in 1 hour" : `in ${hours} hours`;
+    }
+    if (dayDiff === 1) return "Tomorrow";
+    if (dayDiff < 7) return `in ${dayDiff} days`;
+    if (dayDiff < 14) return "in 1 week";
+    if (dayDiff < 60) return `in ${Math.round(dayDiff / 7)} weeks`;
+    return `in ${Math.round(dayDiff / 30)} months`;
+}
+
 // Re-export date-fns format for callers that do their own parsing.
 export { formatFns as format, toZonedTime, fromZonedTime };

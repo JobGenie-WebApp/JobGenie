@@ -17,16 +17,19 @@ import { Loader2, CheckCircle2, XCircle, ArrowRight, Briefcase } from "lucide-re
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
+export type FeedbackOutcome = 'advance' | 'reject' | 'offer' | 'no_decision';
+
 interface InterviewFeedbackDialogProps {
     roundId: string;
     roundNumber: number;
     candidateName: string;
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void;
+    /** Called after the feedback is saved, with the chosen outcome so the caller can flow into the next step. */
+    onSuccess: (outcome: FeedbackOutcome) => void;
 }
 
-type Outcome = 'advance' | 'reject' | 'offer' | 'no_decision';
+type Outcome = FeedbackOutcome;
 
 export function InterviewFeedbackDialog({
     roundId,
@@ -61,7 +64,7 @@ export function InterviewFeedbackDialog({
 
             if (data.success) {
                 toast.success("Interview feedback saved successfully!");
-                onSuccess();
+                onSuccess(outcome);
                 handleClose();
             } else {
                 toast.error(data.error || "Failed to save feedback");

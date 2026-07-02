@@ -119,7 +119,7 @@ export async function POST(request: Request) {
 
         // Parse request body
         const body = await request.json();
-        const { candidateId, industry, jobDesignation, message, timeSlots, interviewMode, interviewAddress, mapLink } = body;
+        const { candidateId, industry, jobDesignation, message, timeSlots, interviewMode, meetingLink, interviewAddress, mapLink } = body;
 
         if (!candidateId || !industry || !jobDesignation || !interviewMode) {
             return NextResponse.json(
@@ -244,8 +244,9 @@ export async function POST(request: Request) {
                 alternative_dates: null,  // Removed alternative dates logic
                 employer_last_seen_at: sentNow,
                 interview_mode: interviewMode,
-                interview_address: interviewAddress || null,
-                map_link: mapLink || null,
+                meeting_link: interviewMode === 'online' ? (meetingLink || null) : null,
+                interview_address: interviewMode === 'physical' ? (interviewAddress || null) : null,
+                map_link: interviewMode === 'physical' ? (mapLink || null) : null,
             })
             .select()
             .single();

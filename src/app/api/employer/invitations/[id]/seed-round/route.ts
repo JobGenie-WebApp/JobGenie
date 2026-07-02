@@ -19,15 +19,14 @@ export async function POST(
 
         const supabase = createAdminClient();
 
-        // Verify employer owns this invitation
+        // Load the invitation
         const { data: invitation, error: invError } = await supabase
             .from("job_invitations")
             .select(`
                 id, company_id, interview_confirmed, mis_rescheduled,
                 selected_time_slot, interview_mode, confirmed_time,
                 meeting_link, interview_address, map_link, confirmed_at,
-                mis_reschedule_data,
-                employer:employers!inner(user_id)
+                mis_reschedule_data
             `)
             .eq("id", invitationId)
             .single();
@@ -36,10 +35,17 @@ export async function POST(
             return NextResponse.json({ success: false, error: "Invitation not found" }, { status: 404 });
         }
 
-        type SeedInvitation = { employer: { user_id: string }[]; mis_reschedule_data: { date: string; time: string; interview_mode: string; meeting_link?: string; interview_address?: string; map_link?: string } | null; mis_rescheduled: boolean; selected_time_slot: Record<string, unknown> | null; interview_mode: string | null; confirmed_time: string | null; meeting_link: string | null; interview_address: string | null; map_link: string | null; confirmed_at: string | null };
+        type SeedInvitation = { company_id: string; mis_reschedule_data: { date: string; time: string; interview_mode: string; meeting_link?: string; interview_address?: string; map_link?: string } | null; mis_rescheduled: boolean; selected_time_slot: Record<string, unknown> | null; interview_mode: string | null; confirmed_time: string | null; meeting_link: string | null; interview_address: string | null; map_link: string | null; confirmed_at: string | null };
         const typedInv = invitation as unknown as SeedInvitation;
-        const emp = typedInv.employer?.[0];
-        if (emp?.user_id !== user.id) {
+
+        // Authorize by company (consistent with the confirm/cancel endpoints) — any employer
+        // in the owning company can manage the interview, not only the one who sent it.
+        const { data: employer } = await supabase
+            .from("employers")
+            .select("company_id")
+            .eq("user_id", user.id)
+            .single();
+        if (!employer || employer.company_id !== typedInv.company_id) {
             return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
         }
 
@@ -69,6 +75,10 @@ export async function POST(
                 : typedInv.selected_time_slot
                     ? [typedInv.selected_time_slot]
                     : [],
+            // Store the confirmed slot so the candidate/employer round views can show details.
+            selected_time_slot: isRescheduled
+                ? { date: reschedule.date, time: reschedule.time, is_alternative: false }
+                : typedInv.selected_time_slot,
             interview_mode: isRescheduled ? reschedule.interview_mode : typedInv.interview_mode,
             interview_confirmed: true,
             confirmed_time: isRescheduled ? reschedule.time : typedInv.confirmed_time,

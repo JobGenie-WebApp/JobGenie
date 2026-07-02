@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InterviewRoundsDisplay } from "@/components/employer/InterviewRoundsDisplay";
@@ -371,9 +372,66 @@ function InvitationModal({
     const [editMapLink, setEditMapLink] = useState('');
     const [isSavingEdit, setIsSavingEdit] = useState(false);
 
+    // Confirm-interview state (accepted → confirmed)
+    const [meetingLink, setMeetingLink] = useState('');
+    const [confirmedTime, setConfirmedTime] = useState('');
+    const [isConfirming, setIsConfirming] = useState(false);
+
+    // Cancel-interview state
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [cancellationReason, setCancellationReason] = useState('');
+    const [isCanceling, setIsCanceling] = useState(false);
+
+    // Pre-fill the meeting link with whatever was attached at scheduling time.
+    useEffect(() => {
+        setMeetingLink(inv?.meeting_link || '');
+        setConfirmedTime('');
+    }, [inv?.id, inv?.meeting_link]);
+
     if (!inv) return null;
 
     const canEdit = (inv.status === 'pending' || inv.status === 'viewed') && !inv.invitation_canceled;
+
+    const needsConfirmation =
+        inv.status === 'accepted' &&
+        !inv.invitation_canceled &&
+        !!inv.selected_time_slot &&
+        !inv.interview_confirmed;
+
+    const isAlternativeSlot = !!(inv.selected_time_slot as { is_alternative?: boolean } | null)?.is_alternative;
+
+    const handleConfirm = async () => {
+        if (inv.interview_mode === 'online' && !meetingLink.trim()) {
+            toast.error('Please provide a meeting link');
+            return;
+        }
+        if (isAlternativeSlot && !confirmedTime) {
+            toast.error('Please select a time slot');
+            return;
+        }
+        setIsConfirming(true);
+        try {
+            const res = await fetch(`/api/employer/invitations/${inv.id}/confirm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    meeting_link: meetingLink.trim() || null,
+                    confirmed_time: confirmedTime || undefined,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success('Interview confirmed!');
+                fetchInvitations();
+            } else {
+                toast.error(data.error || 'Failed to confirm interview');
+            }
+        } catch {
+            toast.error('An error occurred');
+        } finally {
+            setIsConfirming(false);
+        }
+    };
 
     const openEditDialog = () => {
         setEditSlots((inv.given_time_slots || []).map((s, i) => ({ id: String(i), date: s.date, time: s.time })));
@@ -428,6 +486,43 @@ function InvitationModal({
     );
     const { className: badgeCls } = journeyVariantToEmployerBadgeProps(journey.variant);
     const isCanceled = inv.invitation_canceled && !inv.mis_rescheduled;
+
+    // The interview process is concluded once the candidate is rejected or reaches an offer/hired
+    // stage — after that, cancelling is no longer applicable.
+    const concluded = !!offer
+        || ["rejected", "hired", "offered", "withdrawn", "expired"].includes(inv.pipeline_status ?? "")
+        || !!inv.interview_rounds?.some(r => r.outcome === "reject" || r.outcome === "offer");
+
+    // Cancellation is only allowed up to the day BEFORE the scheduled interview date.
+    const interviewDate = (inv.mis_rescheduled && inv.mis_reschedule_data?.date)
+        ? inv.mis_reschedule_data.date
+        : inv.selected_time_slot?.date;
+    const canCancel = !concluded && !!interviewDate && interviewDate.slice(0, 10) > new Date().toISOString().slice(0, 10);
+
+    const handleCancelInterview = async () => {
+        if (!cancellationReason.trim()) { toast.error('Please provide a reason'); return; }
+        setIsCanceling(true);
+        try {
+            const res = await fetch(`/api/employer/invitations/${inv.id}/cancel-interview`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cancellation_reason: cancellationReason.trim() }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success('Interview canceled');
+                setShowCancelDialog(false);
+                setCancellationReason('');
+                fetchInvitations();
+            } else {
+                toast.error(data.error || 'Failed to cancel interview');
+            }
+        } catch {
+            toast.error('An error occurred');
+        } finally {
+            setIsCanceling(false);
+        }
+    };
 
     return (
         <>
@@ -536,54 +631,91 @@ function InvitationModal({
                         </div>
                     )}
 
-                    {/* Confirmed interview */}
+                    {/* Confirmed interview — compact banner. Full schedule details live in the
+                        Round 1 card below (INTERVIEW ROUNDS) to avoid duplicating the same data. */}
                     {inv.interview_confirmed && !isCanceled && !inv.mis_rescheduled && (
-                        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/20 p-4">
-                            <div className="flex items-center gap-2 mb-3">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Interview Confirmed</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-xs">
-                                {inv.selected_time_slot && (
-                                    <>
-                                        <div className="flex items-center gap-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/20 px-2.5 py-2">
-                                            <Calendar className="h-3.5 w-3.5 shrink-0 text-emerald-700 dark:text-emerald-400" />
-                                            {formatUTCDate(inv.selected_time_slot.date, "MMM d, yyyy")}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/20 px-2.5 py-2">
-                                            <Clock className="h-3.5 w-3.5 shrink-0 text-emerald-700 dark:text-emerald-400" />
-                                            {inv.confirmed_time
-                                                ? formatUTCTime(inv.selected_time_slot.date, inv.confirmed_time)
-                                                : inv.selected_time_slot.time
-                                                    ? formatUTCTime(inv.selected_time_slot.date, inv.selected_time_slot.time)
-                                                    : "TBD"}
-                                        </div>
-                                    </>
+                        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Interview Confirmed</span>
+                            <div className="ml-auto flex flex-col items-end gap-1">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 disabled:opacity-50"
+                                    onClick={() => setShowCancelDialog(true)}
+                                    disabled={!canCancel}
+                                >
+                                    <X className="h-3 w-3 mr-1.5" />Cancel Interview
+                                </Button>
+                                {!canCancel && (
+                                    <p className="text-[11px] text-muted-foreground">
+                                        {concluded ? "Interview process concluded." : "Only cancellable before the scheduled day."}
+                                    </p>
                                 )}
-                                {inv.interview_mode && (
-                                    <div className="flex items-center gap-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/20 px-2.5 py-2">
-                                        {inv.interview_mode === "online"
-                                            ? <Video className="h-3.5 w-3.5 shrink-0 text-emerald-700 dark:text-emerald-400" />
-                                            : <MapPinned className="h-3.5 w-3.5 shrink-0 text-emerald-700 dark:text-emerald-400" />}
-                                        {inv.interview_mode === "online" ? "Online" : "Physical"}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Needs confirmation (candidate accepted, employer hasn't confirmed yet) */}
+                    {needsConfirmation && (
+                        <div className="rounded-xl border-2 border-blue-300 dark:border-blue-700 bg-blue-50/60 dark:bg-blue-950/20 p-4 space-y-4">
+                            <div className="flex items-center gap-2.5">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
+                                    <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-blue-900 dark:text-blue-100">Action Required: Confirm Interview</p>
+                                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                                        Candidate accepted for {formatUTCDate(inv.selected_time_slot?.date ?? '', "EEEE, MMM d")}
+                                        {!isAlternativeSlot && inv.selected_time_slot?.time &&
+                                            ` at ${formatUTCTime(inv.selected_time_slot.date, inv.selected_time_slot.time)}`}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {isAlternativeSlot && (
+                                <div>
+                                    <label className="text-xs font-semibold mb-2 block text-blue-900 dark:text-blue-200">Select Time Slot *</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00"].map(time => (
+                                            <button
+                                                key={time}
+                                                type="button"
+                                                onClick={() => setConfirmedTime(time)}
+                                                className={cn(
+                                                    "rounded-lg py-2 text-xs font-medium border transition-all",
+                                                    confirmedTime === time
+                                                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                                        : "bg-white dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 hover:border-blue-400"
+                                                )}
+                                            >{time}</button>
+                                        ))}
                                     </div>
-                                )}
-                            </div>
-                            {inv.interview_mode === "online" && inv.meeting_link && (
-                                <div className="flex items-center gap-2 mt-2">
-                                    <span className="flex-1 text-xs truncate text-muted-foreground border border-border rounded px-2 py-1 bg-background">
-                                        {inv.meeting_link}
-                                    </span>
-                                    <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => { navigator.clipboard.writeText(inv.meeting_link!); toast.success("Copied!"); }}>
-                                        <Copy className="h-3 w-3" />
-                                    </Button>
-                                    <Button size="sm" className="h-7 px-2 text-xs" asChild>
-                                        <a href={inv.meeting_link} target="_blank" rel="noopener noreferrer">
-                                            <ExternalLink className="h-3 w-3 mr-1" />Join
-                                        </a>
-                                    </Button>
                                 </div>
                             )}
+
+                            {inv.interview_mode === "online" && (
+                                <div>
+                                    <label className="text-xs font-semibold mb-1.5 block text-blue-900 dark:text-blue-200">Meeting Link *</label>
+                                    <Input type="url" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} className="h-9 text-sm bg-white dark:bg-blue-950/30" placeholder="https://meet.google.com/... or Zoom/Teams link" />
+                                    <p className="mt-1 text-[11px] text-blue-700/80 dark:text-blue-400">{inv.meeting_link ? "Pre-filled from scheduling — edit if needed. The candidate sees it once you confirm." : "The candidate sees this link once you confirm."}</p>
+                                </div>
+                            )}
+
+                            {inv.interview_mode === "physical" && (
+                                <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white/50 dark:bg-blue-950/20 px-3 py-2.5">
+                                    <p className="text-xs text-blue-800 dark:text-blue-300">
+                                        Location was shared with the candidate at scheduling. Confirming will notify them the interview is set.
+                                    </p>
+                                    {inv.interview_address && <p className="text-xs font-medium text-blue-900 dark:text-blue-200 mt-1">{inv.interview_address}</p>}
+                                </div>
+                            )}
+
+                            <Button onClick={handleConfirm} disabled={isConfirming} className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="sm">
+                                {isConfirming
+                                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Confirming...</>
+                                    : <><CheckCircle2 className="h-4 w-4 mr-2" />Confirm Interview</>}
+                            </Button>
                         </div>
                     )}
 
@@ -622,20 +754,17 @@ function InvitationModal({
                         </div>
                     )}
 
-                    {/* Interview rounds */}
+                    {/* Interview rounds — the component renders its own "Interview Rounds (N)" heading */}
                     {(inv.interview_confirmed || inv.mis_rescheduled) && (
-                        <div>
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Interview Rounds</p>
-                            <InterviewRoundsDisplay
-                                invitationId={inv.id}
-                                candidateName={`${inv.candidate.first_name} ${inv.candidate.last_name}`}
-                                jobTitle={inv.job_designation}
-                                onOutcomeFound={setHasOutcome}
-                                onUpdate={fetchInvitations}
-                                autoSeed={!!(inv.interview_confirmed || inv.mis_rescheduled)}
-                                showActiveRoundCard
-                            />
-                        </div>
+                        <InterviewRoundsDisplay
+                            invitationId={inv.id}
+                            candidateName={`${inv.candidate.first_name} ${inv.candidate.last_name}`}
+                            jobTitle={inv.job_designation}
+                            onOutcomeFound={setHasOutcome}
+                            onUpdate={fetchInvitations}
+                            autoSeed={!!(inv.interview_confirmed || inv.mis_rescheduled)}
+                            showActiveRoundCard
+                        />
                     )}
 
                     {/* Message */}
@@ -725,6 +854,37 @@ function InvitationModal({
                     <Button onClick={handleSaveEdit} disabled={isSavingEdit}>
                         {isSavingEdit && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
                         Save Changes
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        {/* Cancel Interview Dialog */}
+        <Dialog open={showCancelDialog} onOpenChange={(v) => { setShowCancelDialog(v); if (!v) setCancellationReason(''); }}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Cancel Interview</DialogTitle>
+                    <DialogDescription>
+                        Please provide a reason for canceling this interview. This will be shared with the candidate.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <Textarea
+                        placeholder="Enter your reason for cancellation..."
+                        value={cancellationReason}
+                        onChange={(e) => setCancellationReason(e.target.value)}
+                        rows={4}
+                        className="resize-none"
+                    />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => { setShowCancelDialog(false); setCancellationReason(''); }} disabled={isCanceling}>
+                        Keep Interview
+                    </Button>
+                    <Button variant="destructive" onClick={handleCancelInterview} disabled={isCanceling || !cancellationReason.trim()}>
+                        {isCanceling
+                            ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Canceling...</>
+                            : 'Confirm Cancellation'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

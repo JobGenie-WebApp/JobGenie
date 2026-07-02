@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, Check, Trash2, Calendar, CheckCircle2, XCircle, Clock, Gift, Send, RefreshCw } from "lucide-react";
+import { Fragment, useState } from "react";
+import { Bell, Check, Trash2, Calendar, CheckCircle2, XCircle, Clock, Gift, Send, RefreshCw, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isToday, isYesterday } from "date-fns";
 import { useNotifications, Notification } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +24,17 @@ function getNotificationMeta(type: string): {
   iconBg: string;
   iconColor: string;
 } {
-  if (type.includes("confirmed") || type.includes("accepted") || type.includes("offer_received")) {
+  if (type.includes("confirmed") || type.includes("accepted") || type.includes("hired") || type.includes("offer_received")) {
     return { Icon: CheckCircle2, iconBg: "bg-emerald-100 dark:bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400" };
   }
-  if (type.includes("declined") || type.includes("cancelled") || type.includes("withdrawn")) {
+  if (type.includes("declined") || type.includes("cancel") || type.includes("withdrawn") || type.includes("reject")) {
     return { Icon: XCircle, iconBg: "bg-red-100 dark:bg-red-500/15", iconColor: "text-red-500 dark:text-red-400" };
   }
   if (type.includes("rescheduled")) {
     return { Icon: RefreshCw, iconBg: "bg-amber-100 dark:bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400" };
+  }
+  if (type.includes("review") || type.includes("shortlist")) {
+    return { Icon: Clock, iconBg: "bg-amber-100 dark:bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400" };
   }
   if (type.includes("offer")) {
     return { Icon: Gift, iconBg: "bg-violet-100 dark:bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" };
@@ -39,10 +42,21 @@ function getNotificationMeta(type: string): {
   if (type.includes("scheduled") || type.includes("interview")) {
     return { Icon: Calendar, iconBg: "bg-blue-100 dark:bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" };
   }
+  if (type.includes("application") || type.includes("submitted") || type.includes("applied")) {
+    return { Icon: FileText, iconBg: "bg-sky-100 dark:bg-sky-500/15", iconColor: "text-sky-600 dark:text-sky-400" };
+  }
   if (type.includes("sent") || type.includes("received") || type.includes("invitation")) {
     return { Icon: Send, iconBg: "bg-sky-100 dark:bg-sky-500/15", iconColor: "text-sky-600 dark:text-sky-400" };
   }
   return { Icon: Clock, iconBg: "bg-muted", iconColor: "text-muted-foreground" };
+}
+
+/** Bucket a notification into a recency section label. */
+function sectionLabel(createdAt: string): string {
+  const d = new Date(createdAt);
+  if (isToday(d)) return "Today";
+  if (isYesterday(d)) return "Yesterday";
+  return "Earlier";
 }
 
 export function NotificationBell({ role = "candidate" }: NotificationBellProps) {
@@ -124,13 +138,20 @@ export function NotificationBell({ role = "candidate" }: NotificationBellProps) 
       <DropdownMenuContent align="end" className="w-80 md:w-96 p-0 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <span className="text-sm font-semibold">Notifications</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">Notifications</span>
+            {unreadCount > 0 && (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1.5 text-[11px] font-semibold text-primary">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </div>
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              <Check className="h-3 w-3" />
+              <Check className="h-3.5 w-3.5" />
               Mark all read
             </button>
           )}
@@ -138,86 +159,111 @@ export function NotificationBell({ role = "candidate" }: NotificationBellProps) 
 
         {/* Body */}
         {loading ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            Loading…
+          <div className="py-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3 px-4 py-3">
+                <div className="h-9 w-9 shrink-0 rounded-full bg-muted animate-pulse" />
+                <div className="flex-1 space-y-2 pt-1">
+                  <div className="h-3 w-3/4 rounded bg-muted animate-pulse" />
+                  <div className="h-2.5 w-1/3 rounded bg-muted animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : notifications.length === 0 ? (
-          <div className="py-10 flex flex-col items-center gap-2 text-center">
-            <Bell className="h-7 w-7 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No notifications yet</p>
+          <div className="py-12 flex flex-col items-center gap-3 text-center px-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/8 ring-1 ring-primary/15">
+              <Bell className="h-6 w-6 text-primary/50" />
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium text-foreground">You&apos;re all caught up</p>
+              <p className="text-xs text-muted-foreground">New updates about your interviews and applications will show up here.</p>
+            </div>
           </div>
         ) : (
           <ScrollArea className="h-[420px]">
-            <div className="py-1">
-              {notifications.slice(0, 10).map((notification) => {
-                const { Icon, iconBg, iconColor } = getNotificationMeta(notification.type);
-                const unread = !notification.is_read;
+            <div className="pb-1">
+              {(() => {
+                let lastSection = "";
+                return notifications.slice(0, 12).map((notification) => {
+                  const { Icon, iconBg, iconColor } = getNotificationMeta(notification.type);
+                  const unread = !notification.is_read;
+                  const section = sectionLabel(notification.created_at);
+                  const showHeader = section !== lastSection;
+                  lastSection = section;
 
-                return (
-                  <div
-                    key={notification.id}
-                    className={cn(
-                      "group relative flex items-start gap-3 px-4 py-3 cursor-pointer",
-                      "hover:bg-accent/60 transition-colors duration-100",
-                      unread && "bg-accent/30"
-                    )}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    {/* Type icon */}
-                    <div className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full", iconBg)}>
-                      <Icon className={cn("h-4 w-4", iconColor)} />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className={cn("text-[13px] leading-snug", unread ? "font-semibold" : "font-medium")}>
-                          {notification.title}
-                        </p>
-                        {unread && (
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  return (
+                    <Fragment key={notification.id}>
+                      {showHeader && (
+                        <div className="sticky top-0 z-10 bg-popover/95 backdrop-blur px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                          {section}
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          "group relative flex items-start gap-3 pl-4 pr-3 py-2.5 cursor-pointer transition-colors duration-100",
+                          unread ? "bg-primary/[0.04] hover:bg-primary/[0.07]" : "hover:bg-muted/50"
                         )}
-                      </div>
-                      {notification.body && expandedId === notification.id && (
-                        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                          {notification.body}
-                        </p>
-                      )}
-                      <p className="mt-1 text-[11px] text-muted-foreground/60">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                      </p>
-                    </div>
-
-                    {/* Actions (on hover) */}
-                    <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {unread && (
-                        <button
-                          className="flex h-6 w-6 items-center justify-center rounded hover:bg-background text-muted-foreground hover:text-foreground transition-colors"
-                          onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
-                          title="Mark as read"
-                        >
-                          <Check className="h-3 w-3" />
-                        </button>
-                      )}
-                      <button
-                        className="flex h-6 w-6 items-center justify-center rounded hover:bg-background text-muted-foreground hover:text-red-500 transition-colors"
-                        onClick={(e) => { e.stopPropagation(); deleteNotification(notification.id); }}
-                        title="Delete"
+                        onClick={() => handleNotificationClick(notification)}
                       >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                        {/* Unread accent bar */}
+                        {unread && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-r-full bg-primary" />}
+
+                        {/* Type icon */}
+                        <div className={cn("mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full", iconBg)}>
+                          <Icon className={cn("h-4 w-4", iconColor)} />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2">
+                            <p className={cn("flex-1 text-[13px] leading-snug", unread ? "font-semibold text-foreground" : "font-medium text-foreground/80")}>
+                              {notification.title}
+                            </p>
+                            {unread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                          </div>
+                          {notification.body && expandedId === notification.id && (
+                            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                              {notification.body}
+                            </p>
+                          )}
+                          <p className="mt-0.5 text-[11px] text-muted-foreground/60">
+                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                          </p>
+                        </div>
+
+                        {/* Actions (on hover) */}
+                        <div className="flex shrink-0 gap-0.5 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          {unread && (
+                            <button
+                              className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-background text-muted-foreground hover:text-foreground transition-colors"
+                              onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
+                              title="Mark as read"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          <button
+                            className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-background text-muted-foreground hover:text-red-500 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); deleteNotification(notification.id); }}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </Fragment>
+                  );
+                });
+              })()}
             </div>
           </ScrollArea>
         )}
 
         {/* Footer */}
-        {notifications.length > 10 && (
+        {notifications.length > 12 && (
           <div className="border-t border-border px-4 py-2.5 text-center">
-            <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <button className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
               View all notifications
             </button>
           </div>

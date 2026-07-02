@@ -67,6 +67,9 @@ export async function POST(
                 round_number,
                 status,
                 invitation_id,
+                interview_mode,
+                meeting_link,
+                interview_address,
                 invitation:job_invitations!inner(
                     id,
                     candidate_id,
@@ -103,15 +106,36 @@ export async function POST(
         }
 
         // Update the round based on action
+        const now = new Date().toISOString();
         const updateData: Record<string, unknown> = {
             status: action === 'accept' ? 'accepted' : 'declined',
-            responded_at: new Date().toISOString()
+            responded_at: now
         };
 
+        // Auto-confirm on accept when the employer already attached everything at scheduling time
+        // (online → meeting link present; physical → address present) and a concrete time was picked.
+        // In that case there's nothing left for the employer to confirm, so skip the manual step.
+        let autoConfirmed = false;
         if (action === 'accept') {
+            const slot = selected_time_slot as { time?: string; is_alternative?: boolean } | null;
+            const mode = round.interview_mode as string | null;
+            const roundMeetingLink = (round as unknown as { meeting_link: string | null }).meeting_link;
+            const roundAddress = (round as unknown as { interview_address: string | null }).interview_address;
+            const hasConcreteTime = !!slot?.time && !slot?.is_alternative;
+            const detailsReady =
+                (mode === 'online' && !!roundMeetingLink) ||
+                (mode === 'physical' && !!roundAddress);
+            autoConfirmed = hasConcreteTime && detailsReady;
+
             updateData.selected_time_slot = selected_time_slot;
             updateData.interview_mode = interview_mode;
-            updateData.viewed_at = updateData.viewed_at || new Date().toISOString();
+            updateData.viewed_at = updateData.viewed_at || now;
+
+            if (autoConfirmed) {
+                updateData.status = 'confirmed';
+                updateData.interview_confirmed = true;
+                updateData.confirmed_at = now;
+            }
         }
 
         const { error: updateError } = await supabase
@@ -148,8 +172,8 @@ export async function POST(
 
         return NextResponse.json({
             success: true,
-            message: action === 'accept' 
-                ? 'Interview round accepted successfully' 
+            message: action === 'accept'
+                ? (autoConfirmed ? 'Interview confirmed — all details are set' : 'Interview round accepted successfully')
                 : 'Interview round declined',
             data: {
                 round_id: roundId,

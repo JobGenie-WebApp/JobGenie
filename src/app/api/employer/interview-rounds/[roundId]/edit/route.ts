@@ -19,15 +19,22 @@ export async function PATCH(
 
         const { data: round, error: roundError } = await supabase
             .from("interview_rounds")
-            .select("id, status, round_canceled, invitation:job_invitations!inner(company_id, employers!inner(user_id))")
+            .select("id, status, round_canceled, invitation:job_invitations!inner(company_id)")
             .eq("id", roundId)
             .single();
 
         if (roundError || !round) return NextResponse.json({ success: false, error: "Round not found" }, { status: 404 });
 
-        const inv = (round as unknown as { invitation: { employers: { user_id: string }[] } }).invitation;
-        const emp = inv?.employers?.[0];
-        if (emp?.user_id !== user.id) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+        // Authorize by company (any employer in the owning company may edit)
+        const inv = (round as unknown as { invitation: { company_id: string } }).invitation;
+        const { data: employer } = await supabase
+            .from("employers")
+            .select("company_id")
+            .eq("user_id", user.id)
+            .single();
+        if (!employer || employer.company_id !== inv?.company_id) {
+            return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+        }
 
         const editableStatuses = ["pending", "viewed", "accepted"];
         if (!editableStatuses.includes(round.status)) {

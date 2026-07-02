@@ -3,10 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
 import { jobApplySchema } from "@/lib/validations/job-schema";
-import {
-    sendApplicationReceivedEmail,
-    sendNewApplicationEmail,
-} from "@/lib/job-advertisement-emails";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -81,9 +77,6 @@ export async function POST(request: NextRequest, { params }: Params) {
             throw error;
         }
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-        const companyArr = job.company as unknown as { company_name: string }[];
-        const companyName = Array.isArray(companyArr) ? companyArr[0]?.company_name : "the company";
         const candidateName = `${candidate.first_name} ${candidate.last_name}`;
         const employerArr = job.employer as unknown as { user_id: string; first_name: string; email: string }[];
         const employer = Array.isArray(employerArr) ? employerArr[0] : null;
@@ -97,7 +90,8 @@ export async function POST(request: NextRequest, { params }: Params) {
             data: { job_id: id, application_id: application.id },
         });
 
-        // Notify employer
+        // Notify employer (in-app only — no email; high-volume jobs can get 100+ applications,
+        // and the employer reviews them in the Applicants / job posting sections).
         if (employer?.user_id) {
             await admin.from("notifications").insert({
                 user_id: employer.user_id,
@@ -106,25 +100,6 @@ export async function POST(request: NextRequest, { params }: Params) {
                 body: `${candidateName} has applied for "${job.job_title}".`,
                 data: { job_id: id, application_id: application.id, candidate_name: candidateName },
             });
-        }
-
-        // Emails (fire-and-forget)
-        sendApplicationReceivedEmail({
-            to: candidate.email,
-            candidateName,
-            jobTitle: job.job_title,
-            companyName,
-            applicationsUrl: `${baseUrl}/candidate/jobs?section=applied`,
-        }).catch(console.error);
-
-        if (employer?.email) {
-            sendNewApplicationEmail({
-                to: employer.email,
-                employerName: employer.first_name,
-                jobTitle: job.job_title,
-                candidateName,
-                applicationUrl: `${baseUrl}/employer/jobs/${id}`,
-            }).catch(console.error);
         }
 
         return NextResponse.json({ application_id: application.id }, { status: 201 });

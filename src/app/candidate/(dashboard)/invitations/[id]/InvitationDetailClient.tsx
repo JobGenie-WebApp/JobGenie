@@ -14,10 +14,12 @@ import {
     Calendar, Clock, Building2, MapPin, Loader2, User, Phone, Globe,
     Check, Mail, Video, MapPinned, Copy, ExternalLink, X, AlertCircle,
     CheckCircle2, TrendingUp, Award, XCircle, MessageSquare, PartyPopper,
-    CalendarClock, Send, Ban, RotateCcw,
+    CalendarClock, Send, Ban, RotateCcw, CalendarPlus, Lock,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatUTCTime, formatUTCDate, formatTimestamp } from "@/lib/date-utils";
+import { formatUTCTime, formatUTCDate, formatTimestamp, formatCountdown } from "@/lib/date-utils";
+import { buildEventDate, buildGoogleCalendarUrl } from "@/lib/calendar-utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatIndustry, formatPhoneNumber, cn } from "@/lib/utils";
 import { JobOfferCard } from "@/components/candidate/JobOfferCard";
 import { createClient } from "@/lib/supabase/client";
@@ -360,6 +362,138 @@ function StatusBanner({ icon, title, description, variant }: { icon: React.React
     );
 }
 
+// Small stat tile used inside the interview schedule card
+function ScheduleTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+    return (
+        <div className="rounded-xl border border-border bg-card px-2 py-3 text-center">
+            <div className="flex justify-center text-primary mb-1.5">{icon}</div>
+            <p className="text-[10px] uppercase tracking-wide font-medium text-muted-foreground">{label}</p>
+            <p className="text-[13px] font-semibold mt-0.5 leading-tight">{value}</p>
+        </div>
+    );
+}
+
+/**
+ * The focal card for a scheduled/confirmed interview: date/time/mode tiles, a countdown chip,
+ * a prominent Join button (online) or location (physical), and an Add-to-Calendar action.
+ * Shared by the initial interview, later rounds, and MIS-rescheduled schedules.
+ */
+function InterviewScheduleCard({
+    heading = "Interview confirmed",
+    subheading = "Your interview is scheduled — all details below.",
+    tone = "success",
+    confirmed = true,
+    date, time, mode, meetingLink, address, mapLink,
+    isPast = false, calendarTitle,
+}: {
+    heading?: string;
+    subheading?: string;
+    tone?: "success" | "info";
+    /** When false (awaiting employer confirmation), the meeting link / join / calendar are hidden. */
+    confirmed?: boolean;
+    date: string;
+    time: string | null;
+    mode: string | null;
+    meetingLink?: string | null;
+    address?: string | null;
+    mapLink?: string | null;
+    isPast?: boolean;
+    calendarTitle: string;
+}) {
+    const isOnline = mode === "online";
+    const when = buildEventDate(date, time || "09:00");
+    const countdown = isPast ? "" : formatCountdown(when);
+    const gcalUrl = buildGoogleCalendarUrl({
+        title: calendarTitle,
+        start: when,
+        details: isOnline && meetingLink ? `Join the interview: ${meetingLink}` : undefined,
+        location: isOnline ? meetingLink ?? undefined : address ?? undefined,
+    });
+
+    const accent = tone === "success"
+        ? { ring: "bg-emerald-500/15", icon: "text-emerald-600 dark:text-emerald-400", chip: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", grad: "from-emerald-50/70 dark:from-emerald-950/20" }
+        : { ring: "bg-indigo-500/15", icon: "text-indigo-600 dark:text-indigo-400", chip: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400", grad: "from-indigo-50/70 dark:from-indigo-950/20" };
+
+    return (
+        <div className={cn("rounded-2xl border border-border bg-gradient-to-b to-card p-5 space-y-4 shadow-sm", accent.grad, isPast && "opacity-60")}>
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cn("h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0", accent.ring)}>
+                        {confirmed
+                            ? <CheckCircle2 className={cn("h-4.5 w-4.5", accent.icon)} />
+                            : <Clock className={cn("h-4.5 w-4.5", accent.icon)} />}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold leading-tight">{heading}</p>
+                        <p className="text-[11px] text-muted-foreground leading-tight mt-0.5 line-clamp-1">{subheading}</p>
+                    </div>
+                </div>
+                {countdown && (
+                    <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold flex-shrink-0", accent.chip)}>
+                        <Clock className="h-3 w-3" />{countdown}
+                    </span>
+                )}
+            </div>
+
+            {/* Date / Time / Mode tiles */}
+            <div className="grid grid-cols-3 gap-2.5">
+                <ScheduleTile icon={<Calendar className="h-4 w-4" />} label="Date" value={formatUTCDate(date, "EEE, MMM d")} />
+                <ScheduleTile icon={<Clock className="h-4 w-4" />} label="Time" value={time ? formatUTCTime(date, time) : "TBD"} />
+                <ScheduleTile icon={isOnline ? <Video className="h-4 w-4" /> : <MapPinned className="h-4 w-4" />} label="Mode" value={isOnline ? "Online" : "In person"} />
+            </div>
+
+            {/* Online meeting link (revealed only once confirmed) */}
+            {isOnline && confirmed && meetingLink && (
+                <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground">Meeting link</p>
+                    <div className="flex gap-2">
+                        <Input value={meetingLink} readOnly className="flex-1 h-10 text-xs bg-card" />
+                        <Button variant="outline" size="icon" className="h-10 w-10 flex-shrink-0" onClick={() => { navigator.clipboard.writeText(meetingLink); toast.success("Link copied"); }}>
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    {!isPast && (
+                        <Button asChild className="w-full h-11 text-sm bg-[linear-gradient(135deg,var(--primary),var(--accent))] shadow-md shadow-primary/20 hover:shadow-primary/30">
+                            <a href={meetingLink} target="_blank" rel="noopener noreferrer"><Video className="h-4 w-4 mr-2" />Join meeting</a>
+                        </Button>
+                    )}
+                </div>
+            )}
+
+            {/* Online, awaiting confirmation — link locked */}
+            {isOnline && !confirmed && (
+                <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 flex items-center gap-2.5">
+                    <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">The meeting link appears here once the employer confirms the interview.</p>
+                </div>
+            )}
+
+            {/* Physical location */}
+            {!isOnline && address && (
+                <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-foreground/90 leading-relaxed">{address}</p>
+                    </div>
+                    {mapLink && (
+                        <Button size="sm" variant="outline" className="h-8 text-xs" asChild>
+                            <a href={mapLink} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open in Maps</a>
+                        </Button>
+                    )}
+                </div>
+            )}
+
+            {/* Add to calendar */}
+            {!isPast && confirmed && (
+                <Button variant="outline" className="w-full h-10 text-sm" asChild>
+                    <a href={gcalUrl} target="_blank" rel="noopener noreferrer"><CalendarPlus className="h-4 w-4 mr-2" />Add to calendar</a>
+                </Button>
+            )}
+        </div>
+    );
+}
+
 // Panel: Invitation received / accepted (history view)
 function InvitePanel({ inv }: { inv: InvitationDetail }) {
     return (
@@ -479,10 +613,10 @@ function PendingPanel({ inv, onAccept, onDecline, isSubmitting, selectedSlot, se
                         <p><span className="font-medium text-foreground">Selected:</span> {formatUTCDate(selectedSlot.date, "EEE, MMM d, yyyy")}{!selectedSlot.is_alternative && ` · ${formatUTCTime(selectedSlot.date, selectedSlot.time)}`}</p>
                     </div>
                     <div className="flex gap-2">
-                        <Button className="flex-1 h-9" onClick={onAccept} disabled={isSubmitting}>
+                        <Button className="flex-1 h-10 bg-[linear-gradient(135deg,var(--primary),var(--accent))] shadow-md shadow-primary/20 hover:shadow-primary/30" onClick={onAccept} disabled={isSubmitting}>
                             {isSubmitting ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Processing…</> : <><Check className="h-3.5 w-3.5 mr-1.5" />Confirm Selection</>}
                         </Button>
-                        <Button variant="outline" size="sm" className="h-9 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={onDecline} disabled={isSubmitting}>
+                        <Button variant="outline" className="h-10 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={onDecline} disabled={isSubmitting}>
                             <X className="h-3.5 w-3.5 mr-1.5" />Decline
                         </Button>
                     </div>
@@ -490,7 +624,7 @@ function PendingPanel({ inv, onAccept, onDecline, isSubmitting, selectedSlot, se
             )}
 
             {/* Request reschedule */}
-            <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
+            {/* <div className="rounded-xl border border-border bg-muted/20 px-4 py-3">
                 <div className="flex items-start gap-3">
                     <Checkbox id="rr" checked={requestReschedule} onCheckedChange={v => setRequestReschedule(!!v)} className="mt-0.5" />
                     <div className="flex-1 space-y-1">
@@ -506,26 +640,32 @@ function PendingPanel({ inv, onAccept, onDecline, isSubmitting, selectedSlot, se
                         )}
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }
 
 // Panel: Awaiting employer confirmation
 function AwaitingPanel({ inv, onCancelAcceptance, isSubmitting }: { inv: InvitationDetail; onCancelAcceptance: () => void; isSubmitting: boolean }) {
-    const slot = inv.selected_time_slot;
+    const slot = inv.selected_time_slot ?? inv.given_time_slots?.[0] ?? null;
     return (
         <div className="space-y-4">
-            <StatusBanner icon={<Clock className="h-4 w-4" />} title="Awaiting employer confirmation" description="You've accepted this invitation. The employer will confirm the final details shortly." variant="warning" />
-            {slot && (
-                <div>
-                    <p className="text-xs uppercase tracking-wide font-medium text-muted-foreground mb-2">Your selection</p>
-                    <DetailCard>
-                        <DetailRow icon={<Calendar className="h-4 w-4" />} label="Date" value={formatUTCDate(slot.date, "EEEE, MMMM d, yyyy")} />
-                        <DetailRow icon={<Clock className="h-4 w-4" />} label="Time" value={formatUTCTime(slot.date, slot.time)} />
-                        {inv.interview_mode && <DetailRow icon={inv.interview_mode === "online" ? <Video className="h-4 w-4" /> : <MapPinned className="h-4 w-4" />} label="Mode" value={`${inv.interview_mode} Interview`} />}
-                    </DetailCard>
-                </div>
+            {slot ? (
+                <InterviewScheduleCard
+                    heading="Awaiting employer confirmation"
+                    subheading="You've accepted — the employer will confirm the final details shortly."
+                    tone="info"
+                    confirmed={false}
+                    date={slot.date}
+                    time={slot.time}
+                    mode={inv.interview_mode}
+                    meetingLink={inv.meeting_link}
+                    address={inv.interview_address}
+                    mapLink={inv.map_link}
+                    calendarTitle={`Interview: ${inv.job_designation} @ ${inv.company.company_name}`}
+                />
+            ) : (
+                <StatusBanner icon={<Clock className="h-4 w-4" />} title="Awaiting employer confirmation" description="You've accepted this invitation. The employer will confirm the final details shortly." variant="warning" />
             )}
             <Button variant="outline" size="sm" className="h-8 text-xs border-border/80 text-muted-foreground hover:text-foreground" onClick={onCancelAcceptance} disabled={isSubmitting}>
                 {isSubmitting ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Processing…</> : "Cancel Acceptance"}
@@ -536,51 +676,28 @@ function AwaitingPanel({ inv, onCancelAcceptance, isSubmitting }: { inv: Invitat
 
 // Panel: Interview confirmed
 function ConfirmedPanel({ inv, onCancelInterview, isPast }: { inv: InvitationDetail; onCancelInterview: () => void; isPast?: boolean }) {
-    const slot = inv.selected_time_slot;
+    const slot = inv.selected_time_slot ?? inv.given_time_slots?.[0] ?? null;
     const isCanceled = inv.invitation_canceled && !inv.mis_rescheduled;
     // Links disabled when the interview is in the past (pipeline moved on or canceled)
     const linksDisabled = isCanceled || isPast;
     return (
         <div className="space-y-4">
-            <StatusBanner
-                icon={isCanceled ? <XCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-                title={isCanceled ? "Interview canceled" : "Interview confirmed"}
-                description={isCanceled ? "This interview has been canceled." : "Your interview is scheduled. All details are confirmed."}
-                variant={isCanceled ? "error" : "success"}
-            />
+            {isCanceled && (
+                <StatusBanner icon={<XCircle className="h-4 w-4" />} title="Interview canceled" description="This interview has been canceled." variant="error" />
+            )}
             {slot && (
-                <div>
-                    <p className="text-xs uppercase tracking-wide font-medium text-muted-foreground mb-2">Interview details</p>
-                    <DetailCard className={linksDisabled ? "opacity-60" : undefined}>
-                        <DetailRow icon={<Calendar className="h-4 w-4" />} label="Date" value={formatUTCDate(slot.date, "EEEE, MMMM d, yyyy")} />
-                        <DetailRow icon={<Clock className="h-4 w-4" />} label="Time" value={formatUTCTime(slot.date, inv.confirmed_time || slot.time)} />
-                        {inv.interview_mode && (
-                            <DetailRow icon={inv.interview_mode === "online" ? <Video className="h-4 w-4" /> : <MapPinned className="h-4 w-4" />} label="Mode" value={`${inv.interview_mode} Interview`} />
-                        )}
-                        {inv.interview_mode === "online" && inv.meeting_link && (
-                            <DetailRow icon={<Video className="h-4 w-4" />} label="Meeting link">
-                                <div className="flex gap-2 mt-1">
-                                    <Input value={inv.meeting_link} readOnly disabled={linksDisabled} className="flex-1 h-8 text-xs" />
-                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 flex-shrink-0" disabled={linksDisabled} onClick={() => { navigator.clipboard.writeText(inv.meeting_link!); toast.success("Copied!"); }}><Copy className="h-3.5 w-3.5" /></Button>
-                                    <Button size="sm" className="h-8 flex-shrink-0" disabled={linksDisabled} asChild={!linksDisabled}>
-                                        {linksDisabled ? <span><ExternalLink className="h-3.5 w-3.5 mr-1 inline" />Join</span> : <a href={inv.meeting_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5 mr-1" />Join</a>}
-                                    </Button>
-                                </div>
-                            </DetailRow>
-                        )}
-                        {inv.interview_mode === "physical" && inv.interview_address && (
-                            <DetailRow icon={<MapPin className="h-4 w-4" />} label="Location">
-                                <p className="text-sm text-foreground/90 mt-0.5">{inv.interview_address}</p>
-                                {inv.map_link && (
-                                    <Button size="sm" variant="outline" className="h-7 text-xs mt-2" disabled={linksDisabled} asChild={!linksDisabled}>
-                                        {linksDisabled ? <span><ExternalLink className="h-3 w-3 mr-1.5 inline" />Open in Maps</span> : <a href={inv.map_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3 mr-1.5" />Open in Maps</a>}
-                                    </Button>
-                                )}
-                            </DetailRow>
-                        )}
-                    </DetailCard>
-                    {linksDisabled && <p className="text-[11px] text-muted-foreground/60 mt-1.5 text-center">This interview has concluded — links are disabled.</p>}
-                </div>
+                <InterviewScheduleCard
+                    heading={isCanceled ? "Interview details" : isPast ? "Interview completed" : "Interview confirmed"}
+                    subheading={isCanceled ? "This interview was canceled." : "Your interview is scheduled — all details below."}
+                    date={slot.date}
+                    time={inv.confirmed_time || slot.time}
+                    mode={inv.interview_mode}
+                    meetingLink={inv.meeting_link}
+                    address={inv.interview_address}
+                    mapLink={inv.map_link}
+                    isPast={linksDisabled}
+                    calendarTitle={`Interview: ${inv.job_designation} @ ${inv.company.company_name}`}
+                />
             )}
             {inv.message && (
                 <div>
@@ -606,30 +723,26 @@ function RescheduledPanel({ inv }: { inv: InvitationDetail }) {
     return (
         <div className="space-y-4">
             <StatusBanner icon={<RotateCcw className="h-4 w-4" />} title="Interview rescheduled" description={inv.mis_rescheduled_at ? `Rescheduled on ${formatTimestamp(inv.mis_rescheduled_at, "MMMM d, yyyy")} by the coordinator.` : "Your interview has been rescheduled."} variant="info" />
-            <div>
-                <p className="text-xs uppercase tracking-wide font-medium text-muted-foreground mb-2">New schedule</p>
-                <DetailCard>
-                    <DetailRow icon={<Calendar className="h-4 w-4" />} label="Date" value={formatUTCDate(d.date, "EEEE, MMMM d, yyyy")} />
-                    <DetailRow icon={<Clock className="h-4 w-4" />} label="Time" value={formatUTCTime(d.date, d.time)} />
-                    <DetailRow icon={d.interview_mode === "online" ? <Video className="h-4 w-4" /> : <MapPinned className="h-4 w-4" />} label="Mode" value={`${d.interview_mode} Interview`} />
-                    {d.interview_mode === "online" && d.meeting_link && (
-                        <DetailRow icon={<Video className="h-4 w-4" />} label="Meeting link">
-                            <div className="flex gap-2 mt-1">
-                                <Input value={d.meeting_link} readOnly className="flex-1 h-8 text-xs" />
-                                <Button size="sm" variant="outline" className="h-8 w-8 p-0 flex-shrink-0" onClick={() => { navigator.clipboard.writeText(d.meeting_link!); toast.success("Copied!"); }}><Copy className="h-3.5 w-3.5" /></Button>
-                                <Button size="sm" className="h-8 flex-shrink-0" asChild><a href={d.meeting_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5 mr-1" />Join</a></Button>
-                            </div>
-                        </DetailRow>
-                    )}
-                    {d.interview_mode === "physical" && d.interview_address && (
-                        <DetailRow icon={<MapPin className="h-4 w-4" />} label="Location">
-                            <p className="text-sm text-foreground/90 mt-0.5">{d.interview_address}</p>
-                            {d.map_link && <Button size="sm" variant="outline" className="h-7 text-xs mt-2" asChild><a href={d.map_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3 mr-1.5" />Open in Maps</a></Button>}
-                        </DetailRow>
-                    )}
-                    {d.notes && <DetailRow icon={<MessageSquare className="h-4 w-4" />} label="Notes" value={d.notes} />}
-                </DetailCard>
-            </div>
+            <InterviewScheduleCard
+                heading="New schedule"
+                subheading="Your interview was rescheduled by the coordinator."
+                tone="info"
+                date={d.date}
+                time={d.time}
+                mode={d.interview_mode}
+                meetingLink={d.meeting_link}
+                address={d.interview_address}
+                mapLink={d.map_link}
+                calendarTitle={`Interview: ${inv.job_designation} @ ${inv.company.company_name}`}
+            />
+            {d.notes && (
+                <div>
+                    <p className="text-xs uppercase tracking-wide font-medium text-muted-foreground mb-2">Notes</p>
+                    <div className="rounded-xl bg-muted/40 border border-border px-4 py-3">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{d.notes}</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -667,9 +780,10 @@ function CanceledPanel({ inv }: { inv: InvitationDetail }) {
 // Panel: Single round details
 function RoundPanel({ round, invitationId, onRefresh, onCancelRound }: { round: InterviewRound; invitationId: string; onRefresh: () => void; onCancelRound: () => void }) {
     const isPendingResponse = round.status === "pending" || round.status === "viewed";
-    const isAwaiting = round.status === "accepted" && !round.confirmed_at;
     const isConfirmed = round.status === "confirmed" || !!round.confirmed_at;
-    const slot = round.selected_time_slot;
+    // Fall back to the first offered slot when the round has no explicit selected slot
+    // (e.g. Round 1 seeded from the confirmed invitation stores it in given_time_slots).
+    const slot = round.selected_time_slot ?? round.given_time_slots?.[0] ?? null;
     const roundLabel = round.round_label ?? `Round ${round.round_number}`;
 
     // Show cancelled state first
@@ -728,7 +842,9 @@ function RoundPanel({ round, invitationId, onRefresh, onCancelRound }: { round: 
         return (
             <div className="space-y-4">
                 <StatusBanner icon={<AlertCircle className="h-4 w-4" />} title={`${round.round_label ?? `Round ${round.round_number}`} — response needed`} description="Select a time slot for this interview round." variant="info" />
-                <RoundResponseCard roundId={round.id} roundNumber={round.round_number} roundLabel={round.round_label} interviewMode={round.interview_mode} meetingLink={round.meeting_link} interviewAddress={round.interview_address} mapLink={round.map_link} givenTimeSlots={round.given_time_slots ?? []} onResponse={onRefresh} />
+                {/* Meeting link is intentionally withheld until the round is confirmed, even if the
+                    employer attached it at scheduling — the candidate only sees it after confirmation. */}
+                <RoundResponseCard roundId={round.id} roundNumber={round.round_number} roundLabel={round.round_label} interviewMode={round.interview_mode} meetingLink={null} interviewAddress={round.interview_address} mapLink={round.map_link} givenTimeSlots={round.given_time_slots ?? []} onResponse={onRefresh} />
             </div>
         );
     }
@@ -744,39 +860,23 @@ function RoundPanel({ round, invitationId, onRefresh, onCancelRound }: { round: 
 
     return (
         <div className="space-y-4">
-            {isAwaiting && <StatusBanner icon={<Clock className="h-4 w-4" />} title="Awaiting confirmation" description="The employer will confirm the final time for this round shortly." variant="warning" />}
-            {isConfirmed && !round.outcome && <StatusBanner icon={<CheckCircle2 className="h-4 w-4" />} title={`${round.round_label ?? `Round ${round.round_number}`} confirmed`} description="Your interview is scheduled." variant="success" />}
             {outcomeStyle && <StatusBanner icon={outcomeStyle.icon} title={outcomeStyle.title} variant={outcomeStyle.banner} />}
 
             {slot && !isPendingResponse && (
-                <div>
-                    <p className="text-xs uppercase tracking-wide font-medium text-muted-foreground mb-2">Interview details</p>
-                    <DetailCard className={isDone ? "opacity-60" : undefined}>
-                        <DetailRow icon={<Calendar className="h-4 w-4" />} label="Date" value={formatUTCDate(slot.date, "EEEE, MMMM d, yyyy")} />
-                        {slot.time && <DetailRow icon={<Clock className="h-4 w-4" />} label="Time" value={formatUTCTime(slot.date, slot.time)} />}
-                        {round.interview_mode && <DetailRow icon={round.interview_mode === "online" ? <Video className="h-4 w-4" /> : <MapPinned className="h-4 w-4" />} label="Mode" value={`${round.interview_mode} Interview`} />}
-                        {round.interview_mode === "online" && round.meeting_link && (
-                            <DetailRow icon={<Video className="h-4 w-4" />} label="Meeting link">
-                                <div className="flex gap-2 mt-1">
-                                    <Input value={round.meeting_link} readOnly disabled={isDone} className="flex-1 h-8 text-xs" />
-                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 flex-shrink-0" disabled={isDone} onClick={() => { navigator.clipboard.writeText(round.meeting_link!); toast.success("Copied!"); }}><Copy className="h-3.5 w-3.5" /></Button>
-                                    <Button size="sm" className="h-8 flex-shrink-0" disabled={isDone} asChild={!isDone}>
-                                        {isDone ? <span><ExternalLink className="h-3.5 w-3.5 mr-1 inline" />Join</span> : <a href={round.meeting_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5 mr-1" />Join</a>}
-                                    </Button>
-                                </div>
-                            </DetailRow>
-                        )}
-                        {round.interview_mode === "physical" && round.interview_address && (
-                            <DetailRow icon={<MapPin className="h-4 w-4" />} label="Location">
-                                <p className="text-sm text-foreground/90 mt-0.5">{round.interview_address}</p>
-                                {round.map_link && <Button size="sm" variant="outline" className="h-7 text-xs mt-2" disabled={isDone} asChild={!isDone}>
-                                    {isDone ? <span><ExternalLink className="h-3 w-3 mr-1.5 inline" />Open in Maps</span> : <a href={round.map_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3 mr-1.5" />Open in Maps</a>}
-                                </Button>}
-                            </DetailRow>
-                        )}
-                    </DetailCard>
-                    {isDone && <p className="text-[11px] text-muted-foreground/60 mt-1.5 text-center">This interview has concluded — links are disabled.</p>}
-                </div>
+                <InterviewScheduleCard
+                    heading={isConfirmed ? `${round.round_label ?? `Round ${round.round_number}`} confirmed` : "Awaiting confirmation"}
+                    subheading={isConfirmed ? "Your interview is scheduled — all details below." : "The employer will confirm the final details shortly."}
+                    tone={isConfirmed ? "success" : "info"}
+                    confirmed={isConfirmed}
+                    date={slot.date}
+                    time={slot.time}
+                    mode={round.interview_mode}
+                    meetingLink={round.meeting_link}
+                    address={round.interview_address}
+                    mapLink={round.map_link}
+                    isPast={isDone}
+                    calendarTitle={`Interview: ${round.round_label ?? `Round ${round.round_number}`}`}
+                />
             )}
 
             {round.outcome_notes && (
@@ -788,9 +888,11 @@ function RoundPanel({ round, invitationId, onRefresh, onCancelRound }: { round: 
                 </div>
             )}
             {isConfirmed && !isDone && !round.round_canceled && (
-                <button onClick={onCancelRound} className="text-xs text-muted-foreground hover:text-red-500 transition-colors underline-offset-2 hover:underline">
-                    Cancel this round
-                </button>
+                <div className="flex justify-end">
+                    <button onClick={onCancelRound} className="text-xs flex items-end text-red-500 hover:text-red-600 transition-colors underline-offset-2 hover:underline">
+                        Cancel this round
+                    </button>
+                </div>
             )}
         </div>
     );
@@ -846,7 +948,8 @@ export default function InvitationDetailClient({ invitationId, onMutateList }: {
         try {
             const res = await fetch(`/api/candidate/invitations/${invitationId}/respond`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "accept", selected_time_slot: selectedSlot }) });
             const d = await res.json();
-            if (d.success) { toast.success("Invitation accepted!"); mutateInvitation(); onMutateList?.(); } else toast.error(d.error || "Failed to accept");
+            // Accepting may auto-confirm the interview and seed Round 1, so refresh rounds too.
+            if (d.success) { toast.success(d.message || "Invitation accepted!"); mutateInvitation(); mutateRounds(); onMutateList?.(); } else toast.error(d.error || "Failed to accept");
         } catch { toast.error("An error occurred"); } finally { setIsSubmitting(false); }
     };
 
@@ -1014,11 +1117,14 @@ export default function InvitationDetailClient({ invitationId, onMutateList }: {
 
                     {/* Contact */}
                     <Separator className="my-4" />
-                    <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-primary/8 ring-1 ring-border flex items-center justify-center flex-shrink-0">
-                            <User className="h-4 w-4 text-primary/70" />
-                        </div>
+                    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
+                        <Avatar className="h-9 w-9 ring-1 ring-border flex-shrink-0">
+                            <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+                                {`${invitation.employer.first_name?.[0] ?? ""}${invitation.employer.last_name?.[0] ?? ""}`.toUpperCase() || <User className="h-4 w-4" />}
+                            </AvatarFallback>
+                        </Avatar>
                         <div className="min-w-0 flex-1">
+                            <p className="text-[10px] uppercase tracking-wide font-medium text-muted-foreground">Your interviewer</p>
                             <p className="text-sm font-semibold leading-tight">{invitation.employer.first_name} {invitation.employer.last_name}</p>
                             <p className="text-xs text-muted-foreground">{[invitation.employer.designation, invitation.employer.job_title, invitation.employer.department].filter(Boolean).join(" · ")}</p>
                         </div>
@@ -1039,14 +1145,14 @@ export default function InvitationDetailClient({ invitationId, onMutateList }: {
             </div>
 
             {/* ── Content + Journey ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_240px] gap-4 items-start">
                 {/* Detail panel */}
-                <div className="rounded-2xl border border-border bg-card p-6 min-h-[180px]">
+                <div className="rounded-2xl border border-border bg-card p-5 md:p-6 min-h-[180px]">
                     {renderPanel() ?? <div className="flex items-center justify-center h-24"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>}
                 </div>
 
                 {/* Journey timeline */}
-                <div className="rounded-2xl border border-border bg-card p-5 lg:sticky lg:top-4">
+                <div className="rounded-2xl border border-border bg-card p-5 md:sticky md:top-4">
                     <div className="flex items-center justify-between mb-4">
                         <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your journey</p>
                         <span className="text-[10px] text-muted-foreground/60">{roadmap.filter(s => s.status === "completed").length}/{roadmap.length}</span>

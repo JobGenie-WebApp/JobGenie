@@ -103,7 +103,7 @@ function parseTimeString(time: string): { hours: number; minutes: number } {
     return { hours: 9, minutes: 0 };
 }
 
-function buildEventDate(dateStr: string, timeStr: string): Date {
+export function buildEventDate(dateStr: string, timeStr: string): Date {
     try {
         const base = parseISO(dateStr);
         if (!isValid(base)) return new Date();
@@ -113,6 +113,33 @@ function buildEventDate(dateStr: string, timeStr: string): Date {
     } catch {
         return new Date();
     }
+}
+
+/** Format a Date to the Google Calendar basic UTC format: YYYYMMDDTHHMMSSZ */
+function toGCalUTC(d: Date): string {
+    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
+
+/**
+ * Build a "Add to Google Calendar" template URL for an interview.
+ * `end` defaults to one hour after `start`.
+ */
+export function buildGoogleCalendarUrl(opts: {
+    title: string;
+    start: Date;
+    end?: Date;
+    details?: string;
+    location?: string;
+}): string {
+    const end = opts.end ?? new Date(opts.start.getTime() + 60 * 60 * 1000);
+    const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: opts.title,
+        dates: `${toGCalUTC(opts.start)}/${toGCalUTC(end)}`,
+    });
+    if (opts.details) params.set("details", opts.details);
+    if (opts.location) params.set("location", opts.location);
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
 function confirmedTimeToRawString(value: unknown): string | null {

@@ -87,6 +87,7 @@ export function ScheduleInterviewDialog({
     const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
     const [sending, setSending] = useState(false);
     const [interviewMode, setInterviewMode] = useState<"online" | "physical">("online");
+    const [meetingLink, setMeetingLink] = useState("");
     const [interviewAddress, setInterviewAddress] = useState("");
     const [mapLink, setMapLink] = useState("");
 
@@ -128,6 +129,7 @@ export function ScheduleInterviewDialog({
     const resetForm = () => {
         setTimeSlots([]);
         setMessage("");
+        setMeetingLink("");
         setInterviewAddress("");
         setMapLink("");
         setInterviewMode("online");
@@ -167,6 +169,8 @@ export function ScheduleInterviewDialog({
                         order: index + 1,
                     })),
                     interviewMode,
+                    meetingLink:
+                        interviewMode === "online" ? meetingLink.trim() || undefined : undefined,
                     interviewAddress:
                         interviewMode === "physical" ? interviewAddress.trim() : undefined,
                     mapLink: interviewMode === "physical" ? mapLink.trim() : undefined,
@@ -330,6 +334,22 @@ export function ScheduleInterviewDialog({
                                 Physical
                             </Button>
                         </div>
+
+                        {interviewMode === "online" && (
+                            <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                                <Label className="text-xs">Meeting Link (Optional)</Label>
+                                <Input
+                                    type="url"
+                                    placeholder="https://meet.google.com/... or Zoom/Teams link"
+                                    value={meetingLink}
+                                    onChange={(e) => setMeetingLink(e.target.value)}
+                                    disabled={sending}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Add it now, or provide it later when you confirm the interview. The candidate sees it once the interview is confirmed.
+                                </p>
+                            </div>
+                        )}
 
                         {interviewMode === "physical" && (
                             <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2">

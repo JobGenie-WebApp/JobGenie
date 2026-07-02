@@ -67,6 +67,7 @@ export function NextRoundDialog({
 }: NextRoundDialogProps) {
     const [roundLabel, setRoundLabel] = useState(`Round ${nextRoundNumber}`);
     const [interviewMode, setInterviewMode] = useState<"online" | "physical">("online");
+    const [meetingLink, setMeetingLink] = useState("");
     const [interviewAddress, setInterviewAddress] = useState("");
     const [mapLink, setMapLink] = useState("");
     const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([{ id: crypto.randomUUID(), date: "", time: "" }]);
@@ -76,6 +77,7 @@ export function NextRoundDialog({
         if (isOpen) {
             setRoundLabel(`Round ${nextRoundNumber}`);
             setInterviewMode("online");
+            setMeetingLink("");
             setInterviewAddress("");
             setMapLink("");
             setTimeSlots([{ id: crypto.randomUUID(), date: "", time: "" }]);
@@ -117,6 +119,7 @@ export function NextRoundDialog({
                     previous_round_id: previousRoundId,
                     round_label: roundLabel.trim() || `Round ${nextRoundNumber}`,
                     interview_mode: interviewMode,
+                    meeting_link: interviewMode === "online" && meetingLink.trim() ? meetingLink.trim() : null,
                     interview_address: interviewMode === "physical" ? interviewAddress.trim() : null,
                     map_link: interviewMode === "physical" && mapLink.trim() ? mapLink.trim() : null,
                     time_slots: timeSlots.map((s, i) => ({ date: s.date, time: s.time, order: i + 1 })),
@@ -202,6 +205,22 @@ export function NextRoundDialog({
                             ))}
                         </div>
                     </div>
+
+                    {/* Online meeting link (optional at scheduling; can also be added at confirm) */}
+                    {interviewMode === "online" && (
+                        <div className="space-y-1.5 rounded-xl border border-border bg-muted/20 px-4 py-4">
+                            <Label htmlFor="meetingLink">Meeting Link <span className="text-muted-foreground text-xs font-normal">(Optional)</span></Label>
+                            <Input
+                                id="meetingLink"
+                                type="url"
+                                placeholder="https://meet.google.com/... or Zoom/Teams link"
+                                value={meetingLink}
+                                onChange={e => setMeetingLink(e.target.value)}
+                                disabled={submitting}
+                            />
+                            <p className="text-xs text-muted-foreground">Add it now or when you confirm the round. The candidate sees it once the round is confirmed.</p>
+                        </div>
+                    )}
 
                     {/* Physical location fields */}
                     {interviewMode === "physical" && (

@@ -52,7 +52,7 @@ export async function POST(
         // Verify the invitation belongs to this employer and is cancellable
         const { data: invitation, error: invitationError } = await supabase
             .from('job_invitations')
-            .select('id, status, interview_confirmed, invitation_canceled, candidate_id')
+            .select('id, status, interview_confirmed, invitation_canceled, candidate_id, selected_time_slot, mis_rescheduled, mis_reschedule_data')
             .eq('id', id)
             .eq('employer_id', employer.id)
             .single();
@@ -78,6 +78,25 @@ export async function POST(
                 { success: false, error: 'Interview is already canceled' },
                 { status: 400 }
             );
+        }
+
+        // Cancellation is only allowed up to the day BEFORE the scheduled interview date.
+        // On the interview day itself and afterwards, cancellation is blocked.
+        const misData = invitation.mis_reschedule_data as { date?: string } | null;
+        const selectedSlot = invitation.selected_time_slot as { date?: string } | null;
+        const interviewDate = (invitation.mis_rescheduled && misData?.date)
+            ? misData.date
+            : selectedSlot?.date;
+
+        if (interviewDate) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            // interviewDate is a YYYY-MM-DD string; lexical comparison matches date order.
+            if (interviewDate.slice(0, 10) <= todayStr) {
+                return NextResponse.json(
+                    { success: false, error: 'Interviews can only be cancelled before the scheduled interview day.' },
+                    { status: 400 }
+                );
+            }
         }
 
         // Cancel the interview

@@ -45,7 +45,7 @@ export async function POST(
         // Verify the invitation belongs to this company and is accepted
         const { data: invitation, error: invitationError } = await supabase
             .from('job_invitations')
-            .select('id, status, interview_mode, selected_time_slot, interview_confirmed')
+            .select('id, status, interview_mode, selected_time_slot, interview_confirmed, meeting_link, interview_address, map_link')
             .eq('id', id)
             .eq('company_id', employer.company_id)
             .eq('status', 'accepted')
@@ -66,16 +66,25 @@ export async function POST(
             );
         }
 
+        // Resolve location details: prefer values submitted at confirm time, otherwise fall
+        // back to what was attached when the interview was scheduled/edited.
+        const resolvedMeetingLink = (meeting_link && meeting_link.trim() !== '')
+            ? meeting_link.trim()
+            : (invitation.meeting_link || null);
+        const resolvedAddress = (interview_address && interview_address.trim() !== '')
+            ? interview_address.trim()
+            : (invitation.interview_address || null);
+
         // Validate based on interview mode
         if (invitation.interview_mode === 'online') {
-            if (!meeting_link || meeting_link.trim() === '') {
+            if (!resolvedMeetingLink) {
                 return NextResponse.json(
                     { success: false, error: "Meeting link is required for online interviews" },
                     { status: 400 }
                 );
             }
         } else if (invitation.interview_mode === 'physical') {
-            if (!interview_address || interview_address.trim() === '') {
+            if (!resolvedAddress) {
                 return NextResponse.json(
                     { success: false, error: "Interview address is required for physical interviews" },
                     { status: 400 }
@@ -103,9 +112,9 @@ export async function POST(
         }
 
         if (invitation.interview_mode === 'online') {
-            updateData.meeting_link = meeting_link;
+            updateData.meeting_link = resolvedMeetingLink;
         } else if (invitation.interview_mode === 'physical') {
-            updateData.interview_address = interview_address;
+            updateData.interview_address = resolvedAddress;
             if (map_link && map_link.trim() !== '') {
                 updateData.map_link = map_link;
             }
@@ -122,6 +131,47 @@ export async function POST(
                 { success: false, error: "Failed to confirm interview" },
                 { status: 500 }
             );
+        }
+
+        // The confirmed initial interview IS Round 1 — create it now so the employer can
+        // immediately record feedback instead of having to "Initialize Round 1" manually.
+        try {
+            const { data: existingRound } = await supabase
+                .from('interview_rounds')
+                .select('id')
+                .eq('invitation_id', id)
+                .eq('round_number', 1)
+                .maybeSingle();
+
+            if (!existingRound) {
+                const slot = invitation.selected_time_slot as { date?: string; time?: string; is_alternative?: boolean } | null;
+                const roundConfirmedTime = (slot?.is_alternative && confirmed_time) ? confirmed_time : (slot?.time ?? null);
+
+                await supabase.from('interview_rounds').insert({
+                    invitation_id: id,
+                    round_number: 1,
+                    round_label: 'Initial Interview',
+                    status: 'confirmed',
+                    given_time_slots: slot ? [slot] : [],
+                    selected_time_slot: slot,
+                    interview_mode: invitation.interview_mode,
+                    interview_confirmed: true,
+                    confirmed_time: roundConfirmedTime,
+                    meeting_link: invitation.interview_mode === 'online' ? resolvedMeetingLink : null,
+                    interview_address: invitation.interview_mode === 'physical' ? resolvedAddress : null,
+                    map_link: invitation.interview_mode === 'physical' ? (invitation.map_link ?? null) : null,
+                    confirmed_at: new Date().toISOString(),
+                });
+
+                await supabase
+                    .from('job_invitations')
+                    .update({ current_round_number: 1 })
+                    .eq('id', id)
+                    .lt('current_round_number', 1);
+            }
+        } catch (seedErr) {
+            // Non-fatal: the client can still fall back to auto-seed / manual init.
+            console.error('Round 1 auto-create error:', seedErr);
         }
 
         // Send confirmation email to candidate (async - non-blocking)
@@ -151,8 +201,8 @@ export async function POST(
                 : timeSlot?.time || '';
 
             const locationInfo = fullInvitation.interview_mode === 'online'
-                ? meeting_link
-                : interview_address;
+                ? resolvedMeetingLink
+                : resolvedAddress;
 
             getUserTimezoneByEmail(candidate.email).then(recipientTz =>
                 sendInterviewConfirmedEmail(

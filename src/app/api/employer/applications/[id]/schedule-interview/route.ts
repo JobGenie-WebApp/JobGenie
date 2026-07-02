@@ -58,7 +58,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
         // Validate scheduling payload
         const body = await request.json();
-        const { message, timeSlots, interviewMode, interviewAddress, mapLink } = body;
+        const { message, timeSlots, interviewMode, meetingLink, interviewAddress, mapLink } = body;
 
         if (!interviewMode) {
             return NextResponse.json({ success: false, error: "Interview mode is required" }, { status: 400 });
@@ -141,8 +141,9 @@ export async function POST(request: NextRequest, { params }: Params) {
                 alternative_dates: null,
                 employer_last_seen_at: sentNow,
                 interview_mode: interviewMode,
-                interview_address: interviewAddress || null,
-                map_link: mapLink || null,
+                meeting_link: interviewMode === "online" ? (meetingLink || null) : null,
+                interview_address: interviewMode === "physical" ? (interviewAddress || null) : null,
+                map_link: interviewMode === "physical" ? (mapLink || null) : null,
             })
             .select()
             .single();
