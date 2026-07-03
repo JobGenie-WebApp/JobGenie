@@ -101,6 +101,7 @@ interface ComplianceFlag {
 interface Application {
     id: string; status: string; applied_at: string;
     cover_letter: string | null; resume_url: string | null; notes: string | null;
+    ats_score: number | null; ats_status: string | null; ats_error: string | null;
     candidate: { id: string; first_name: string; last_name: string; email: string; current_position: string | null; profile_image_url: string | null };
     job_invitation: ApplicantLinkedInvitation | ApplicantLinkedInvitation[] | null;
 }
@@ -116,6 +117,58 @@ function fmt(d: string | null) {
     return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// Colour-coded ATS score chip for an applicant. Handles the three states:
+// scored (coloured score), failed ("ATS failed" + Check again), and pending.
+function AtsBadge({
+    app,
+    onRecheck,
+    rechecking,
+}: {
+    app: Application;
+    onRecheck: (id: string) => void;
+    rechecking: boolean;
+}) {
+    if (app.ats_status === "scored" && typeof app.ats_score === "number") {
+        const score = Math.round(app.ats_score);
+        const cls =
+            score >= 75
+                ? "bg-green-100 text-green-800 border-green-200"
+                : score >= 50
+                ? "bg-amber-100 text-amber-800 border-amber-200"
+                : "bg-red-100 text-red-700 border-red-200";
+        return (
+            <span className={`shrink-0 rounded-md border px-2 py-0.5 text-xs font-semibold ${cls}`} title="ATS match score">
+                ATS {score}
+            </span>
+        );
+    }
+
+    if (app.ats_status === "failed") {
+        return (
+            <span className="flex items-center gap-1 shrink-0">
+                <span className="rounded-md border border-muted bg-muted px-2 py-0.5 text-xs text-muted-foreground" title={app.ats_error ?? "Scoring failed"}>
+                    ATS failed
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    disabled={rechecking}
+                    onClick={(e) => { e.stopPropagation(); onRecheck(app.id); }}
+                >
+                    {rechecking ? <Loader2 className="h-3 w-3 animate-spin" /> : "Check again"}
+                </Button>
+            </span>
+        );
+    }
+
+    return (
+        <span className="shrink-0 rounded-md border border-dashed px-2 py-0.5 text-xs text-muted-foreground" title="ATS score pending">
+            Not scored
+        </span>
+    );
+}
+
 export function JobDetailClient({ jobId }: { jobId: string }) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -128,6 +181,10 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
     const [republishNote, setRepublishNote] = useState("");
     const [republishSubmitting, setRepublishSubmitting] = useState(false);
     const [selectedApp, setSelectedApp] = useState<ApplicantApplication | null>(null);
+    // Applicant list controls: sort by application date + ATS score cutoff.
+    const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+    const [minScore, setMinScore] = useState("");
+    const [recheckingId, setRecheckingId] = useState<string | null>(null);
 
     const fetchJob = useCallback(async () => {
         setLoading(true);
@@ -157,6 +214,22 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
                 .then((r) => r.json())
                 .then((d) => { if (d.success) fetchJob(); })
                 .catch(() => {});
+        }
+    };
+
+    // Employer "Check again": re-run ATS scoring for an application whose apply-time score failed.
+    const recheckAts = async (appId: string) => {
+        setRecheckingId(appId);
+        try {
+            const res = await fetch(`/api/employer/applications/${appId}/ats-recompute`, { method: "POST" });
+            const d = await res.json();
+            if (d.success) toast.success("ATS score updated");
+            else toast.error(d.error || "Still couldn't score this résumé");
+            await fetchJob();
+        } catch {
+            toast.error("Failed to recompute ATS score");
+        } finally {
+            setRecheckingId(null);
         }
     };
 
@@ -223,6 +296,16 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
         : undefined;
     const isL = (k: string) => actionLoading === k;
     const appCount = job.job_applications?.length ?? 0;
+
+    // Apply the ATS cutoff + date sort for the applicant list.
+    const cutoff = minScore.trim() === "" ? null : Number(minScore);
+    const visibleApps = [...(job.job_applications ?? [])]
+        .filter((a) => cutoff == null || Number.isNaN(cutoff) || (typeof a.ats_score === "number" && a.ats_score >= cutoff))
+        .sort((a, b) => {
+            const da = new Date(a.applied_at).getTime();
+            const db = new Date(b.applied_at).getTime();
+            return sortOrder === "newest" ? db - da : da - db;
+        });
 
     return (
         <div className="space-y-6">
@@ -408,27 +491,59 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
                 <Card>
                     <CardHeader>
                         <CardTitle>Applicants ({appCount})</CardTitle>
+                        {appCount > 0 && (
+                            <div className="flex flex-wrap items-center gap-2 pt-2">
+                                <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as "newest" | "oldest")}>
+                                    <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="newest">Newest applied</SelectItem>
+                                        <SelectItem value="oldest">Oldest applied</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <div className="flex items-center gap-1">
+                                    <Label htmlFor="ats-cutoff" className="text-xs whitespace-nowrap text-muted-foreground">Min ATS</Label>
+                                    <Input
+                                        id="ats-cutoff"
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        value={minScore}
+                                        onChange={(e) => setMinScore(e.target.value)}
+                                        placeholder="0"
+                                        className="h-8 w-16 text-xs"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </CardHeader>
                     <CardContent>
                         {appCount === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-6">No applications yet.</p>
+                        ) : visibleApps.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-6">No applicants match this ATS cutoff.</p>
                         ) : (
                             <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
-                                {job.job_applications.map((app) => {
+                                {visibleApps.map((app) => {
                                     const stage = applicantStage(app);
                                     const badge = journeyVariantToEmployerBadgeProps(stage.variant);
                                     return (
-                                        <button
+                                        <div
                                             key={app.id}
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() => openApplicant(app)}
+                                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openApplicant(app); } }}
                                             className="flex w-full items-center justify-between gap-2 rounded-lg border p-3 text-left cursor-pointer transition-colors hover:border-primary/40 hover:bg-muted/40"
                                         >
                                             <div className="min-w-0">
                                                 <p className="font-medium text-sm truncate">{app.candidate.first_name} {app.candidate.last_name}</p>
                                                 <p className="text-xs text-muted-foreground truncate">{app.candidate.current_position || app.candidate.email} · Applied {fmt(app.applied_at)}</p>
                                             </div>
-                                            <Badge variant={badge.variant} className={`shrink-0 ${badge.className}`}>{stage.label}</Badge>
-                                        </button>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <AtsBadge app={app} onRecheck={recheckAts} rechecking={recheckingId === app.id} />
+                                                <Badge variant={badge.variant} className={`shrink-0 ${badge.className}`}>{stage.label}</Badge>
+                                            </div>
+                                        </div>
                                     );
                                 })}
                             </div>

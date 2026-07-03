@@ -675,6 +675,16 @@ model JobApplication {
   updated_at   DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
   notes        String?           @db.Text
 
+  // ATS score: computed at apply time by comparing the candidate's résumé against the
+  // job description via Gemini. All nullable — a scoring failure never blocks the apply.
+  ats_score            Float?    @db.DoublePrecision // 0–100 overall match
+  ats_status           String?   @default("pending") @db.VarChar(20) // "pending" | "scored" | "failed"
+  ats_breakdown        Json?     // { skills, experience, education, keywords } sub-scores
+  ats_matched_keywords String[]  @default([]) // job-description keywords found in the CV
+  ats_missing_keywords String[]  @default([]) // job-description keywords missing from the CV
+  ats_scored_at        DateTime? @db.Timestamptz(6)
+  ats_error            String?   @db.Text // last failure reason (shown to employer for "Check again")
+
   job       Job       @relation(fields: [job_id], references: [id], onDelete: Cascade)
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -686,6 +696,7 @@ model JobApplication {
   @@index([candidate_id])
   @@index([status])
   @@index([applied_at])
+  @@index([ats_score])
   @@map("job_applications")
 }
 

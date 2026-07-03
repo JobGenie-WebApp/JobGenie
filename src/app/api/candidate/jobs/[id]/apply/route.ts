@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
 import { jobApplySchema } from "@/lib/validations/job-schema";
+import { buildAtsUpdate } from "@/app/actions/ats-score";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         const admin = createAdminClient();
         const { data: candidate } = await admin
             .from("candidates")
-            .select("id, first_name, last_name, email, user_id")
+            .select("id, first_name, last_name, email, user_id, resume_url")
             .eq("user_id", user.id)
             .single();
         if (!candidate) return NextResponse.json({ error: "Candidate profile not found" }, { status: 404 });
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         const { data: job } = await admin
             .from("jobs")
             .select(`
-                id, job_title, status, expires_at, is_deleted,
+                id, job_title, status, expires_at, is_deleted, description, experience_level,
                 company:companies!jobs_company_id_fkey(company_name),
                 employer:employers!jobs_employer_id_fkey(user_id, first_name, email)
             `)
@@ -100,6 +101,33 @@ export async function POST(request: NextRequest, { params }: Params) {
                 body: `${candidateName} has applied for "${job.job_title}".`,
                 data: { job_id: id, application_id: application.id, candidate_name: candidateName },
             });
+        }
+
+        // Compute the ATS score (résumé vs. job description) and persist it on the
+        // application. Fully isolated: any failure here — Gemini down, no résumé, a
+        // crash — is swallowed so the application still succeeds (201). Failures are
+        // recorded as ats_status="failed" so the employer can retry ("Check again").
+        try {
+            const resumeUrl = parsed.data.resume_url ?? candidate.resume_url ?? null;
+            const atsUpdate = await buildAtsUpdate({
+                jobTitle: job.job_title,
+                jobDescription: job.description,
+                experienceLevel: job.experience_level,
+                resumeUrl,
+            });
+            await admin.from("job_applications").update(atsUpdate).eq("id", application.id);
+        } catch (atsError) {
+            await logError({
+                source: "api/candidate/jobs/[id]/apply:ats",
+                errorType: "AtsScoreError",
+                message: atsError instanceof Error ? atsError.message : String(atsError),
+            });
+            // Best-effort: mark failed so the employer can retry. Ignore if even this fails.
+            await admin
+                .from("job_applications")
+                .update({ ats_status: "failed", ats_error: "Scoring error" })
+                .eq("id", application.id)
+                .then(undefined, () => {});
         }
 
         return NextResponse.json({ application_id: application.id }, { status: 201 });

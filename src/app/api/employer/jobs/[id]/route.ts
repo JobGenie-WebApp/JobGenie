@@ -54,6 +54,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
                 ),
                 job_applications(
                     id, status, applied_at, cover_letter, resume_url, notes,
+                    ats_score, ats_status, ats_breakdown, ats_matched_keywords, ats_missing_keywords, ats_scored_at, ats_error,
                     candidate:candidates!job_applications_candidate_id_fkey(
                         id, first_name, last_name, email, profile_image_url,
                         current_position, industry, years_of_experience

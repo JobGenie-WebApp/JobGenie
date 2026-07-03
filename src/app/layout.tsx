@@ -5,8 +5,10 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import StoreProvider from "@/components/providers/StoreProvider";
 import { SWRProvider } from "@/components/providers/SWRProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { CookieConsentProvider } from "@/components/providers/CookieConsentProvider";
+import { CookieConsentBanner } from "@/components/cookie-consent/CookieConsentBanner";
+import { CookiePreferencesModal } from "@/components/cookie-consent/CookiePreferencesModal";
+import { ConsentedAnalytics } from "@/components/analytics/ConsentedAnalytics";
 
 export const metadata: Metadata = {
   title: "JobGenie - Find Your Perfect Career Match",
@@ -45,10 +47,13 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              {children}
-              <Toaster />
-              <Analytics />
-              <SpeedInsights />
+              <CookieConsentProvider>
+                {children}
+                <Toaster />
+                <CookieConsentBanner />
+                <CookiePreferencesModal />
+                <ConsentedAnalytics />
+              </CookieConsentProvider>
             </ThemeProvider>
           </SWRProvider>
         </StoreProvider>
