@@ -13,7 +13,7 @@ const hrefMap: Record<string, string> = {
     Features: '#features', 'How It Works': '#how-it-works', Pricing: '#', Enterprise: '#', Changelog: '#',
     About: '#', Blog: '#', Careers: '#', Press: '#', Partners: '#',
     Documentation: '#', 'API Reference': '#', Status: '#', Community: '#',
-    'Privacy Policy': '/privacy', 'Terms of Service': '/terms', 'Cookie Policy': '#', GDPR: '#',
+    'Privacy Policy': '/privacy', 'Terms of Service': '/terms', 'Cookie Policy': '/cookie-policy', GDPR: '/cookie-policy#gdpr',
 };
 
 export function Footer() {
