@@ -117,7 +117,14 @@ function GenieScene() {
       </svg>
       <div className="jg-spark-burst" aria-hidden="true">{Array.from({ length: 22 }, (_, i) => <i key={i} style={{ '--n': i } as React.CSSProperties} />)}</div>
       <motion.div className="jg-genie" initial={{ opacity: 0, x: 45, scale: .88 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: 1, delay: .15, ease: [0.22, 1, 0.36, 1] }}>
-        <Image src="/Genie.png" alt="The JobGenie emerging from a magic lamp" fill priority sizes="(max-width: 900px) 88vw, 560px" />
+        <Image
+          src="/genie.png"
+          alt="The JobGenie emerging from a magic lamp"
+          fill
+          priority
+          sizes="(max-width: 640px) 100vw, (max-width: 900px) 88vw, 560px"
+          className="jg-genie-image"
+        />
       </motion.div>
       <div className="jg-wish-orbit" aria-hidden="true"><i /><i /><i /></div>
       <div className="jg-wish-card jg-wish-card--job"><span><BriefcaseBusiness size={15} /></span><div><small>WISH MATCHED</small><b>Product Designer</b><em>94% match</em></div></div>

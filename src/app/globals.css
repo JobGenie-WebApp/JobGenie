@@ -109,7 +109,7 @@
 .jg-hero__trust>div>div { display:flex; gap:2px; color:#f4b83f; }.jg-hero__trust small { color:var(--jg-muted); font-size:11px; }
 .jg-hero__visual { height:650px; position:relative; align-self:end; }
 .jg-genie { position:absolute; z-index:2; width:min(560px,48vw); height:720px; right:-40px; bottom:15px; filter:drop-shadow(0 30px 35px rgba(5,64,27,.2)); animation:jg-float 6s ease-in-out infinite; }
-.jg-genie img { object-fit:contain; }
+.jg-genie img,.jg-genie-image { object-fit:contain; object-position:center bottom; }
 @keyframes jg-float { 50% { transform:translateY(-12px) rotate(.6deg); } }
 .jg-genie-glow { position:absolute; width:410px;height:410px;right:35px;top:60px;border-radius:50%;border:1px solid rgba(39,190,99,.24);box-shadow:0 0 0 42px rgba(42,210,110,.035),0 0 0 90px rgba(42,210,110,.025),inset 0 0 80px rgba(50,230,120,.15);animation:jg-pulse 4s ease-in-out infinite; }
 @keyframes jg-pulse { 50% { transform:scale(1.035); opacity:.74; } }
