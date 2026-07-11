@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useLandingSectionSpy } from '@/hooks/useLandingSectionSpy';
 import { cn } from '@/lib/utils';
@@ -52,26 +52,7 @@ export function Header({ showSignIn = true }: { showSignIn?: boolean }) {
             {/* Logo */}
             <Link href="/"
                 className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 no-underline">
-                <div
-                    className="overflow-hidden rounded-full"
-                    style={{
-                        width: 'clamp(36px, 9vw, 44px)',
-                        height: 'clamp(36px, 9vw, 44px)',
-                        position: 'relative',
-                        flexShrink: 0,
-                        border: '1px solid var(--c-green-20)',
-                        boxShadow: '0 0 12px var(--c-green-12)',
-                    }}
-                >
-                    <Image
-                        src="/logo.jpg"
-                        alt="JobGenie Logo"
-                        fill
-                        sizes="44px"
-                        className="rounded-full object-cover"
-                        priority
-                    />
-                </div>
+                <div className="jg-brand-mark"><Sparkles size={18} /></div>
                 <span style={{ fontWeight: 700, fontSize: 'clamp(17px, 4.5vw, 22px)', letterSpacing: '-0.02em', color: 'var(--lp-text)', whiteSpace: 'nowrap' }}>
                     Job<span style={{ color: 'var(--c-green)', fontWeight: 900 }}>Genie</span>
                 </span>
