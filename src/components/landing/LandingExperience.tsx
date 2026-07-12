@@ -25,6 +25,12 @@ import {
   Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { fallbackLandingContent } from '@/lib/cms/fallback';
+import type {
+  LandingContent,
+  LandingFeatureIcon,
+  LandingStepIcon,
+} from '@/lib/cms/types';
 
 const reveal = {
   hidden: { opacity: 0, y: 26 },
@@ -189,13 +195,22 @@ function HeroDashboard() {
   );
 }
 
-const featureCards = [
-  { icon: WandSparkles, eyebrow: 'AI MATCHING', title: 'The right match, without the guesswork.', text: 'Skills, experience and ambition are translated into clear match signals your team can trust.', className: 'is-wide is-green', visual: 'match' },
-  { icon: Fingerprint, eyebrow: 'TRUST LAYER', title: 'Verified from day one.', text: 'Build confidence with verified candidate and employer profiles.', className: '', visual: 'verify' },
-  { icon: CalendarCheck2, eyebrow: 'INTERVIEWS', title: 'From shortlist to scheduled.', text: 'Coordinate every round, reminder and response in one calm workspace.', className: '', visual: 'calendar' },
-  { icon: BarChart3, eyebrow: 'PIPELINE', title: 'See hiring momentum.', text: 'Live pipeline analytics reveal bottlenecks before they slow your team down.', className: '', visual: 'chart' },
-  { icon: MessageSquareText, eyebrow: 'COLLABORATION', title: 'One source of truth for the whole team.', text: 'Notes, decisions, invitations and status updates stay connected to every candidate.', className: 'is-wide', visual: 'team' },
-];
+const featureIconMap: Record<LandingFeatureIcon, typeof WandSparkles> = {
+  wand: WandSparkles,
+  fingerprint: Fingerprint,
+  calendar: CalendarCheck2,
+  chart: BarChart3,
+  message: MessageSquareText,
+};
+
+const stepIconMap: Record<LandingStepIcon, typeof Search> = {
+  file: FileCheck2,
+  search: Search,
+  check: CircleCheckBig,
+  briefcase: BriefcaseBusiness,
+  users: UsersRound,
+  zap: Zap,
+};
 
 function FeatureVisual({ type }: { type: string }) {
   if (type === 'match') return (
@@ -211,18 +226,18 @@ function FeatureVisual({ type }: { type: string }) {
   return <div className="jg-team"><div>{['AM', 'KD', 'NR', 'ST'].map(x => <i key={x}>{x}</i>)}</div><span><b>Hiring team</b><small>4 people reviewing now</small></span><strong><i /> Live</strong></div>;
 }
 
-function Features() {
+function Features({ content }: { content: LandingContent['features'] }) {
   return (
     <section id="features" className="jg-section jg-features">
       <div className="jg-container">
         <Reveal className="jg-section-heading">
-          <span className="jg-kicker"><Sparkles size={13} /> ONE POWERFUL WORKSPACE</span>
-          <h2>Less admin. More <em>magic.</em></h2>
-          <p>Everything candidates and hiring teams need, beautifully orchestrated in one recruitment platform.</p>
+          <span className="jg-kicker"><Sparkles size={13} /> {content.kicker}</span>
+          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
+          <p>{content.description}</p>
         </Reveal>
         <div className="jg-bento">
-          {featureCards.map((card, i) => {
-            const Icon = card.icon;
+          {content.cards.map((card, i) => {
+            const Icon = featureIconMap[card.icon] ?? WandSparkles;
             return (
               <Reveal className={`jg-feature-card ${card.className}`} delay={i * 0.06} key={card.title}>
                 <div className="jg-feature-card__copy">
@@ -240,39 +255,28 @@ function Features() {
   );
 }
 
-const journeys = {
-  candidate: [
-    ['01', 'Create your profile', 'Tell your story once. Your skills, CV and preferences become a polished professional profile.', FileCheck2],
-    ['02', 'Discover your matches', 'Search trusted opportunities and let JobGenie surface the roles that truly fit.', Search],
-    ['03', 'Track every step', 'Applications, interviews and offers stay organised in one clear timeline.', CircleCheckBig],
-  ],
-  employer: [
-    ['01', 'Publish the role', 'Create a trusted company profile and launch a polished job post in minutes.', BriefcaseBusiness],
-    ['02', 'Meet top talent', 'Review verified candidates, AI match signals and team feedback side by side.', UsersRound],
-    ['03', 'Make the hire', 'Coordinate interviews, decisions and offers without losing momentum.', Zap],
-  ],
-};
-
-function HowItWorks() {
+function HowItWorks({ content }: { content: LandingContent['journeys'] }) {
   const [mode, setMode] = useState<'candidate' | 'employer'>('candidate');
+  const activeSteps = content[mode];
+
   return (
     <section id="how-it-works" className="jg-section jg-journey">
       <div className="jg-container">
         <Reveal className="jg-section-heading is-left">
-          <span className="jg-kicker"><WandSparkles size={13} /> YOUR WISH, IN MOTION</span>
-          <h2>A better career story starts in <em>three steps.</em></h2>
+          <span className="jg-kicker"><WandSparkles size={13} /> {content.kicker}</span>
+          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
           <div className="jg-role-toggle" role="tablist" aria-label="Choose your journey">
-            <button className={mode === 'candidate' ? 'is-active' : ''} onClick={() => setMode('candidate')}>I&apos;m a candidate</button>
-            <button className={mode === 'employer' ? 'is-active' : ''} onClick={() => setMode('employer')}>I&apos;m an employer</button>
+            <button className={mode === 'candidate' ? 'is-active' : ''} onClick={() => setMode('candidate')}>{content.candidateLabel}</button>
+            <button className={mode === 'employer' ? 'is-active' : ''} onClick={() => setMode('employer')}>{content.employerLabel}</button>
           </div>
         </Reveal>
         <motion.div className="jg-steps" key={mode} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-          {journeys[mode].map(([number, title, text, Icon], index) => {
-            const StepIcon = Icon as typeof Search;
+          {activeSteps.map((step, index) => {
+            const StepIcon = stepIconMap[step.icon] ?? Search;
             return (
-              <div className="jg-step" key={title as string}>
-                <div className="jg-step__number"><span>{number as string}</span><StepIcon size={22} /></div>
-                <div><h3>{title as string}</h3><p>{text as string}</p></div>
+              <div className="jg-step" key={step.title}>
+                <div className="jg-step__number"><span>{step.number}</span><StepIcon size={22} /></div>
+                <div><h3>{step.title}</h3><p>{step.text}</p></div>
                 {index < 2 && <ChevronRight className="jg-step__arrow" size={20} />}
               </div>
             );
@@ -283,17 +287,17 @@ function HowItWorks() {
   );
 }
 
-function Testimonial() {
+function Testimonial({ content }: { content: LandingContent['testimonial'] }) {
   return (
     <section id="testimonials" className="jg-section jg-proof">
       <div className="jg-container jg-proof__grid">
         <Reveal className="jg-proof__quote">
           <div className="jg-stars">{Array.from({ length: 5 }, (_, i) => <Star key={i} size={16} fill="currentColor" />)}</div>
-          <blockquote>“JobGenie turned a scattered hiring process into one clear rhythm. We spend less time chasing updates and more time talking to the right people.”</blockquote>
-          <div className="jg-author"><i>AS</i><span><b>Amaya Silva</b><small>Head of People · Northstar Labs</small></span></div>
+          <blockquote>“{content.quote}”</blockquote>
+          <div className="jg-author"><i>{content.authorInitials}</i><span><b>{content.authorName}</b><small>{content.authorRole}</small></span></div>
         </Reveal>
         <div className="jg-proof__stats">
-          {[['3×', 'faster shortlisting'], ['96%', 'top match accuracy'], ['100%', 'pipeline visibility']].map(([value, label], i) => (
+          {content.stats.map(({ value, label }, i) => (
             <Reveal className="jg-proof-stat" delay={i * 0.08} key={value}><strong>{value}</strong><span>{label}</span></Reveal>
           ))}
         </div>
@@ -302,19 +306,19 @@ function Testimonial() {
   );
 }
 
-function PortalShowcase() {
+function PortalShowcase({ content }: { content: LandingContent['portals'] }) {
   const [portal, setPortal] = useState<'candidate' | 'employer'>('employer');
   return (
     <section id="portals" className="jg-section jg-portals">
       <div className="jg-container">
         <Reveal className="jg-section-heading">
-          <span className="jg-kicker"><LayoutDashboard size={13} /> DESIGNED FOR BOTH SIDES</span>
-          <h2>One platform. <em>Two brilliant experiences.</em></h2>
-          <p>Focused workspaces give everyone exactly what they need—and nothing they don&apos;t.</p>
+          <span className="jg-kicker"><LayoutDashboard size={13} /> {content.kicker}</span>
+          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
+          <p>{content.description}</p>
         </Reveal>
         <div className="jg-portal-tabs">
-          <button onClick={() => setPortal('candidate')} className={portal === 'candidate' ? 'is-active' : ''}>Candidate portal</button>
-          <button onClick={() => setPortal('employer')} className={portal === 'employer' ? 'is-active' : ''}>Employer portal</button>
+          <button onClick={() => setPortal('candidate')} className={portal === 'candidate' ? 'is-active' : ''}>{content.candidateLabel}</button>
+          <button onClick={() => setPortal('employer')} className={portal === 'employer' ? 'is-active' : ''}>{content.employerLabel}</button>
         </div>
         <motion.div className="jg-portal-window" key={portal} initial={{ opacity: 0, scale: 0.985 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}>
           <div className="jg-portal-sidebar">
@@ -322,7 +326,7 @@ function PortalShowcase() {
             {[LayoutDashboard, portal === 'employer' ? UsersRound : Search, CalendarCheck2, MessageSquareText].map((Icon, i) => <span className={i === 0 ? 'is-active' : ''} key={i}><Icon size={16} /></span>)}
           </div>
           <div className="jg-portal-main">
-            <div className="jg-portal-head"><div><small>GOOD MORNING</small><h3>{portal === 'employer' ? 'Your hiring overview' : 'Your career dashboard'}</h3></div><span><i /> All caught up</span></div>
+            <div className="jg-portal-head"><div><small>GOOD MORNING</small><h3>{portal === 'employer' ? content.employerHeading : content.candidateHeading}</h3></div><span><i /> All caught up</span></div>
             <div className="jg-portal-metrics">
               {(portal === 'employer' ? [['Active roles', '12'], ['New candidates', '48'], ['Interviews', '09']] : [['Applications', '14'], ['Profile views', '62'], ['Interviews', '04']]).map(([label, value], i) => <div key={label}><span>{label}</span><strong>{value}</strong><small>↗ {8 + i * 4}% this week</small></div>)}
             </div>
@@ -337,25 +341,25 @@ function PortalShowcase() {
   );
 }
 
-function CTA() {
+function CTA({ content }: { content: LandingContent['cta'] }) {
   return (
     <section className="jg-cta-wrap">
       <div className="jg-container">
         <Reveal className="jg-cta">
           <MagicDust />
           <div className="jg-cta__orb"><Sparkles size={25} /></div>
-          <span className="jg-kicker">YOUR NEXT CHAPTER IS WAITING</span>
-          <h2>Ready to make your career wish <em>real?</em></h2>
-          <p>Join JobGenie today—where ambitious talent and remarkable teams find each other.</p>
-          <div className="jg-cta__actions"><Link href="/candidate/signup">Find my next role <ArrowRight size={17} /></Link><Link href="/employer/signup">Start hiring</Link></div>
-          <small><ShieldCheck size={13} /> Verified profiles · Transparent hiring · Built for trust</small>
+          <span className="jg-kicker">{content.kicker}</span>
+          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
+          <p>{content.description}</p>
+          <div className="jg-cta__actions"><Link href={content.primaryCta.href}>{content.primaryCta.label} <ArrowRight size={17} /></Link><Link href={content.secondaryCta.href}>{content.secondaryCta.label}</Link></div>
+          <small><ShieldCheck size={13} /> {content.trustNote}</small>
         </Reveal>
       </div>
     </section>
   );
 }
 
-export function LandingExperience() {
+export function LandingExperience({ content = fallbackLandingContent }: { content?: LandingContent }) {
   return (
     <main>
       <MagicCursor />
@@ -363,27 +367,27 @@ export function LandingExperience() {
         <div className="jg-aurora" aria-hidden="true" /><MagicDust />
         <div className="jg-container jg-hero__grid">
           <div className="jg-hero__copy">
-            <motion.div className="jg-kicker" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}><Sparkles size={13} /> YOUR CAREER WISH, GRANTED</motion.div>
-            <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}>Where great talent meets its <em>perfect match.</em></motion.h1>
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.18 }}>JobGenie brings trusted talent, intelligent matching and effortless hiring together—so candidates move forward and teams hire with confidence.</motion.p>
+            <motion.div className="jg-kicker" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}><Sparkles size={13} /> {content.hero.kicker}</motion.div>
+            <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}>{content.hero.title} <em>{content.hero.emphasizedTitle}</em></motion.h1>
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.18 }}>{content.hero.description}</motion.p>
             <motion.div className="jg-hero__actions" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.28 }}>
-              <Link className="jg-button is-primary" href="/candidate/signup">Find your opportunity <ArrowRight size={17} /></Link>
-              <Link className="jg-button is-secondary" href="/employer/signup">Hire exceptional talent</Link>
+              <Link className="jg-button is-primary" href={content.hero.primaryCta.href}>{content.hero.primaryCta.label} <ArrowRight size={17} /></Link>
+              <Link className="jg-button is-secondary" href={content.hero.secondaryCta.href}>{content.hero.secondaryCta.label}</Link>
             </motion.div>
             <motion.div className="jg-hero__trust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.5 }}>
-              <span>{[1, 2, 3, 4].map(x => <i key={x} />)}</span><div><div>{[1,2,3,4,5].map(x => <Star key={x} size={11} fill="currentColor" />)}</div><small>Trusted by modern hiring teams</small></div>
+              <span>{[1, 2, 3, 4].map(x => <i key={x} />)}</span><div><div>{[1,2,3,4,5].map(x => <Star key={x} size={11} fill="currentColor" />)}</div><small>{content.hero.trustLabel}</small></div>
             </motion.div>
           </div>
           <div className="jg-hero__visual"><GenieScene /></div>
         </div>
         <div className="jg-container jg-hero-dashboard-wrap"><HeroDashboard /></div>
       </section>
-      <div className="jg-trust-strip"><span>BUILT FOR MODERN RECRUITMENT</span>{['Verified talent', 'Intelligent matching', 'Clear pipelines', 'Faster decisions'].map(x => <p key={x}><BadgeCheck size={16} /> {x}</p>)}</div>
-      <Features />
-      <HowItWorks />
-      <Testimonial />
-      <PortalShowcase />
-      <CTA />
+      <div className="jg-trust-strip"><span>{content.trustStrip.label}</span>{content.trustStrip.items.map(x => <p key={x}><BadgeCheck size={16} /> {x}</p>)}</div>
+      <Features content={content.features} />
+      <HowItWorks content={content.journeys} />
+      <Testimonial content={content.testimonial} />
+      <PortalShowcase content={content.portals} />
+      <CTA content={content.cta} />
     </main>
   );
 }
