@@ -2,11 +2,11 @@ import type { LandingContent, SiteFooterContent, SiteNavigationContent } from '.
 
 export const fallbackLandingContent: LandingContent = {
   hero: {
-    kicker: 'YOUR CAREER WISH, GRANTED',
-    title: 'Where great talent meets its',
-    emphasizedTitle: 'perfect match.',
+    kicker: '',
+    title: 'Hire the best,',
+    emphasizedTitle: 'Hired by the best!',
     description:
-      'JobGenie brings trusted talent, intelligent matching and effortless hiring together—so candidates move forward and teams hire with confidence.',
+      'Your Career Companion, guiding you through the job market. The best teams are looking for the best talent. The best talent is looking for the best team. I’m here to grant your wish! ',
     primaryCta: { label: 'Find your opportunity', href: '/candidate/signup' },
     secondaryCta: { label: 'Hire exceptional talent', href: '/employer/signup' },
     trustLabel: 'Trusted by modern hiring teams',

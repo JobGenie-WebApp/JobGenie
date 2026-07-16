@@ -374,9 +374,6 @@ export function LandingExperience({ content = fallbackLandingContent }: { conten
               <Link className="jg-button is-primary" href={content.hero.primaryCta.href}>{content.hero.primaryCta.label} <ArrowRight size={17} /></Link>
               <Link className="jg-button is-secondary" href={content.hero.secondaryCta.href}>{content.hero.secondaryCta.label}</Link>
             </motion.div>
-            <motion.div className="jg-hero__trust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.5 }}>
-              <span>{[1, 2, 3, 4].map(x => <i key={x} />)}</span><div><div>{[1,2,3,4,5].map(x => <Star key={x} size={11} fill="currentColor" />)}</div><small>{content.hero.trustLabel}</small></div>
-            </motion.div>
           </div>
           <div className="jg-hero__visual"><GenieScene /></div>
         </div>

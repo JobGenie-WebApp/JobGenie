@@ -27,7 +27,7 @@ export function Footer({ content = fallbackFooterContent }: { content?: SiteFoot
                                 Job<span style={{ color: 'var(--c-green)' }}>Genie</span>
                             </span>
                         </div>
-                        <p style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-22)', lineHeight: 1.72, maxWidth: '100%', marginBottom: 'clamp(16px, 4vw, 20px)' }}>
+                        <p style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-33)', lineHeight: 1.72, maxWidth: '100%', marginBottom: 'clamp(16px, 4vw, 20px)' }}>
                             {content.brandDescription}
                         </p>
                         <div style={{ display: 'flex', gap: 'clamp(6px, 2vw, 8px)', flexWrap: 'wrap' }}>
@@ -47,11 +47,11 @@ export function Footer({ content = fallbackFooterContent }: { content?: SiteFoot
                     {/* Link columns */}
                     {content.columns.map(col => (
                         <div key={col.title}>
-                            <div style={{ fontSize: 'clamp(9px, 2.3vw, 10px)', fontWeight: 700, color: 'var(--lp-text-22)', letterSpacing: '0.12em', marginBottom: 'clamp(10px, 3vw, 14px)', textTransform: 'uppercase' }}>{col.title}</div>
+                            <div style={{ fontSize: 'clamp(12px, 2.3vw, 10px)', fontWeight: 700, color: 'var(--lp-text-22)', letterSpacing: '0.12em', marginBottom: 'clamp(10px, 3vw, 14px)', textTransform: 'uppercase' }}>{col.title}</div>
                             {col.links.map(l => (
                                 <div key={l.label} style={{ marginBottom: 'clamp(7px, 2vw, 9px)' }}>
                                     <Link href={l.href}
-                                        style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-28)', transition: 'color 150ms', textDecoration: 'none', display: 'block' }}
+                                        style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-33)', transition: 'color 150ms', textDecoration: 'none', display: 'block' }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--c-green)'; }}
                                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-28)'; }}>
                                         {l.label}
