@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 
-import { fallbackFooterContent } from '@/lib/cms/fallback';
-import type { SiteFooterContent } from '@/lib/cms/types';
+import { footerContent } from '@/content/site';
+import type { SiteFooterContent } from '@/content/types';
 
-export function Footer({ content = fallbackFooterContent }: { content?: SiteFooterContent }) {
+export function Footer({ content = footerContent }: { content?: SiteFooterContent }) {
     const year = new Date().getFullYear();
     const socialIconMap = {
         Twitter: <svg width={'clamp(11px, 3vw, 12px)'} height={'clamp(11px, 3vw, 12px)'} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.7 5.3 4.3 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" /></svg>,

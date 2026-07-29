@@ -1,6 +1,6 @@
 import type { LandingContent, SiteFooterContent, SiteNavigationContent } from './types';
 
-export const fallbackLandingContent: LandingContent = {
+export const landingContent: LandingContent = {
   hero: {
     kicker: '',
     title: 'Hire the best,',
@@ -144,7 +144,7 @@ export const fallbackLandingContent: LandingContent = {
   },
 };
 
-export const fallbackNavigationContent: SiteNavigationContent = {
+export const navigationContent: SiteNavigationContent = {
   links: [
     { href: '#features', id: 'features', label: 'Features' },
     { href: '#how-it-works', id: 'how-it-works', label: 'How it Works' },
@@ -155,7 +155,7 @@ export const fallbackNavigationContent: SiteNavigationContent = {
   getStarted: { label: 'Get Started', href: '/candidate/signup' },
 };
 
-export const fallbackFooterContent: SiteFooterContent = {
+export const footerContent: SiteFooterContent = {
   brandDescription:
     'The recruitment operating system for teams who value clarity, speed, and accountability.',
   columns: [
@@ -164,28 +164,22 @@ export const fallbackFooterContent: SiteFooterContent = {
       links: [
         { label: 'Features', href: '#features' },
         { label: 'How It Works', href: '#how-it-works' },
-        { label: 'Pricing', href: '#' },
-        { label: 'Enterprise', href: '#' },
-        { label: 'Changelog', href: '#' },
+        { label: 'Pricing', href: '/pricing' },
+        { label: 'For Employers', href: '/employer/signup' },
       ],
     },
     {
       title: 'Company',
       links: [
-        { label: 'About', href: '#' },
-        { label: 'Blog', href: '#' },
-        { label: 'Careers', href: '#' },
-        { label: 'Press', href: '#' },
-        { label: 'Partners', href: '#' },
+        { label: 'Careers', href: '/careers' },
+        { label: 'Sign In', href: '/login' },
       ],
     },
     {
       title: 'Resources',
       links: [
-        { label: 'Documentation', href: '#' },
-        { label: 'API Reference', href: '#' },
-        { label: 'Status', href: '#' },
-        { label: 'Community', href: '#' },
+        { label: 'Documentation', href: '/docs' },
+        { label: 'Get Started', href: '/candidate/signup' },
       ],
     },
     {
@@ -194,7 +188,8 @@ export const fallbackFooterContent: SiteFooterContent = {
         { label: 'Privacy Policy', href: '/privacy' },
         { label: 'Terms of Service', href: '/terms' },
         { label: 'Cookie Policy', href: '/cookie-policy' },
-        { label: 'GDPR', href: '/cookie-policy#gdpr' },
+        { label: 'GDPR', href: '/gdpr' },
+        { label: 'PDPA', href: '/pdpa' },
       ],
     },
   ],
@@ -208,8 +203,8 @@ export const fallbackFooterContent: SiteFooterContent = {
   statusLabel: 'All systems operational',
 };
 
-export const fallbackSiteContent = {
-  landing: fallbackLandingContent,
-  navigation: fallbackNavigationContent,
-  footer: fallbackFooterContent,
+export const siteContent = {
+  landing: landingContent,
+  navigation: navigationContent,
+  footer: footerContent,
 };

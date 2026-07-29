@@ -5,13 +5,13 @@ import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useLandingSectionSpy } from '@/hooks/useLandingSectionSpy';
-import { fallbackNavigationContent } from '@/lib/cms/fallback';
-import type { SiteNavigationContent } from '@/lib/cms/types';
+import { navigationContent } from '@/content/site';
+import type { SiteNavigationContent } from '@/content/types';
 import { cn } from '@/lib/utils';
 
 export function Header({
     showSignIn = true,
-    navigation = fallbackNavigationContent,
+    navigation = navigationContent,
 }: {
     showSignIn?: boolean;
     navigation?: SiteNavigationContent;
@@ -19,7 +19,7 @@ export function Header({
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     /** Order matches section layout on the landing page (top -> bottom). */
-    const navLinks = navigation.links.length ? navigation.links : fallbackNavigationContent.links;
+    const navLinks = navigation.links.length ? navigation.links : navigationContent.links;
     const navLinkIds = navLinks.map((l) => l.id);
     const activeId = useLandingSectionSpy(navLinkIds);
 

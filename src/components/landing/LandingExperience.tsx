@@ -25,12 +25,12 @@ import {
   Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { fallbackLandingContent } from '@/lib/cms/fallback';
+import { landingContent } from '@/content/site';
 import type {
   LandingContent,
   LandingFeatureIcon,
   LandingStepIcon,
-} from '@/lib/cms/types';
+} from '@/content/types';
 
 const reveal = {
   hidden: { opacity: 0, y: 26 },
@@ -359,7 +359,7 @@ function CTA({ content }: { content: LandingContent['cta'] }) {
   );
 }
 
-export function LandingExperience({ content = fallbackLandingContent }: { content?: LandingContent }) {
+export function LandingExperience({ content = landingContent }: { content?: LandingContent }) {
   return (
     <main>
       <MagicCursor />

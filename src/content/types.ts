@@ -120,9 +120,3 @@ export type SiteFooterContent = {
   versionLabel: string;
   statusLabel: string;
 };
-
-export type SiteContent = {
-  landing: LandingContent;
-  navigation: SiteNavigationContent;
-  footer: SiteFooterContent;
-};
