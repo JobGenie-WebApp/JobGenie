@@ -5,21 +5,22 @@ import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useLandingSectionSpy } from '@/hooks/useLandingSectionSpy';
+import { navigationContent } from '@/content/site';
+import type { SiteNavigationContent } from '@/content/types';
 import { cn } from '@/lib/utils';
 
-/** Order matches section layout on the landing page (top → bottom). */
-const navLinks = [
-    { href: '#features', id: 'features', label: 'Features' },
-    { href: '#how-it-works', id: 'how-it-works', label: 'How it Works' },
-    { href: '#testimonials', id: 'testimonials', label: 'Testimonials' },
-    { href: '#portals', id: 'portals', label: 'Portals' },
-] as const;
-
-const navLinkIds = navLinks.map((l) => l.id);
-
-export function Header({ showSignIn = true }: { showSignIn?: boolean }) {
+export function Header({
+    showSignIn = true,
+    navigation = navigationContent,
+}: {
+    showSignIn?: boolean;
+    navigation?: SiteNavigationContent;
+}) {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    /** Order matches section layout on the landing page (top -> bottom). */
+    const navLinks = navigation.links.length ? navigation.links : navigationContent.links;
+    const navLinkIds = navLinks.map((l) => l.id);
     const activeId = useLandingSectionSpy(navLinkIds);
 
     useEffect(() => {
@@ -81,19 +82,19 @@ export function Header({ showSignIn = true }: { showSignIn?: boolean }) {
 
                 {showSignIn && (
                     <>
-                        <Link href="/login"
+                        <Link href={navigation.signIn.href}
                             className="hidden md:inline-block"
                             style={{ padding: '7px 16px', borderRadius: 7, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-45)', fontSize: 13, fontWeight: 500, textDecoration: 'none', transition: 'all 160ms', whiteSpace: 'nowrap' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--c-green-40)'; (e.currentTarget as HTMLElement).style.background = 'var(--lp-surface)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-45)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--lp-border)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                            Sign In
+                            {navigation.signIn.label}
                         </Link>
-                        <Link href="/candidate/signup"
+                        <Link href={navigation.getStarted.href}
                             className="hidden md:inline-block"
                             style={{ padding: '8px 18px', borderRadius: 7, background: 'var(--c-green)', color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 22px var(--c-green-30)', transition: 'all 160ms', whiteSpace: 'nowrap' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 36px var(--c-green-60)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 22px var(--c-green-30)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}>
-                            Get Started →
+                            {navigation.getStarted.label} →
                         </Link>
                     </>
                 )}
@@ -145,15 +146,15 @@ export function Header({ showSignIn = true }: { showSignIn?: boolean }) {
                     </nav>
                     {showSignIn && (
                         <div className="flex flex-col sm:flex-row gap-2.5 pt-3" style={{ borderTop: '1px solid var(--lp-border)' }}>
-                            <Link href="/login" onClick={() => setMobileOpen(false)}
+                            <Link href={navigation.signIn.href} onClick={() => setMobileOpen(false)}
                                 className="flex-1 text-center touch-manipulation"
                                 style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-60)', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 500, textDecoration: 'none' }}>
-                                Sign In
+                                {navigation.signIn.label}
                             </Link>
-                            <Link href="/candidate/signup" onClick={() => setMobileOpen(false)}
+                            <Link href={navigation.getStarted.href} onClick={() => setMobileOpen(false)}
                                 className="flex-1 text-center touch-manipulation"
                                 style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--c-green)', color: '#fff', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 20px var(--c-green-30)' }}>
-                                Get Started
+                                {navigation.getStarted.label}
                             </Link>
                         </div>
                     )}

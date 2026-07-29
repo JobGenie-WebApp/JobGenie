@@ -11,6 +11,7 @@ import { CookiePreferencesModal } from "@/components/cookie-consent/CookiePrefer
 import { ConsentedAnalytics } from "@/components/analytics/ConsentedAnalytics";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "JobGenie - Find Your Perfect Career Match",
   description: "JobGenie connects talented candidates with forward-thinking employers. Whether you're looking for your dream job or the perfect hire, we've got you covered.",
   keywords: ["jobs", "careers", "hiring", "recruitment", "job portal", "employment"],
