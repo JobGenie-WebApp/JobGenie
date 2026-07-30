@@ -16,7 +16,8 @@
     "db:cleanup": "tsx scripts/cleanup-logs.ts",
     "mis:seed-permissions": "tsx scripts/seed-mis-permissions.ts",
     "mis:add-permissions": "tsx scripts/add-mis-permissions.ts",
-    "db:update-seniority-levels": "tsx scripts/update-seniority-levels.ts"
+    "db:update-seniority-levels": "tsx scripts/update-seniority-levels.ts",
+    "cms:seed": "tsx scripts/seed-cms.ts"
   },
   "prisma": {
     "seed": "tsx scripts/setup-database.ts"
@@ -75,6 +76,7 @@
     "react-day-picker": "^9.13.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.70.0",
+    "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.21",
     "react-redux": "^9.2.0",
     "recharts": "^3.8.1",

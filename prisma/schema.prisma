@@ -84,8 +84,8 @@ model Candidate {
   resume_url        String?  @db.VarChar(255)
   resume_copy_url   String?  @db.VarChar(255)
 
-  years_of_experience Int?             @default(0)
-  experience_level    String?           @db.VarChar(100) @default("entry")
+  years_of_experience Int?    @default(0)
+  experience_level    String? @default("entry") @db.VarChar(100)
 
   // Qualifications stored as array for multiple selection
   qualifications        ProfessionalQualification[]
@@ -161,16 +161,16 @@ model Candidate {
 // ============================================
 
 model CandidateResume {
-  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  candidate_id String  @db.Uuid
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id String @db.Uuid
 
   file_name  String  @db.VarChar(255)
   file_url   String  @db.VarChar(500)
   file_path  String  @db.VarChar(500)
   is_primary Boolean @default(false)
 
-  created_at DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
@@ -217,11 +217,11 @@ model Education {
   id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   candidate_id String @db.Uuid
 
-  education_type             EducationType   @default(academic) // academic or professional
-  degree_diploma             String?         @db.VarChar(200) // Qualification
-  professional_qualification String?         @db.VarChar(200)
-  institution                String?         @db.VarChar(200)
-  status                     String          @default("incomplete") @db.VarChar(100)
+  education_type             EducationType @default(academic) // academic or professional
+  degree_diploma             String?       @db.VarChar(200) // Qualification
+  professional_qualification String?       @db.VarChar(200)
+  institution                String?       @db.VarChar(200)
+  status                     String        @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -312,9 +312,9 @@ model FinanceAcademicEducation {
   id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   candidate_id String @db.Uuid
 
-  degree_diploma String                 @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Accounting and Finance
-  institution    String                 @db.VarChar(200)
-  status         String                 @default("incomplete") @db.VarChar(100)
+  degree_diploma String @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Accounting and Finance
+  institution    String @db.VarChar(200)
+  status         String @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -329,9 +329,9 @@ model FinanceProfessionalEducation {
   id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   candidate_id String @db.Uuid
 
-  professional_qualification String                 @db.VarChar(300) // Professional Qualifications/Professional Programs/Specialized programs
-  institution                String                 @db.VarChar(200)
-  status                     String                 @default("incomplete") @db.VarChar(100)
+  professional_qualification String @db.VarChar(300) // Professional Qualifications/Professional Programs/Specialized programs
+  institution                String @db.VarChar(200)
+  status                     String @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -350,9 +350,9 @@ model BankingAcademicEducation {
   id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   candidate_id String @db.Uuid
 
-  degree_diploma String                 @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Banking and Finance
-  institution    String                 @db.VarChar(200)
-  status         String                 @default("incomplete") @db.VarChar(100)
+  degree_diploma String @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Banking and Finance
+  institution    String @db.VarChar(200)
+  status         String @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -367,9 +367,9 @@ model BankingProfessionalEducation {
   id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   candidate_id String @db.Uuid
 
-  professional_qualification String                 @db.VarChar(300) // Professional Banking Programs/Specialist diplomas/International Professional Qualifications
-  institution                String                 @db.VarChar(200)
-  status                     String                 @default("incomplete") @db.VarChar(100)
+  professional_qualification String @db.VarChar(300) // Professional Banking Programs/Specialist diplomas/International Professional Qualifications
+  institution                String @db.VarChar(200)
+  status                     String @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -384,10 +384,10 @@ model BankingSpecializedTraining {
   id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   candidate_id String @db.Uuid
 
-  certificate_name        String                 @db.VarChar(300) // Certificate Name/Training program name
-  issuing_authority       String                 @db.VarChar(200) // Issuing Authority/Institution
-  certificate_issue_month DateTime?              @db.Date // Certificate Issue Month/training completion month
-  status                  String                 @default("incomplete") @db.VarChar(100)
+  certificate_name        String    @db.VarChar(300) // Certificate Name/Training program name
+  issuing_authority       String    @db.VarChar(200) // Issuing Authority/Institution
+  certificate_issue_month DateTime? @db.Date // Certificate Issue Month/training completion month
+  status                  String    @default("incomplete") @db.VarChar(100)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
@@ -481,26 +481,26 @@ model Employer {
   user_id    String @unique @db.Uuid
   company_id String @db.Uuid
 
-  first_name        String  @db.VarChar(100)
-  last_name         String  @db.VarChar(100)
-  designation       String? @db.VarChar(200)
-  phone             String? @db.VarChar(20)
-  email             String  @db.VarChar(255)
-  address           String  @db.VarChar(255)
-  job_title         String? @db.VarChar(200)
-  department        String? @db.VarChar(100)
-  is_super_admin      Boolean @default(false)
-  profile_completed   Boolean @default(false)
-  profile_image_url   String? @db.VarChar(500)
-  hiring_preferences  Json?   @default("{}")
+  first_name         String  @db.VarChar(100)
+  last_name          String  @db.VarChar(100)
+  designation        String? @db.VarChar(200)
+  phone              String? @db.VarChar(20)
+  email              String  @db.VarChar(255)
+  address            String  @db.VarChar(255)
+  job_title          String? @db.VarChar(200)
+  department         String? @db.VarChar(100)
+  is_super_admin     Boolean @default(false)
+  profile_completed  Boolean @default(false)
+  profile_image_url  String? @db.VarChar(500)
+  hiring_preferences Json?   @default("{}")
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
-  user            User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  company         Company         @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  jobs            Job[]
-  job_invitations JobInvitation[]
+  user                    User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  company                 Company          @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  jobs                    Job[]
+  job_invitations         JobInvitation[]
   payment_requests        PaymentRequest[]
   payment_proofs_uploaded PaymentProof[]
 
@@ -514,21 +514,21 @@ model Employer {
 // ============================================
 
 model MisUser {
-  user_id             String      @id @db.Uuid
-  first_name          String      @db.VarChar(100)
-  last_name           String      @db.VarChar(100)
-  email               String      @unique @db.VarChar(255)
-  role_id             String?     @db.Uuid // Assigned role
-  is_super_admin      Boolean     @default(false) // Super admin flag
-  created_at          DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime    @default(now()) @updatedAt @db.Timestamptz(6)
-  user                User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  role                MisRole?    @relation(fields: [role_id], references: [id], onDelete: SetNull)
-  reviewed_candidates Candidate[]
-  payment_requests_created PaymentRequest[] @relation("PaymentRequestCreator")
-  payment_proofs_reviewed  PaymentProof[]   @relation("PaymentProofReviewer")
-  compliance_flags_raised    JobComplianceFlag[] @relation("ComplianceFlagger")
-  compliance_flags_resolved  JobComplianceFlag[] @relation("ComplianceResolver")
+  user_id                   String              @id @db.Uuid
+  first_name                String              @db.VarChar(100)
+  last_name                 String              @db.VarChar(100)
+  email                     String              @unique @db.VarChar(255)
+  role_id                   String?             @db.Uuid // Assigned role
+  is_super_admin            Boolean             @default(false) // Super admin flag
+  created_at                DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  user                      User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role                      MisRole?            @relation(fields: [role_id], references: [id], onDelete: SetNull)
+  reviewed_candidates       Candidate[]
+  payment_requests_created  PaymentRequest[]    @relation("PaymentRequestCreator")
+  payment_proofs_reviewed   PaymentProof[]      @relation("PaymentProofReviewer")
+  compliance_flags_raised   JobComplianceFlag[] @relation("ComplianceFlagger")
+  compliance_flags_resolved JobComplianceFlag[] @relation("ComplianceResolver")
 
   @@index([role_id])
   @@index([is_super_admin])
@@ -549,7 +549,7 @@ model MisRole {
   created_by  String   @db.Uuid // MIS user who created this role
 
   // Relations
-  mis_users       MisUser[]
+  mis_users        MisUser[]
   role_permissions MisRolePermission[]
 
   @@index([is_active])
@@ -573,10 +573,10 @@ model MisPermission {
 }
 
 model MisRolePermission {
-  role_id       String        @db.Uuid
-  permission_id String        @db.Uuid
-  assigned_at   DateTime      @default(now()) @db.Timestamptz(6)
-  assigned_by   String        @db.Uuid // MIS user who assigned this permission
+  role_id       String   @db.Uuid
+  permission_id String   @db.Uuid
+  assigned_at   DateTime @default(now()) @db.Timestamptz(6)
+  assigned_by   String   @db.Uuid // MIS user who assigned this permission
 
   // Relations
   role       MisRole       @relation(fields: [role_id], references: [id], onDelete: Cascade)
@@ -623,28 +623,28 @@ model Job {
   status      JobStatus @default(draft)
 
   // Advertisement-specific fields
-  salary_min          Decimal? @db.Decimal(12, 2)
-  salary_max          Decimal? @db.Decimal(12, 2)
-  salary_currency     String?  @db.VarChar(10) @default("LKR")
-  experience_level    String?  @db.VarChar(50)
-  positions_available Int?     @default(1)
-  validity_days       Int      @default(30)
+  salary_min          Decimal?  @db.Decimal(12, 2)
+  salary_max          Decimal?  @db.Decimal(12, 2)
+  salary_currency     String?   @default("LKR") @db.VarChar(10)
+  experience_level    String?   @db.VarChar(50)
+  positions_available Int?      @default(1)
+  validity_days       Int       @default(30)
   custom_start_date   DateTime? @db.Date
   custom_end_date     DateTime? @db.Date
   expires_at          DateTime? @db.Timestamptz(6)
-  is_deleted          Boolean  @default(false)
+  is_deleted          Boolean   @default(false)
   deleted_at          DateTime? @db.Timestamptz(6)
 
   // Set when MIS pauses the job for a fake/invalid payment document. While true the
   // employer cannot resume/republish — only MIS can clear it (see JobComplianceFlag).
-  mis_pause_locked    Boolean  @default(false)
+  mis_pause_locked Boolean @default(false)
 
   created_at   DateTime  @default(now()) @db.Timestamptz(6)
   updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
   published_at DateTime? @db.Timestamptz(6)
 
-  employer         Employer         @relation(fields: [employer_id], references: [id], onDelete: Cascade)
-  company          Company          @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  employer         Employer            @relation(fields: [employer_id], references: [id], onDelete: Cascade)
+  company          Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
   job_invitations  JobInvitation[]
   payment_requests PaymentRequest[]
   job_applications JobApplication[]
@@ -679,7 +679,7 @@ model JobApplication {
   // job description via Gemini. All nullable — a scoring failure never blocks the apply.
   ats_score            Float?    @db.DoublePrecision // 0–100 overall match
   ats_status           String?   @default("pending") @db.VarChar(20) // "pending" | "scored" | "failed"
-  ats_breakdown        Json?     // { skills, experience, education, keywords } sub-scores
+  ats_breakdown        Json? // { skills, experience, education, keywords } sub-scores
   ats_matched_keywords String[]  @default([]) // job-description keywords found in the CV
   ats_missing_keywords String[]  @default([]) // job-description keywords missing from the CV
   ats_scored_at        DateTime? @db.Timestamptz(6)
@@ -755,7 +755,7 @@ model JobInvitation {
   invitation_canceled Boolean     @default(false) // True if interview was cancelled
   canceled_by         CanceledBy? // Who canceled: candidate or employer
   cancellation_reason String?     @db.Text // Reason for cancellation
-  canceled_at         DateTime? @db.Timestamptz(6) // When the interview was cancelled
+  canceled_at         DateTime?   @db.Timestamptz(6) // When the interview was cancelled
 
   // MIS Reschedule tracking (for rescheduling cancelled confirmed interviews)
   mis_rescheduled     Boolean   @default(false) // True if MIS rescheduled the interview
@@ -765,14 +765,14 @@ model JobInvitation {
 
   // Pipeline management (Phase 1: additive)
   pipeline_status      PipelineStatus @default(active)
-  current_round_number Int @default(1)
+  current_round_number Int            @default(1)
   closed_at            DateTime?
   closed_reason        String?
 
   // Tracking
-  sent_at      DateTime  @default(now()) @db.Timestamptz(6)
-  viewed_at    DateTime? @db.Timestamptz(6)
-  responded_at DateTime? @db.Timestamptz(6)
+  sent_at               DateTime  @default(now()) @db.Timestamptz(6)
+  viewed_at             DateTime? @db.Timestamptz(6)
+  responded_at          DateTime? @db.Timestamptz(6)
   /// When the employer last opened this invitation; null = unread on employer sidebar
   employer_last_seen_at DateTime? @db.Timestamptz(6)
 
@@ -799,41 +799,41 @@ model JobInvitation {
 }
 
 model InterviewRound {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  invitation_id   String   @db.Uuid
-  round_number    Int      // 1, 2, 3, ...
-  round_label     String?  @db.VarChar(100) // e.g. "Technical Interview", "Culture Fit", "Final Round"
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invitation_id String  @db.Uuid
+  round_number  Int // 1, 2, 3, ...
+  round_label   String? @db.VarChar(100) // e.g. "Technical Interview", "Culture Fit", "Final Round"
 
   // ---- Scheduling ----
-  status          RoundStatus   @default(pending)  // pending|viewed|accepted|declined|expired|confirmed|completed|canceled
-  given_time_slots   Json  // Array of time slot objects
-  alternative_dates  Json? // Array of alternative date objects
-  selected_time_slot Json? // Candidate's selected time slot
-  interview_mode     InterviewMode?
-  interview_confirmed Boolean @default(false)
-  confirmed_time      Json?   // Confirmed time for alternative dates
-  meeting_link        String? @db.Text
-  interview_address   String? @db.Text
-  map_link            String? @db.Text
-  confirmed_at        DateTime? @db.Timestamptz(6)
+  status              RoundStatus    @default(pending) // pending|viewed|accepted|declined|expired|confirmed|completed|canceled
+  given_time_slots    Json // Array of time slot objects
+  alternative_dates   Json? // Array of alternative date objects
+  selected_time_slot  Json? // Candidate's selected time slot
+  interview_mode      InterviewMode?
+  interview_confirmed Boolean        @default(false)
+  confirmed_time      Json? // Confirmed time for alternative dates
+  meeting_link        String?        @db.Text
+  interview_address   String?        @db.Text
+  map_link            String?        @db.Text
+  confirmed_at        DateTime?      @db.Timestamptz(6)
 
   // ---- Cancellation ----
-  round_canceled       Boolean  @default(false)
-  canceled_by          CanceledBy?
-  cancellation_reason  String?  @db.Text
-  canceled_at          DateTime? @db.Timestamptz(6)
+  round_canceled      Boolean     @default(false)
+  canceled_by         CanceledBy?
+  cancellation_reason String?     @db.Text
+  canceled_at         DateTime?   @db.Timestamptz(6)
 
   // ---- MIS reschedule ----
-  mis_rescheduled     Boolean @default(false)
+  mis_rescheduled     Boolean   @default(false)
   mis_rescheduled_at  DateTime? @db.Timestamptz(6)
-  mis_rescheduled_by  String? @db.Uuid
+  mis_rescheduled_by  String?   @db.Uuid
   mis_reschedule_data Json?
 
   // ---- Interview Feedback & Outcome ----
-  outcome             RoundOutcome?   // advance|reject|offer|no_decision
-  outcome_notes       String?  @db.Text  // Employer's feedback about candidate performance
-  outcome_at          DateTime? @db.Timestamptz(6)
-  outcome_by          String? @db.Uuid   // employer user id who made the decision
+  outcome       RoundOutcome? // advance|reject|offer|no_decision
+  outcome_notes String?       @db.Text // Employer's feedback about candidate performance
+  outcome_at    DateTime?     @db.Timestamptz(6)
+  outcome_by    String?       @db.Uuid // employer user id who made the decision
 
   // ---- Timestamps ----
   sent_at      DateTime  @default(now()) @db.Timestamptz(6)
@@ -855,11 +855,11 @@ model InterviewRound {
 
 /// Singleton row (id = 1): MIS-configured offsets in minutes before each interview start.
 model MisInterviewReminderSettings {
-  id                Int      @id @default(1)
-  enabled           Boolean  @default(false)
-  offsets_minutes   Int[]    @default([])
-  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  updated_by_user_id String? @db.Uuid
+  id                 Int      @id @default(1)
+  enabled            Boolean  @default(false)
+  offsets_minutes    Int[]    @default([])
+  updated_at         DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  updated_by_user_id String?  @db.Uuid
 
   @@map("mis_interview_reminder_settings")
 }
@@ -881,27 +881,27 @@ model InterviewReminderSent {
 }
 
 model JobOffer {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  invitation_id  String   @unique @db.Uuid
-  round_id       String?  @unique @db.Uuid          // round after which offer was made
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invitation_id String  @unique @db.Uuid
+  round_id      String? @unique @db.Uuid // round after which offer was made
 
-  job_title      String
-  salary_amount  Decimal? @db.Decimal(12,2)
-  salary_currency String? @default("LKR")
-  salary_period  SalaryPeriod? @default(monthly)    // monthly|annual
-  start_date     DateTime?
-  expiry_date    DateTime?
+  job_title        String
+  salary_amount    Decimal?      @db.Decimal(12, 2)
+  salary_currency  String?       @default("LKR")
+  salary_period    SalaryPeriod? @default(monthly) // monthly|annual
+  start_date       DateTime?
+  expiry_date      DateTime?
   offer_letter_url String?
-  description    String?                             // benefits, terms, etc.
+  description      String? // benefits, terms, etc.
 
-  status         OfferStatus @default(pending)       // pending|accepted|declined|withdrawn|expired
+  status         OfferStatus @default(pending) // pending|accepted|declined|withdrawn|expired
   decline_reason String?
   responded_at   DateTime?
-  created_by     String  @db.Uuid                    // employer user id
-  created_at     DateTime @default(now())
-  updated_at     DateTime @default(now()) @updatedAt
+  created_by     String      @db.Uuid // employer user id
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @default(now()) @updatedAt
 
-  invitation JobInvitation @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  invitation JobInvitation   @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
   round      InterviewRound? @relation(fields: [round_id], references: [id])
 
   @@map("job_offers")
@@ -1154,13 +1154,13 @@ model EventLog {
 model ApiRequestLog {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-  user_id    String? @db.Uuid
-  method     String  @db.VarChar(10)
-  path       String  @db.VarChar(500)
-  status     Int
-  duration   Int // milliseconds
+  user_id      String? @db.Uuid
+  method       String  @db.VarChar(10)
+  path         String  @db.VarChar(500)
+  status       Int
+  duration     Int // milliseconds
   query_params String? @db.Text
-  
+
   ip_address String? @db.VarChar(45)
   user_agent String? @db.Text
   error      String? @db.Text
@@ -1184,9 +1184,9 @@ model ErrorLog {
   stack      String? @db.Text
   metadata   Json?
 
-  resolved   Boolean @default(false)
+  resolved    Boolean   @default(false)
   resolved_at DateTime? @db.Timestamptz(6)
-  resolved_by String? @db.Uuid
+  resolved_by String?   @db.Uuid
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
 
@@ -1202,13 +1202,13 @@ model ErrorLog {
 // ============================================
 
 model Notification {
-  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id String  @db.Uuid
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id String @db.Uuid
 
   type    String  @db.Text // notification type: invitation_received, interview_scheduled, etc.
   title   String  @db.Text
   body    String? @db.Text
-  data    Json?   // Additional context: {invitation_id, round_id, offer_id, etc.}
+  data    Json? // Additional context: {invitation_id, round_id, offer_id, etc.}
   is_read Boolean @default(false)
 
   created_at DateTime @default(now()) @db.Timestamptz(6)
@@ -1218,7 +1218,7 @@ model Notification {
 
   // Indexes matching the SQL migration
   @@index([user_id, is_read, created_at(sort: Desc)]) // For unread notifications query
-  @@index([user_id, created_at(sort: Desc)])          // For notification history
+  @@index([user_id, created_at(sort: Desc)]) // For notification history
   /// Supabase Realtime enabled: REPLICA IDENTITY FULL (migration: enable_realtime_for_notification_tables)
   @@map("notifications")
 }
@@ -1244,14 +1244,14 @@ model PaymentType {
 }
 
 model PaymentPricing {
-  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  payment_type_id String      @db.Uuid
-  amount          Decimal     @db.Decimal(12, 2)
-  currency        String      @default("LKR") @db.VarChar(10)
-  description     String?     @db.Text
-  is_active       Boolean     @default(true)
-  effective_from  DateTime    @default(now()) @db.Timestamptz(6)
-  created_at      DateTime    @default(now()) @db.Timestamptz(6)
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  payment_type_id String   @db.Uuid
+  amount          Decimal  @db.Decimal(12, 2)
+  currency        String   @default("LKR") @db.VarChar(10)
+  description     String?  @db.Text
+  is_active       Boolean  @default(true)
+  effective_from  DateTime @default(now()) @db.Timestamptz(6)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
 
   payment_type PaymentType @relation(fields: [payment_type_id], references: [id], onDelete: Cascade)
 
@@ -1376,33 +1376,100 @@ enum ComplianceFlagStatus {
 }
 
 model JobComplianceFlag {
-  id                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  job_id                  String               @db.Uuid
-  payment_request_id      String?              @db.Uuid
-  flagged_proof_id        String?              @db.Uuid
-  reason                  String               @db.Text
-  flagged_by_mis_user_id  String               @db.Uuid
-  flagged_at              DateTime             @default(now()) @db.Timestamptz(6)
-  status                  ComplianceFlagStatus @default(paused)
+  id                     String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id                 String               @db.Uuid
+  payment_request_id     String?              @db.Uuid
+  flagged_proof_id       String?              @db.Uuid
+  reason                 String               @db.Text
+  flagged_by_mis_user_id String               @db.Uuid
+  flagged_at             DateTime             @default(now()) @db.Timestamptz(6)
+  status                 ComplianceFlagStatus @default(paused)
 
   // Employer re-submission
-  employer_doc_url   String?   @db.VarChar(500)
-  employer_doc_path  String?   @db.VarChar(500)
-  employer_doc_name  String?   @db.VarChar(255)
-  employer_doc_type  String?   @db.VarChar(100)
-  employer_note      String?   @db.Text
-  resubmitted_at     DateTime? @db.Timestamptz(6)
+  employer_doc_url  String?   @db.VarChar(500)
+  employer_doc_path String?   @db.VarChar(500)
+  employer_doc_name String?   @db.VarChar(255)
+  employer_doc_type String?   @db.VarChar(100)
+  employer_note     String?   @db.Text
+  resubmitted_at    DateTime? @db.Timestamptz(6)
 
   // MIS resolution
   resolved_by_mis_user_id String?   @db.Uuid
   resolved_at             DateTime? @db.Timestamptz(6)
   resolution_notes        String?   @db.Text
 
-  job         Job     @relation(fields: [job_id], references: [id], onDelete: Cascade)
-  flagged_by  MisUser @relation("ComplianceFlagger", fields: [flagged_by_mis_user_id], references: [user_id])
+  job         Job      @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  flagged_by  MisUser  @relation("ComplianceFlagger", fields: [flagged_by_mis_user_id], references: [user_id])
   resolved_by MisUser? @relation("ComplianceResolver", fields: [resolved_by_mis_user_id], references: [user_id])
 
   @@index([job_id])
   @@index([status])
   @@map("job_compliance_flags")
+}
+
+// ---------------------------------------------------------------------------
+// CMS — editable site content
+//
+// The constants in src/content/site.ts are the fallback layer; rows here are
+// overrides merged on top by dot-path. A missing or empty row means the
+// constant wins, which is why no content field below is required.
+// ---------------------------------------------------------------------------
+
+/// Every editable string on the public site.
+model CmsText {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scope       String   @db.VarChar(64) // 'landing' | 'navigation' | 'footer'
+  path        String   @db.VarChar(191) // 'hero.title', 'highlights.0.points.2'
+  value       String?  @db.Text // published
+  draft_value String?  @db.Text // pending; null = no pending change
+  updated_by  String?  @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@unique([scope, path])
+  @@index([scope])
+  @@map("cms_texts")
+}
+
+/// Header links, footer columns and their links, footer social links.
+model CmsNavItem {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  location       String   @db.VarChar(32) // 'header' | 'footer' | 'footer_social'
+  parent_id      String?  @db.Uuid // footer column -> its links
+  label          String?  @db.VarChar(191)
+  href           String?  @db.VarChar(500)
+  sort_order     Int      @default(0)
+  is_visible     Boolean  @default(true)
+  draft          Json? // pending { label?, href?, sort_order?, is_visible? }
+  pending_delete Boolean  @default(false) // removed in draft, still public
+  is_new         Boolean  @default(false) // added in draft, not yet public
+  updated_by     String?  @db.Uuid
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  parent   CmsNavItem?  @relation("CmsNavItemChildren", fields: [parent_id], references: [id], onDelete: Cascade)
+  children CmsNavItem[] @relation("CmsNavItemChildren")
+
+  @@index([location, sort_order])
+  @@index([parent_id])
+  @@map("cms_nav_items")
+}
+
+/// Standalone markdown pages: terms, privacy, pricing, docs, gdpr, pdpa, ...
+model CmsPage {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String   @unique @db.VarChar(120)
+  title           String?  @db.VarChar(200)
+  body            String?  @db.Text // published markdown
+  draft_title     String?  @db.VarChar(200)
+  draft_body      String?  @db.Text
+  seo_description String?  @db.Text
+  is_published    Boolean  @default(false)
+  sort_order      Int      @default(0)
+  updated_by      String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([is_published])
+  @@map("cms_pages")
 }

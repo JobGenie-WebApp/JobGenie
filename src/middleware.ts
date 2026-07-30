@@ -81,6 +81,7 @@ const roleRoutes: Record<string, string[]> = {
         '/mis/audit',
         '/mis/interviews',
         '/mis/roles',
+        '/mis/content',
     ],
 };
 
@@ -396,6 +397,8 @@ export const config = {
         '/mis/interviews/:path*',
         '/mis/roles',
         '/mis/roles/:path*',
+        '/mis/content',
+        '/mis/content/:path*',
         // Auth routes
         '/login',
         '/candidate/signup',

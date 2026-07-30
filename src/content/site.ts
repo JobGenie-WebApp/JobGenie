@@ -1,4 +1,4 @@
-import type { LandingContent, SiteFooterContent, SiteNavigationContent } from './types';
+import type { LandingContent, SiteContent, SiteFooterContent, SiteNavigationContent } from './types';
 
 export const landingContent: LandingContent = {
   hero: {
@@ -7,106 +7,97 @@ export const landingContent: LandingContent = {
     emphasizedTitle: 'Hired by the best!',
     description:
       'Your Career Companion, guiding you through the job market. The best teams are looking for the best talent. The best talent is looking for the best team. I’m here to grant your wish! ',
-    primaryCta: { label: 'Find your opportunity', href: '/candidate/signup' },
-    secondaryCta: { label: 'Hire exceptional talent', href: '/employer/signup' },
     trustLabel: 'Trusted by modern hiring teams',
+    lampLabel: 'Rub the lamp',
+    genieImageAlt: 'The JobGenie emerging from a magic lamp',
+    wishCards: [
+      { eyebrow: 'SKILLS MATCH', title: 'Product Designer', note: '94% match' },
+      { eyebrow: 'TOP TALENT PICKED', title: 'Screening passed', note: 'Ready to interview' },
+    ],
+  },
+  heroDashboard: {
+    title: 'Progress Tracker',
+    liveLabel: 'LIVE',
+    columns: [
+      {
+        title: 'New Applicants',
+        count: '08',
+        people: [
+          { initials: 'AM', name: 'Arawinda Marasinghe', match: '96% match' },
+          { initials: 'DK', name: 'Dinuka Karunarathne', match: '93% match' },
+          { initials: 'SL', name: 'Sara Liyanage', match: '90% match' },
+        ],
+      },
+      {
+        title: 'Shortlisted',
+        count: '05',
+        people: [
+          { initials: 'NR', name: 'Nimashi Herath', match: '89% match' },
+          { initials: 'JT', name: 'Janaka Perera', match: '86% match' },
+        ],
+      },
+      {
+        title: 'Interview Completed',
+        count: '03',
+        people: [
+          { initials: 'KM', name: 'Kavi Mendis', match: '82% match' },
+          { initials: 'RB', name: 'Ravi Peris', match: '79% match' },
+        ],
+      },
+      {
+        title: 'It is a match',
+        count: '02',
+        people: [{ initials: 'EP', name: 'Natasha Fernando', match: '75% match' }],
+      },
+    ],
   },
   trustStrip: {
     label: 'BUILT FOR MODERN RECRUITMENT',
     items: ['Verified talent', 'Intelligent matching', 'Clear pipelines', 'Faster decisions'],
   },
-  features: {
-    kicker: 'ONE POWERFUL WORKSPACE',
-    title: 'Less admin. More',
-    emphasizedTitle: 'magic.',
-    description:
-      'Everything candidates and hiring teams need, beautifully orchestrated in one recruitment platform.',
-    cards: [
-      {
-        icon: 'wand',
-        eyebrow: 'AI MATCHING',
-        title: 'The right match, without the guesswork.',
-        text: 'Skills, experience and ambition are translated into clear match signals your team can trust.',
-        className: 'is-wide is-green',
-        visual: 'match',
-      },
-      {
-        icon: 'fingerprint',
-        eyebrow: 'TRUST LAYER',
-        title: 'Verified from day one.',
-        text: 'Build confidence with verified candidate and employer profiles.',
-        className: '',
-        visual: 'verify',
-      },
-      {
-        icon: 'calendar',
-        eyebrow: 'INTERVIEWS',
-        title: 'From shortlist to scheduled.',
-        text: 'Coordinate every round, reminder and response in one calm workspace.',
-        className: '',
-        visual: 'calendar',
-      },
-      {
-        icon: 'chart',
-        eyebrow: 'PIPELINE',
-        title: 'See hiring momentum.',
-        text: 'Live pipeline analytics reveal bottlenecks before they slow your team down.',
-        className: '',
-        visual: 'chart',
-      },
-      {
-        icon: 'message',
-        eyebrow: 'COLLABORATION',
-        title: 'One source of truth for the whole team.',
-        text: 'Notes, decisions, invitations and status updates stay connected to every candidate.',
-        className: 'is-wide',
-        visual: 'team',
-      },
-    ],
-  },
   journeys: {
-    kicker: 'YOUR WISH, IN MOTION',
-    title: 'A better career story starts in',
-    emphasizedTitle: 'three steps.',
-    candidateLabel: "I'm a candidate",
-    employerLabel: "I'm an employer",
+    kicker: '',
+    title: 'Ready, Steady,',
+    emphasizedTitle: 'Hire!',
+    candidateLabel: "For Candidate",
+    employerLabel: "For Companies",
     candidate: [
       {
         number: '01',
         title: 'Create your profile',
-        text: 'Tell your story once. Your skills, CV and preferences become a polished professional profile.',
+        text: 'Upload your CV, verify your profile, and kickstart your job search!',
         icon: 'file',
       },
       {
         number: '02',
-        title: 'Discover your matches',
-        text: 'Search trusted opportunities and let JobGenie surface the roles that truly fit.',
+        title: 'Get your skill score',
+        text: 'Our smart AI matches your CV with jobs that fit your skills. View your personalised opportunities and apply.',
         icon: 'search',
       },
       {
         number: '03',
-        title: 'Track every step',
-        text: 'Applications, interviews and offers stay organised in one clear timeline.',
+        title: 'Follow your progress',
+        text: 'Get real time updates from every recruiter, on a single dashboard. Save time. Spot the perfect match.',
         icon: 'check',
       },
     ],
     employer: [
       {
         number: '01',
-        title: 'Publish the role',
-        text: 'Create a trusted company profile and launch a polished job post in minutes.',
+        title: 'Register and Post Jobs ',
+        text: 'Create your company profile, verify your profile, and kickstart your skill search!',
         icon: 'briefcase',
       },
       {
         number: '02',
-        title: 'Meet top talent',
-        text: 'Review verified candidates, AI match signals and team feedback side by side.',
+        title: 'Review & Select',
+        text: 'Let our smart AI pair your job requirements with the perfect applicant. Review profiles effortlessly and connect with your next great hire in real time.',
         icon: 'users',
       },
       {
         number: '03',
-        title: 'Make the hire',
-        text: 'Coordinate interviews, decisions and offers without losing momentum.',
+        title: 'Interview and Job Offer',
+        text: 'Share interview schedules with top talent, compare team feedback, and view candidate scores. Hire the right talent, right away.',
         icon: 'zap',
       },
     ],
@@ -123,16 +114,33 @@ export const landingContent: LandingContent = {
       { value: '100%', label: 'pipeline visibility' },
     ],
   },
-  portals: {
-    kicker: 'DESIGNED FOR BOTH SIDES',
-    title: 'One platform.',
-    emphasizedTitle: 'Two brilliant experiences.',
-    description: "Focused workspaces give everyone exactly what they need—and nothing they don't.",
-    candidateLabel: 'Candidate portal',
-    employerLabel: 'Employer portal',
-    employerHeading: 'Your hiring overview',
-    candidateHeading: 'Your career dashboard',
-  },
+  highlights: [
+    {
+      eyebrow: 'SMART MATCHING',
+      title: 'Looking for a job or the best talent? We’ve got your best match!',
+      description:
+        'Our smart AI system handles the initial sorting, but a human professional reviews every CV before moving forward.',
+      points: [
+        'Skills-first reviews',
+        'Fast screening for thousands of CVs',
+        'Instant updates on your next stage',
+      ],
+    },
+    {
+      eyebrow: 'CLEAR PROGRESS',
+      title: 'Curious where your application stands? View your progress every step of the way.',
+      description:
+        'Your personalised dashboard keeps you completely in the loop. See how well your skills match the role and watch your CV move forward in real time.',
+      points: ['Real-time updates', 'Efficient workflows', 'Multi-recruiter view'],
+    },
+    {
+      eyebrow: 'VERIFIED TRUST',
+      title: 'Having second thoughts about credibility? Don’t worry. We’ve done all the research for you.',
+      description:
+        'No fake profiles, no hidden surprises. We verify both employers and job seekers at creation, vetting every user to ensure a community built on trust.',
+      points: ['Prevents scams', 'Creates aspiration', 'Saves time'],
+    },
+  ],
   cta: {
     kicker: 'YOUR NEXT CHAPTER IS WAITING',
     title: 'Ready to make your career wish',
@@ -145,11 +153,13 @@ export const landingContent: LandingContent = {
 };
 
 export const navigationContent: SiteNavigationContent = {
+  brand: { prefix: 'Job', suffix: 'Genie' },
   links: [
-    { href: '#features', id: 'features', label: 'Features' },
-    { href: '#how-it-works', id: 'how-it-works', label: 'How it Works' },
-    { href: '#testimonials', id: 'testimonials', label: 'Testimonials' },
-    { href: '#portals', id: 'portals', label: 'Portals' },
+    { href: '/about-us', id: 'about-us', label: 'About Us' },
+    { href: '/opportunities', id: 'opportunities', label: 'Our Opportunities' },
+    { href: '/top-employers', id: 'top-employers', label: 'Our Top Employers' },
+    { href: '/talent-pool', id: 'talent-pool', label: 'Our Talent Pool' },
+    { href: '/explore-genie', id: 'explore-genie', label: 'Explore Genie' },
   ],
   signIn: { label: 'Sign In', href: '/login' },
   getStarted: { label: 'Get Started', href: '/candidate/signup' },
@@ -162,24 +172,23 @@ export const footerContent: SiteFooterContent = {
     {
       title: 'Product',
       links: [
-        { label: 'Features', href: '#features' },
-        { label: 'How It Works', href: '#how-it-works' },
-        { label: 'Pricing', href: '/pricing' },
-        { label: 'For Employers', href: '/employer/signup' },
+        { label: 'Opportunities', href: '/opportunities' },
+        { label: 'Top Employers', href: '/top-employers' },
+        { label: 'Talent Pool', href: '/talent-pool' },
+        { label: 'Explore Genie', href: '/explore-genie' },
       ],
     },
     {
       title: 'Company',
       links: [
-        { label: 'Careers', href: '/careers' },
-        { label: 'Sign In', href: '/login' },
+        { label: 'About Us', href: '/about-us' },
+        { label: 'Contact Us', href: '/contact' },
       ],
     },
     {
       title: 'Resources',
       links: [
-        { label: 'Documentation', href: '/docs' },
-        { label: 'Get Started', href: '/candidate/signup' },
+        { label: 'FAQ', href: '/faq' },
       ],
     },
     {
@@ -203,7 +212,7 @@ export const footerContent: SiteFooterContent = {
   statusLabel: 'All systems operational',
 };
 
-export const siteContent = {
+export const siteContent: SiteContent = {
   landing: landingContent,
   navigation: navigationContent,
   footer: footerContent,
