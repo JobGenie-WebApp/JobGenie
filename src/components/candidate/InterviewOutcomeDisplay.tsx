@@ -125,11 +125,11 @@ export function InterviewOutcomeDisplay({ invitationId, onOutcomeFound }: Interv
             case 'offer':
                 return {
                     icon: Briefcase,
-                    color: 'bg-blue-500',
-                    bgColor: 'bg-blue-50 dark:bg-blue-950/20',
-                    borderColor: 'border-blue-200 dark:border-blue-800',
-                    textColor: 'text-blue-900 dark:text-blue-100',
-                    mutedColor: 'text-blue-700 dark:text-blue-300',
+                    color: 'bg-primary',
+                    bgColor: 'bg-primary/10',
+                    borderColor: 'border-primary/20',
+                    textColor: 'text-foreground',
+                    mutedColor: 'text-muted-foreground',
                     title: '🎊 Congratulations - Job Offer!',
                     message: 'Excellent news! You\'ve been selected for the position. A formal job offer will be sent to you shortly.'
                 };

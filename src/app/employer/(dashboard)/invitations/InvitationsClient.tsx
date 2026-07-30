@@ -329,12 +329,12 @@ function InvitationDetailPanel({
                         {/* Viewed */}
                         {inv.status === 'viewed' && !isCanceled && !inv.interview_confirmed && (
                             <StatusCard
-                                icon={<User className="h-5 w-5 text-blue-600" />}
+                                icon={<User className="h-5 w-5 text-primary" />}
                                 color="blue"
                                 title="Candidate Has Viewed the Invitation"
                                 subtitle="They haven't responded yet. They may be reviewing the details."
                             >
-                                <Button size="sm" variant="outline" className="mt-3 w-full h-8 text-xs border-blue-400 text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/20" onClick={openEditDialog}>
+                                <Button size="sm" variant="outline" className="mt-3 h-8 w-full text-xs" onClick={openEditDialog}>
                                     <Pencil className="h-3 w-3 mr-1.5" />Edit Invitation
                                 </Button>
                             </StatusCard>
@@ -376,14 +376,14 @@ function InvitationDetailPanel({
 
                         {/* Needs confirmation (accepted, not yet confirmed by employer) */}
                         {needsConfirmation && (
-                            <div className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 bg-blue-50/60 dark:bg-blue-950/20 p-4 space-y-4">
+                            <div className="space-y-4 rounded-2xl border border-primary/25 bg-primary/10 p-4">
                                 <div className="flex items-center gap-2.5">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
-                                        <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                                        <CheckCircle2 className="h-5 w-5 text-primary" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-blue-900 dark:text-blue-100">Action Required: Confirm Interview</p>
-                                        <p className="text-xs text-blue-700 dark:text-blue-400">
+                                        <p className="text-sm font-bold text-foreground">Action Required: Confirm Interview</p>
+                                        <p className="text-xs text-muted-foreground">
                                             Candidate accepted for {formatUTCDate(inv.selected_time_slot?.date ?? '', "EEEE, MMM d")}
                                             {!inv.selected_time_slot?.is_alternative && inv.selected_time_slot?.time &&
                                                 ` at ${formatUTCTime(inv.selected_time_slot.date, inv.selected_time_slot.time)}`}
@@ -394,7 +394,7 @@ function InvitationDetailPanel({
                                 <div className="space-y-3">
                                     {inv.selected_time_slot?.is_alternative && (
                                         <div>
-                                            <label className="text-xs font-semibold mb-2 block text-blue-900 dark:text-blue-200">Select Time Slot *</label>
+                                            <label className="mb-2 block text-xs font-semibold text-foreground">Select Time Slot *</label>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00"].map(time => (
                                                     <button
@@ -404,8 +404,8 @@ function InvitationDetailPanel({
                                                         className={cn(
                                                             "rounded-lg py-2 text-xs font-medium border transition-all",
                                                             confirmedTime === time
-                                                                ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                                                : "bg-white dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 hover:border-blue-400"
+                                                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                                                : "border-border bg-background text-foreground hover:border-primary/50"
                                                         )}
                                                     >{time}</button>
                                                 ))}
@@ -415,27 +415,27 @@ function InvitationDetailPanel({
 
                                     {inv.interview_mode === 'online' && (
                                         <div>
-                                            <label className="text-xs font-semibold mb-1.5 block text-blue-900 dark:text-blue-200">Meeting Link *</label>
-                                            <Input type="url" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} className="h-9 text-sm bg-white dark:bg-blue-950/30" placeholder="https://zoom.us/j/... or Google Meet link" />
-                                            <p className="mt-1 text-[11px] text-blue-700/80 dark:text-blue-400">{inv.meeting_link ? "Pre-filled from scheduling — edit if needed. The candidate sees it once you confirm." : "The candidate sees this link once you confirm."}</p>
+                                            <label className="mb-1.5 block text-xs font-semibold text-foreground">Meeting Link *</label>
+                                            <Input type="url" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} className="h-9 text-sm" placeholder="https://zoom.us/j/... or Google Meet link" />
+                                            <p className="mt-1 text-[11px] text-muted-foreground">{inv.meeting_link ? "Pre-filled from scheduling — edit if needed. The candidate sees it once you confirm." : "The candidate sees this link once you confirm."}</p>
                                         </div>
                                     )}
 
                                     {inv.interview_mode === 'physical' && (
                                         <>
                                             <div>
-                                                <label className="text-xs font-semibold mb-1.5 block text-blue-900 dark:text-blue-200">Interview Address *</label>
-                                                <Input type="text" value={interviewAddress} onChange={e => setInterviewAddress(e.target.value)} className="h-9 text-sm bg-white dark:bg-blue-950/30" placeholder="Full address with city and postal code" />
+                                                <label className="mb-1.5 block text-xs font-semibold text-foreground">Interview Address *</label>
+                                                <Input type="text" value={interviewAddress} onChange={e => setInterviewAddress(e.target.value)} className="h-9 text-sm" placeholder="Full address with city and postal code" />
                                             </div>
                                             <div>
-                                                <label className="text-xs font-semibold mb-1.5 block text-blue-900 dark:text-blue-200">Map Link (Optional)</label>
-                                                <Input type="url" value={mapLink} onChange={e => setMapLink(e.target.value)} className="h-9 text-sm bg-white dark:bg-blue-950/30" placeholder="https://maps.google.com/..." />
+                                                <label className="mb-1.5 block text-xs font-semibold text-foreground">Map Link (Optional)</label>
+                                                <Input type="url" value={mapLink} onChange={e => setMapLink(e.target.value)} className="h-9 text-sm" placeholder="https://maps.google.com/..." />
                                             </div>
                                         </>
                                     )}
 
                                     <div className="flex gap-2">
-                                        <Button onClick={handleConfirmInterview} disabled={isConfirming} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="sm">
+                                        <Button onClick={handleConfirmInterview} disabled={isConfirming} className="flex-1" size="sm">
                                             {isConfirming ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Confirming...</> : <><CheckCircle2 className="h-4 w-4 mr-2" />Confirm Interview</>}
                                         </Button>
                                         <Button variant="outline" size="sm" className="border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={() => setShowCancelDialog(true)} disabled={isCanceling || !canCancel} title={!canCancel ? "Interviews can only be cancelled before the scheduled day" : undefined}>
@@ -735,14 +735,14 @@ function StatusCard({ icon, color, title, subtitle, children }: {
 }) {
     const colorMap = {
         amber: "bg-amber-50/80 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800",
-        blue: "bg-blue-50/80 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800",
+        blue: "border-primary/20 bg-primary/10",
         green: "bg-green-50/80 dark:bg-green-950/20 border-green-200 dark:border-green-800",
         red: "bg-red-50/80 dark:bg-red-950/20 border-red-200 dark:border-red-800",
         primary: "bg-primary/5 border-primary/20",
     };
     const iconBgMap = {
         amber: "bg-amber-100 dark:bg-amber-900/40",
-        blue: "bg-blue-100 dark:bg-blue-900/40",
+        blue: "bg-primary/10",
         green: "bg-green-100 dark:bg-green-900/40",
         red: "bg-red-100 dark:bg-red-900/40",
         primary: "bg-primary/10",
@@ -816,7 +816,7 @@ function InvitationRoadmapSidebar({ invitationId, onOutcomeFound }: { invitation
     const getStepStyle = (round: RoadmapRound) => {
         if (round.round_canceled) return { dot: "bg-red-400 border-red-300", connector: "bg-red-200 dark:bg-red-900/30", badge: "text-red-600 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800" };
         if (round.outcome === 'reject') return { dot: "bg-red-500 border-red-300", connector: "bg-red-200 dark:bg-red-900/30", badge: "text-red-600 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800" };
-        if (round.outcome === 'offer') return { dot: "bg-blue-500 border-blue-300", connector: "bg-blue-200 dark:bg-blue-900/30", badge: "text-blue-600 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800" };
+        if (round.outcome === 'offer') return { dot: "border-primary/40 bg-primary", connector: "bg-primary/25", badge: "border-primary/20 bg-primary/10 text-primary" };
         if (round.outcome === 'advance') return { dot: "bg-green-500 border-green-300", connector: "bg-green-200 dark:bg-green-900/30", badge: "text-green-600 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" };
         if (round.status === 'confirmed') return { dot: "bg-green-400 border-green-300", connector: "bg-muted", badge: "text-green-700 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" };
         if (round.status === 'accepted') return { dot: "bg-amber-400 border-amber-200", connector: "bg-muted", badge: "text-amber-700 bg-amber-50 dark:bg-amber-950/30 border-amber-200" };
@@ -968,13 +968,13 @@ function RoundDetailModalContent({ round }: { round: RoadmapRound }) {
                     "rounded-lg border-2 p-3",
                     round.outcome === 'advance' && "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800",
                     round.outcome === 'reject' && "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800",
-                    round.outcome === 'offer' && "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800",
+                    round.outcome === 'offer' && "border-primary/20 bg-primary/10",
                 )}>
                     <p className={cn(
                         "text-sm font-semibold",
                         round.outcome === 'advance' && "text-green-800 dark:text-green-200",
                         round.outcome === 'reject' && "text-red-800 dark:text-red-200",
-                        round.outcome === 'offer' && "text-blue-800 dark:text-blue-200",
+                        round.outcome === 'offer' && "text-foreground",
                     )}>
                         {round.outcome === 'advance' && "🎉 Advanced to Next Round"}
                         {round.outcome === 'reject' && "Not Selected"}

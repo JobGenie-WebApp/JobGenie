@@ -83,14 +83,14 @@ export default async function MISDashboardPage() {
     ];
 
     const colorClasses: Record<string, { bg: string; text: string; hover: string }> = {
-        blue: { bg: "bg-blue-500/10", text: "text-blue-500", hover: "hover:border-blue-500" },
-        green: { bg: "bg-green-500/10", text: "text-green-500", hover: "hover:border-green-500" },
-        purple: { bg: "bg-purple-500/10", text: "text-purple-500", hover: "hover:border-purple-500" },
-        orange: { bg: "bg-orange-500/10", text: "text-orange-500", hover: "hover:border-orange-500" },
-        indigo: { bg: "bg-indigo-500/10", text: "text-indigo-500", hover: "hover:border-indigo-500" },
-        violet: { bg: "bg-violet-500/10", text: "text-violet-500", hover: "hover:border-violet-500" },
-        red: { bg: "bg-red-500/10", text: "text-red-500", hover: "hover:border-red-500" },
-        gray: { bg: "bg-gray-500/10", text: "text-gray-500", hover: "hover:border-gray-500" },
+        blue: { bg: "bg-primary/10", text: "text-primary", hover: "hover:border-primary/40" },
+        green: { bg: "bg-primary/10", text: "text-primary", hover: "hover:border-primary/40" },
+        purple: { bg: "bg-primary/10", text: "text-primary", hover: "hover:border-primary/40" },
+        orange: { bg: "bg-primary/10", text: "text-primary", hover: "hover:border-primary/40" },
+        indigo: { bg: "bg-primary/10", text: "text-primary", hover: "hover:border-primary/40" },
+        violet: { bg: "bg-primary/10", text: "text-primary", hover: "hover:border-primary/40" },
+        red: { bg: "bg-primary/10", text: "text-primary", hover: "hover:border-primary/40" },
+        gray: { bg: "bg-muted", text: "text-muted-foreground", hover: "hover:border-primary/30" },
     };
 
     return (

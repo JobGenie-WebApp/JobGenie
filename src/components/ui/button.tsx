@@ -21,12 +21,10 @@ const buttonVariants = cva(
           "hover:bg-accent/10 hover:text-accent-foreground dark:hover:bg-accent/10",
         link: "text-primary underline-offset-4 hover:underline",
         gradient:
-          "relative overflow-hidden text-white font-semibold min-h-[44px] min-w-[44px] " +
-          "bg-[linear-gradient(135deg,var(--primary),var(--accent))] " +
-          "shadow-md shadow-primary/20 " +
-          "before:absolute before:inset-0 before:bg-white/0 " +
-          "hover:before:bg-white/10 hover:shadow-primary/30 " +
-          "disabled:opacity-60 disabled:hover:before:bg-white/0",
+          "relative overflow-hidden bg-primary text-primary-foreground font-semibold min-h-[44px] min-w-[44px] " +
+          "shadow-sm shadow-black/10 transition-colors " +
+          "hover:bg-primary/90 " +
+          "disabled:opacity-60",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

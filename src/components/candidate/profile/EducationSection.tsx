@@ -91,12 +91,12 @@ export function EducationSection({
 
     const getStatusColor = (status: string) => {
         if (status === "first_class") {
-            return "bg-green-500/10 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400";
+            return "border-border/70 bg-muted text-foreground";
         }
         if (status.includes("second_class")) {
-            return "bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400";
+            return "border-border/70 bg-muted text-foreground";
         }
-        return "bg-gray-500/10 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-400";
+        return "border-border/70 bg-muted text-muted-foreground";
     };
 
     const handleEdit = (edu: Education) => {
@@ -228,8 +228,8 @@ export function EducationSection({
                             {index > 0 && <Separator className="my-4" />}
                             <div className="group relative flex gap-4">
                                 <div className="flex-shrink-0 hidden md:flex">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <GraduationCap className="h-6 w-6 text-primary" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                        <GraduationCap className="h-6 w-6 text-muted-foreground" />
                                     </div>
                                 </div>
 
@@ -283,8 +283,8 @@ export function EducationSection({
                             {index > 0 && <Separator className="my-4" />}
                             <div className="group relative flex gap-4">
                                 <div className="flex-shrink-0 hidden md:flex">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <AwardIcon className="h-6 w-6 text-primary" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                        <AwardIcon className="h-6 w-6 text-muted-foreground" />
                                     </div>
                                 </div>
 
@@ -350,8 +350,8 @@ export function EducationSection({
                             {index > 0 && <Separator className="my-4" />}
                             <div className="group relative flex gap-4">
                                 <div className="flex-shrink-0 hidden md:flex">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <GraduationCap className="h-6 w-6 text-primary" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                        <GraduationCap className="h-6 w-6 text-muted-foreground" />
                                     </div>
                                 </div>
 
@@ -405,8 +405,8 @@ export function EducationSection({
                             {index > 0 && <Separator className="my-4" />}
                             <div className="group relative flex gap-4">
                                 <div className="flex-shrink-0 hidden md:flex">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <AwardIcon className="h-6 w-6 text-primary" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                        <AwardIcon className="h-6 w-6 text-muted-foreground" />
                                     </div>
                                 </div>
 
@@ -473,8 +473,8 @@ export function EducationSection({
                             {index > 0 && <Separator className="my-4" />}
                             <div className="group relative flex gap-4">
                                 <div className="flex-shrink-0 hidden md:flex">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <GraduationCap className="h-6 w-6 text-primary" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                        <GraduationCap className="h-6 w-6 text-muted-foreground" />
                                     </div>
                                 </div>
 
@@ -528,8 +528,8 @@ export function EducationSection({
                             {index > 0 && <Separator className="my-4" />}
                             <div className="group relative flex gap-4">
                                 <div className="flex-shrink-0 hidden md:flex">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <AwardIcon className="h-6 w-6 text-primary" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                        <AwardIcon className="h-6 w-6 text-muted-foreground" />
                                     </div>
                                 </div>
 
@@ -583,8 +583,8 @@ export function EducationSection({
                             {index > 0 && <Separator className="my-4" />}
                             <div className="group relative flex gap-4">
                                 <div className="flex-shrink-0 hidden md:flex">
-                                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <Building className="h-6 w-6 text-primary" />
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                        <Building className="h-6 w-6 text-muted-foreground" />
                                     </div>
                                 </div>
 

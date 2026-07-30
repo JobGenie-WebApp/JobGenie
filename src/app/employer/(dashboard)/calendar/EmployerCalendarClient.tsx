@@ -32,8 +32,8 @@ type StatusFilter = "all" | "confirmed" | "completed" | "active" | "needs_action
 const STATUS_FILTERS: { value: StatusFilter; label: string; color: string }[] = [
     { value: "all", label: "All", color: "" },
     { value: "confirmed", label: "Confirmed", color: "bg-emerald-500" },
-    { value: "completed", label: "Completed", color: "bg-violet-500" },
-    { value: "active", label: "Active Pipeline", color: "bg-teal-500" },
+    { value: "completed", label: "Completed", color: "bg-primary" },
+    { value: "active", label: "Active Pipeline", color: "bg-primary" },
     { value: "needs_action", label: "Needs Action", color: "bg-lime-500" },
     { value: "declined", label: "Declined", color: "bg-red-500" },
     { value: "canceled", label: "Canceled", color: "bg-slate-500" },
@@ -120,7 +120,7 @@ function EventDetailModal({ event, onClose }: EventDetailModalProps) {
                                 </span>
                             )}
                             {r.misRescheduled && (
-                                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Rescheduled</span>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">Rescheduled</span>
                             )}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -380,7 +380,7 @@ function RoadmapStepIcon({ isCanceled, isConfirmed, misRescheduled, isPastEvent 
     misRescheduled: boolean;
     isPastEvent: boolean;
 }) {
-    if (misRescheduled) return <span className="h-2 w-2 rounded-full bg-purple-500 flex-shrink-0" />;
+    if (misRescheduled) return <span className="h-2 w-2 flex-shrink-0 rounded-full bg-amber-500" />;
     if (isCanceled) return <Ban className="h-3 w-3 text-slate-400 flex-shrink-0" />;
     if (isConfirmed && isPastEvent) return <CheckCircle2 className="h-3 w-3 text-emerald-500 flex-shrink-0" />;
     if (isConfirmed) return <span className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />;
@@ -465,7 +465,7 @@ function CandidateRoadmapCard({ group, onSelectEvent, isExpanded, onToggle }: {
                                             {label}
                                         </span>
                                         {ev.resource.misRescheduled && (
-                                            <span className="text-[9px] rounded px-1 py-0.5 bg-purple-500/15 text-purple-500 font-semibold flex-shrink-0">Rescheduled</span>
+                                            <span className="flex-shrink-0 rounded bg-amber-500/15 px-1 py-0.5 text-[9px] font-semibold text-amber-500">Rescheduled</span>
                                         )}
                                     </div>
                                     <p className={cn("text-[10px] mt-0.5", isPastEvent ? "text-muted-foreground/60" : "text-muted-foreground")}>
@@ -546,7 +546,7 @@ function StatsBar({ events, invitations }: { events: CalendarEvent[]; invitation
         { label: "Total", value: events.length, accent: false, color: "" },
         { label: "Upcoming", value: upcomingCount, accent: true, color: "" },
         { label: "Confirmed", value: confirmedCount, accent: true, color: "" },
-        { label: "Completed", value: completedCount, accent: false, color: "text-violet-500" },
+        { label: "Completed", value: completedCount, accent: false, color: "text-primary" },
         { label: "Candidates", value: totalCandidates, accent: false, color: "" },
     ];
 

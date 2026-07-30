@@ -147,7 +147,7 @@ export function MisJobDetailClient({ jobId }: { jobId: string }) {
             </div>
 
             {/* Admin Status Controls */}
-            <Card className="border-blue-200 bg-blue-50/50">
+            <Card className="border-primary/20 bg-primary/[0.04]">
                 <CardHeader className="pb-3"><CardTitle className="text-sm">Admin Status Controls</CardTitle></CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-2">

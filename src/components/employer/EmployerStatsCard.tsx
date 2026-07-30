@@ -13,9 +13,8 @@ interface EmployerStatsCardProps {
 
 const colorMap = {
     blue: {
-        iconBg:
-            "bg-[linear-gradient(135deg,oklch(from_var(--accent-sky)_l_c_h_/_0.12),oklch(from_var(--accent-sky)_l_c_h_/_0.06))]",
-        iconColor: "text-blue-600 dark:text-blue-400",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary",
     },
     green: {
         iconBg:
@@ -28,9 +27,8 @@ const colorMap = {
         iconColor: "text-amber-600 dark:text-amber-400",
     },
     purple: {
-        iconBg:
-            "bg-[linear-gradient(135deg,oklch(from_var(--accent-violet)_l_c_h_/_0.12),oklch(from_var(--accent-violet)_l_c_h_/_0.06))]",
-        iconColor: "text-violet-600 dark:text-violet-400",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary",
     },
     rose: {
         iconBg:
@@ -38,9 +36,8 @@ const colorMap = {
         iconColor: "text-rose-600 dark:text-rose-400",
     },
     cyan: {
-        iconBg:
-            "bg-[linear-gradient(135deg,oklch(from_var(--accent-sky)_l_c_h_/_0.12),oklch(from_var(--accent-sky)_l_c_h_/_0.06))]",
-        iconColor: "text-cyan-600 dark:text-cyan-400",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary",
     },
 };
 

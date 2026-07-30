@@ -117,7 +117,7 @@ export function EmployerTable({ companies }: EmployerTableProps) {
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                             {company.approval_status === "pending" && (
-                                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1">
+                                                <Badge variant="outline" className="gap-1 border-amber-500/25 bg-amber-500/10 text-amber-600">
                                                     <Clock className="h-3 w-3" /> Pending
                                                 </Badge>
                                             )}

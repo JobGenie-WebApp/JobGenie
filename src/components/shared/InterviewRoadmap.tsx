@@ -126,10 +126,10 @@ export function InterviewRoadmap({
         if (round.round_canceled && round.mis_rescheduled) return { Icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' };
         if (round.outcome === 'advance') return { Icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-100' };
         if (round.outcome === 'reject') return { Icon: XCircle, color: 'text-red-600', bg: 'bg-red-100' };
-        if (round.outcome === 'offer') return { Icon: Award, color: 'text-blue-600', bg: 'bg-blue-100' };
+        if (round.outcome === 'offer') return { Icon: Award, color: 'text-primary', bg: 'bg-primary/10' };
         if (round.status === 'confirmed') return { Icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-100' };
         if (round.status === 'accepted') return { Icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100' };
-        if (round.status === 'pending') return { Icon: AlertCircle, color: 'text-blue-600', bg: 'bg-blue-100' };
+        if (round.status === 'pending') return { Icon: AlertCircle, color: 'text-primary', bg: 'bg-primary/10' };
         return { Icon: Clock, color: 'text-gray-600', bg: 'bg-gray-100' };
     };
 
@@ -140,12 +140,12 @@ export function InterviewRoadmap({
         if (round.outcome === 'reject') return { label: 'Not Selected', color: 'bg-red-500' };
         if (round.outcome === 'offer') return {
             label: userRole === 'candidate' ? 'Offer Received' : 'Offer Sent',
-            color: 'bg-blue-500'
+            color: 'bg-primary'
         };
         if (round.status === 'confirmed') return { label: 'Confirmed', color: 'bg-green-500' };
         if (round.status === 'accepted') return { label: 'Awaiting Confirmation', color: 'bg-orange-500' };
-        if (round.status === 'pending') return { label: 'Invitation Sent', color: 'bg-blue-500' };
-        if (round.status === 'viewed') return { label: 'Viewed', color: 'bg-purple-500' };
+        if (round.status === 'pending') return { label: 'Invitation Sent', color: 'bg-primary' };
+        if (round.status === 'viewed') return { label: 'Viewed', color: 'bg-primary' };
         return { label: 'Pending', color: 'bg-gray-500' };
     };
 
@@ -237,7 +237,7 @@ export function InterviewRoadmap({
                                             "absolute left-6 top-12 bottom-0 w-0.5",
                                             round.outcome === 'advance' ? "bg-green-300" :
                                             round.outcome === 'reject' ? "bg-red-300" :
-                                            round.outcome === 'offer' ? "bg-blue-300" :
+                                            round.outcome === 'offer' ? "bg-primary/40" :
                                             "bg-gray-300"
                                         )}
                                     />
@@ -344,11 +344,11 @@ export function InterviewRoadmap({
 
                                                 {/* Pending Round - Show Proposed Time Slots (Employer View) */}
                                                 {userRole === 'employer' && round.status === 'pending' && round.given_time_slots && (
-                                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2 dark:bg-blue-950/20 dark:border-blue-800">
-                                                        <p className="text-xs font-medium text-blue-900 dark:text-blue-100">Proposed Time Slots (Awaiting Candidate Response)</p>
+                                                    <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/10 p-3">
+                                                        <p className="text-xs font-medium text-foreground">Proposed Time Slots (Awaiting Candidate Response)</p>
                                                         <div className="space-y-1.5">
                                                             {(round.given_time_slots ?? []).map((slot: { date: string; time?: string }, idx: number) => (
-                                                                <div key={idx} className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+                                                                <div key={idx} className="flex items-center gap-2 text-sm text-foreground">
                                                                     <Calendar className="h-3 w-3" />
                                                                     <span>{formatUTCDate(slot.date)}</span>
                                                                     {slot.time && (
@@ -363,10 +363,10 @@ export function InterviewRoadmap({
                                                         {round.alternative_dates && (round.alternative_dates ?? []).length > 0 && (
                                                             <>
                                                                 <Separator className="my-2" />
-                                                                <p className="text-xs font-medium text-blue-900 dark:text-blue-100">Alternative Dates</p>
+                                                                <p className="text-xs font-medium text-foreground">Alternative Dates</p>
                                                                 <div className="space-y-1.5">
                                                                     {(round.alternative_dates ?? []).map((slot: { date: string; time?: string }, idx: number) => (
-                                                                        <div key={idx} className="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+                                                                        <div key={idx} className="flex items-center gap-2 text-sm text-foreground">
                                                                             <Calendar className="h-3 w-3" />
                                                                             <span>{formatUTCDate(slot.date)}</span>
                                                                             <Badge variant="outline" className="ml-2 text-xs">Alternative</Badge>
@@ -384,7 +384,7 @@ export function InterviewRoadmap({
                                                         "rounded-lg p-3 border-2",
                                                         round.outcome === 'advance' && "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800",
                                                         round.outcome === 'reject' && "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800",
-                                                        round.outcome === 'offer' && "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800"
+                                                        round.outcome === 'offer' && "border-primary/20 bg-primary/10"
                                                     )}>
                                                         <div className="flex items-start gap-2">
                                                             {round.outcome === 'advance' && (
@@ -394,14 +394,14 @@ export function InterviewRoadmap({
                                                                 <XCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
                                                             )}
                                                             {round.outcome === 'offer' && (
-                                                                <Award className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                                                <Award className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
                                                             )}
                                                             <div className="flex-1">
                                                                 <p className={cn(
                                                                     "text-sm font-semibold",
                                                                     round.outcome === 'advance' && "text-green-900 dark:text-green-100",
                                                                     round.outcome === 'reject' && "text-red-900 dark:text-red-100",
-                                                                    round.outcome === 'offer' && "text-blue-900 dark:text-blue-100"
+                                                                    round.outcome === 'offer' && "text-foreground"
                                                                 )}>
                                                                     {round.outcome === 'advance' && "🎉 Congratulations! You've advanced to the next round"}
                                                                     {round.outcome === 'reject' && "Interview Result: Not Selected"}
@@ -441,8 +441,8 @@ export function InterviewRoadmap({
 
                                                 {/* Pending Status for Candidate */}
                                                 {!round.outcome && round.status === 'pending' && userRole === 'candidate' && (
-                                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 dark:bg-blue-950/20 dark:border-blue-800">
-                                                        <p className="text-sm text-blue-900 dark:text-blue-100">
+                                                    <div className="rounded-lg border border-primary/20 bg-primary/10 p-3">
+                                                        <p className="text-sm text-foreground">
                                                             The employer will send you the interview details shortly.
                                                         </p>
                                                     </div>
@@ -461,7 +461,7 @@ export function InterviewRoadmap({
                     <div className={cn(
                         "rounded-lg p-4 text-center border-2 mt-6",
                         finalOutcome.outcome === 'offer' 
-                            ? "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800"
+                            ? "border-primary/20 bg-primary/10"
                             : "bg-gray-50 border-gray-200 dark:bg-gray-950/20 dark:border-gray-800"
                     )}>
                         <p className="text-sm font-medium">

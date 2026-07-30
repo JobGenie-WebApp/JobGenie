@@ -203,8 +203,8 @@ export function ExperienceSection({ experiences }: ExperienceSectionProps) {
                                 <div className="mb-6">
                                     <div className="flex gap-4">
                                         <div className="flex-shrink-0 hidden md:flex">
-                                            <div className="h-14 w-14 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                <Briefcase className="h-7 w-7 text-primary" />
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted">
+                                                <Briefcase className="h-7 w-7 text-muted-foreground" />
                                             </div>
                                         </div>
                                         <div>

@@ -8,7 +8,7 @@ export default async function CandidateJobDetailPage({ params }: { params: Promi
             pageTitle="Job Details"
             pageDescription="View job details and apply"
         >
-            <div className="max-w-4xl mx-auto">
+            <div className="mx-auto w-full max-w-6xl">
                 <JobDetailClient jobId={id} />
             </div>
         </CandidateLayout>

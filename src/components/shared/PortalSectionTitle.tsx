@@ -5,13 +5,13 @@ type PortalTone = "candidate" | "employer" | "neutral";
 
 const toneBorder: Record<PortalTone, string> = {
     candidate: "border-l-primary",
-    employer: "border-l-accent",
+    employer: "border-l-primary",
     neutral: "border-l-primary/80",
 };
 
 const toneEyebrow: Record<PortalTone, string> = {
     candidate: "text-primary",
-    employer: "text-accent",
+    employer: "text-primary",
     neutral: "text-primary",
 };
 

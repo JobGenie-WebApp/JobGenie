@@ -165,14 +165,14 @@ export function InterviewFeedbackPanel({
 
                         {invitation.interview_mode === 'online' && invitation.meeting_link && (
                             <div className="flex items-start gap-2">
-                                <Video className="h-4 w-4 text-blue-600 mt-0.5" />
+                                <Video className="mt-0.5 h-4 w-4 text-primary" />
                                 <div className="flex-1">
                                     <span className="font-medium">Meeting Link:</span>
                                     <a 
                                         href={invitation.meeting_link} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="block text-blue-600 hover:underline text-xs mt-1 break-all"
+                                        className="mt-1 block break-all text-xs text-primary hover:underline"
                                     >
                                         {invitation.meeting_link}
                                     </a>
@@ -195,7 +195,7 @@ export function InterviewFeedbackPanel({
                                             href={invitation.map_link} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="text-xs text-blue-600 hover:underline"
+                                            className="text-xs text-primary hover:underline"
                                         >
                                             View on Map →
                                         </a>
@@ -210,12 +210,12 @@ export function InterviewFeedbackPanel({
                     {/* Action Section */}
                     {!roundOutcome ? (
                         <div className="space-y-3">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                            <div className="rounded-lg border border-primary/20 bg-primary/10 p-3">
+                                <p className="mb-2 text-sm font-medium text-foreground">
                                     <MessageSquare className="h-4 w-4 inline mr-1.5" />
                                     Provide Interview Feedback
                                 </p>
-                                <p className="text-xs text-blue-800 dark:text-blue-200">
+                                <p className="text-xs text-muted-foreground">
                                     After the interview, add your feedback and decide the next step for this candidate.
                                 </p>
                             </div>
@@ -240,7 +240,7 @@ export function InterviewFeedbackPanel({
                                 </Button>
                                 <Button
                                     size="sm"
-                                    className="w-full bg-blue-600 hover:bg-blue-700"
+                                    className="w-full"
                                     onClick={() => setFeedbackDialog(true)}
                                 >
                                     <Briefcase className="h-3.5 w-3.5 mr-1" />
@@ -263,7 +263,7 @@ export function InterviewFeedbackPanel({
                             {roundOutcome === 'offer' && (
                                 <Button
                                     onClick={() => setOfferDialog(true)}
-                                    className="w-full bg-blue-600 hover:bg-blue-700"
+                                    className="w-full"
                                 >
                                     <Briefcase className="h-4 w-4 mr-2" />
                                     Create Job Offer

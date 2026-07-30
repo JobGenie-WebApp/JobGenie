@@ -388,7 +388,7 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
                                 <p className="font-medium text-foreground">Document submitted — awaiting review.</p>
                                 {openFlag.employer_doc_url && (
                                     <a href={openFlag.employer_doc_url} target="_blank" rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-blue-600 hover:underline text-xs mt-1">
+                                        className="inline-flex items-center gap-1 text-primary hover:underline text-xs mt-1">
                                         <FileText className="h-3.5 w-3.5" />{openFlag.employer_doc_name ?? "View document"}
                                     </a>
                                 )}

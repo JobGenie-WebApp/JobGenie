@@ -26,14 +26,14 @@ export function InterviewStatsCards({ stats }: InterviewStatsCardsProps) {
     return (
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             {/* Total Interviews */}
-            <Card className="border-l-4 border-l-blue-500">
+            <Card className="border-l-4 border-l-primary">
                 <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-xs font-medium text-muted-foreground">Total</p>
                             <p className="text-2xl font-bold">{overview.totalInterviews}</p>
                         </div>
-                        <Calendar className="h-8 w-8 text-blue-500 opacity-50" />
+                        <Calendar className="h-8 w-8 text-primary opacity-50" />
                     </div>
                 </CardContent>
             </Card>

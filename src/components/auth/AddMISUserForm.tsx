@@ -110,7 +110,7 @@ export function AddMISUserForm() {
             )}
 
             {/* Information Banner */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm text-blue-700 dark:text-blue-300">
+            <div className="rounded-lg border border-primary/20 bg-primary/[0.06] p-3 text-sm text-foreground">
                 <p className="font-medium mb-1">📨 Invitation Email Process</p>
                 <p className="text-xs">An invitation email will be sent to the provided email address with instructions to set up their password.</p>
             </div>

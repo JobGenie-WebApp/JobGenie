@@ -55,7 +55,7 @@ export function DashboardShell({
         return (
             <SidebarProvider className="bg-sidebar h-dvh! min-h-0! overflow-hidden">
                 {sidebar}
-                <SidebarInset className="my-2 mr-2 flex min-h-0 flex-col overflow-hidden rounded-xl shadow-sm bg-card">
+                <SidebarInset className="portal-shell my-2 mr-2 flex min-h-0 flex-col overflow-hidden rounded-xl bg-background">
                     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         <PortalHeader
                             notificationRole={notificationRole}
@@ -89,11 +89,11 @@ export function DashboardShell({
     // ── Normal pages: document scroll, panel grows with content ────────────
     // SidebarProvider has no fixed height → grows with content → body scrolls.
     // SidebarInset has no overflow-hidden so position:sticky works on header.
-    // The white background + shadow follow border-radius without clipping content.
+    // The portal canvas + shell shadow follow border-radius without clipping content.
     return (
         <SidebarProvider className="bg-sidebar">
             {sidebar}
-            <SidebarInset className="mt-2 mr-2 mb-2 flex flex-col rounded-lg shadow-sm bg-card">
+            <SidebarInset className="portal-shell mt-2 mr-2 mb-2 flex flex-col rounded-lg bg-background">
                 <PortalHeader
                     notificationRole={notificationRole}
                     breadcrumbOverride={breadcrumbOverride}

@@ -416,9 +416,9 @@ export function InterviewRoundsDisplay({
                 return {
                     label: 'Job Offer Sent',
                     icon: Briefcase,
-                    color: 'text-blue-600',
-                    bgColor: 'bg-blue-50',
-                    borderColor: 'border-blue-200'
+                    color: 'text-primary',
+                    bgColor: 'bg-primary/10',
+                    borderColor: 'border-primary/20'
                 };
             default:
                 return null;
@@ -488,18 +488,18 @@ export function InterviewRoundsDisplay({
                 </div>
             )}
             {offerNeedsCreation && latestRound && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/25 dark:border-blue-800 p-4 mb-4 flex flex-wrap items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/15 shrink-0">
-                        <Briefcase className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <Briefcase className="h-4.5 w-4.5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Ready to make an offer</p>
-                        <p className="text-xs text-blue-800/80 dark:text-blue-300">{candidateName} passed the interviews — create and send the job offer.</p>
+                        <p className="text-sm font-semibold text-foreground">Ready to make an offer</p>
+                        <p className="text-xs text-muted-foreground">{candidateName} passed the interviews — create and send the job offer.</p>
                     </div>
                     <Button
                         size="sm"
                         onClick={() => setOfferDialog({ isOpen: true, roundId: latestRound.id })}
-                        className="bg-blue-600 text-white hover:bg-blue-700"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                         <Briefcase className="h-3.5 w-3.5 mr-1.5" />
                         Create Job Offer
@@ -585,12 +585,12 @@ export function InterviewRoundsDisplay({
                         ? "bg-gradient-to-r from-green-50 to-green-100 border-green-300 dark:from-green-950/60 dark:to-green-900/40 dark:border-green-700"
                         : offerDetails.status === 'declined'
                             ? "bg-gradient-to-r from-red-50 to-red-100 border-red-300 dark:from-red-950/60 dark:to-red-900/40 dark:border-red-700"
-                            : "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-300 dark:from-blue-950/60 dark:to-blue-900/40 dark:border-blue-700"
+                            : "border-primary/20 bg-primary/10"
                 )}>
                     <div className="flex items-center gap-3">
                         <div className={cn(
                             "h-12 w-12 rounded-full flex items-center justify-center flex-shrink-0",
-                            offerDetails.status === 'accepted' ? "bg-green-500" : offerDetails.status === 'declined' ? "bg-red-500" : "bg-blue-500"
+                            offerDetails.status === 'accepted' ? "bg-primary" : offerDetails.status === 'declined' ? "bg-red-500" : "bg-primary"
                         )}>
                             {offerDetails.status === 'accepted' ? (
                                 <CheckCircle2 className="h-6 w-6 text-white" />
@@ -604,7 +604,7 @@ export function InterviewRoundsDisplay({
                             <div className="flex items-center justify-between">
                                 <h4 className={cn(
                                     "font-semibold",
-                                    offerDetails.status === 'accepted' ? "text-green-900 dark:text-green-50" : offerDetails.status === 'declined' ? "text-red-900 dark:text-red-50" : "text-blue-900 dark:text-blue-50"
+                                    offerDetails.status === 'accepted' ? "text-foreground" : offerDetails.status === 'declined' ? "text-red-900 dark:text-red-50" : "text-foreground"
                                 )}>
                                     {offerDetails.status === 'accepted' ? "Job Offer Accepted" : offerDetails.status === 'declined' ? "Job Offer Declined" : "Job Offer Sent"}
                                 </h4>
@@ -613,7 +613,7 @@ export function InterviewRoundsDisplay({
                                     size="sm" 
                                     className={cn(
                                         "h-7 text-xs",
-                                        offerDetails.status === 'accepted' ? "text-green-700 hover:bg-green-200 dark:text-green-300 dark:hover:bg-green-900/40" : offerDetails.status === 'declined' ? "text-red-700 hover:bg-red-200 dark:text-red-300 dark:hover:bg-red-900/40" : "text-blue-700 hover:bg-blue-200 dark:text-blue-300 dark:hover:bg-blue-900/40"
+                                        offerDetails.status === 'accepted' ? "text-primary hover:bg-primary/10" : offerDetails.status === 'declined' ? "text-red-700 hover:bg-red-200 dark:text-red-300 dark:hover:bg-red-900/40" : "text-primary hover:bg-primary/10"
                                     )}
                                     onClick={() => setShowOfferDetails(!showOfferDetails)}
                                 >
@@ -623,7 +623,7 @@ export function InterviewRoundsDisplay({
                             </div>
                             <p className={cn(
                                 "text-sm mt-0.5",
-                                offerDetails.status === 'accepted' ? "text-green-800 dark:text-green-200" : offerDetails.status === 'declined' ? "text-red-800 dark:text-red-200" : "text-blue-800 dark:text-blue-200"
+                                offerDetails.status === 'accepted' ? "text-foreground" : offerDetails.status === 'declined' ? "text-red-800 dark:text-red-200" : "text-foreground"
                             )}>
                                 {offerDetails.status === 'accepted' 
                                     ? `🎊 Great news! ${candidateName} has accepted the job offer.` 
@@ -642,30 +642,30 @@ export function InterviewRoundsDisplay({
                                 <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                             </div>
                         ) : (
-                            <CheckCircle2 className="h-6 w-6 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                            <CheckCircle2 className="h-6 w-6 flex-shrink-0 text-primary" />
                         )}
                     </div>
 
                     {showOfferDetails && offerDetails && (
-                        <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="mt-4 border-t border-primary/20 pt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-3">
                                     <div>
-                                        <p className="text-xs font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wider">Position</p>
-                                        <p className="font-semibold text-blue-900 dark:text-blue-100">{offerDetails.job_title}</p>
+                                        <p className="text-xs font-medium uppercase tracking-wider text-primary">Position</p>
+                                        <p className="font-semibold text-foreground">{offerDetails.job_title}</p>
                                     </div>
                                     {offerDetails.salary_amount && (
                                         <div>
-                                            <p className="text-xs font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wider">Salary</p>
-                                            <p className="font-semibold text-blue-900 dark:text-blue-100">
+                                            <p className="text-xs font-medium uppercase tracking-wider text-primary">Salary</p>
+                                            <p className="font-semibold text-foreground">
                                                 {offerDetails.salary_currency} {offerDetails.salary_amount.toLocaleString()} / {offerDetails.salary_period}
                                             </p>
                                         </div>
                                     )}
                                     {offerDetails.start_date && (
                                         <div>
-                                            <p className="text-xs font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wider">Proposed Start Date</p>
-                                            <p className="font-semibold text-blue-900 dark:text-blue-100">
+                                            <p className="text-xs font-medium uppercase tracking-wider text-primary">Proposed Start Date</p>
+                                            <p className="font-semibold text-foreground">
                                                 {formatTimestamp(offerDetails.start_date, "MMMM d, yyyy")}
                                             </p>
                                         </div>
@@ -674,20 +674,20 @@ export function InterviewRoundsDisplay({
                                 <div className="space-y-3">
                                     {offerDetails.expiry_date && (
                                         <div>
-                                            <p className="text-xs font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wider">Offer Expiry</p>
-                                            <p className="font-semibold text-blue-900 dark:text-blue-100">
+                                            <p className="text-xs font-medium uppercase tracking-wider text-primary">Offer Expiry</p>
+                                            <p className="font-semibold text-foreground">
                                                 {formatTimestamp(offerDetails.expiry_date, "MMMM d, yyyy")}
                                             </p>
                                         </div>
                                     )}
                                     {offerDetails.offer_letter_url && (
                                         <div>
-                                            <p className="text-xs font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wider">Offer Letter</p>
+                                            <p className="text-xs font-medium uppercase tracking-wider text-primary">Offer Letter</p>
                                             <a 
                                                 href={offerDetails.offer_letter_url} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center text-sm font-medium text-blue-600 hover:underline mt-1"
+                                                className="mt-1 inline-flex items-center text-sm font-medium text-primary hover:underline"
                                             >
                                                 View Document <ExternalLink className="ml-1 h-3 w-3" />
                                             </a>
@@ -697,8 +697,8 @@ export function InterviewRoundsDisplay({
                             </div>
                             {offerDetails.description && (
                                 <div className="mt-4">
-                                    <p className="text-xs font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Additional Details</p>
-                                    <p className="text-sm text-blue-900 dark:text-blue-100 bg-blue-200/30 dark:bg-blue-900/20 p-3 rounded-md whitespace-pre-wrap">
+                                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-primary">Additional Details</p>
+                                    <p className="whitespace-pre-wrap rounded-md bg-primary/10 p-3 text-sm text-foreground">
                                         {offerDetails.description}
                                     </p>
                                 </div>
@@ -954,7 +954,7 @@ export function InterviewRoundsDisplay({
 
                                             {round.outcome === 'offer' && !offerExists && (
                                                 <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                                    <Briefcase className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                                    <Briefcase className="h-3.5 w-3.5 text-primary" />
                                                     Ready for offer — create it from the banner above
                                                 </p>
                                             )}
@@ -964,13 +964,13 @@ export function InterviewRoundsDisplay({
                                                     "rounded-lg p-3 text-center border",
                                                     offerDetails.status === 'accepted' ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800" :
                                                     offerDetails.status === 'declined' ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800" :
-                                                    "bg-blue-50 border-blue-200 dark:bg-blue-950/45 dark:border-blue-800"
+                                                    "border-primary/20 bg-primary/10"
                                                 )}>
                                                     <p className={cn(
                                                         "text-sm flex items-center justify-center gap-2 mb-2",
                                                         offerDetails.status === 'accepted' ? "text-green-800 dark:text-green-200" :
                                                         offerDetails.status === 'declined' ? "text-red-800 dark:text-red-200" :
-                                                        "text-blue-800 dark:text-blue-100"
+                                                        "text-foreground"
                                                     )}>
                                                         {offerDetails.status === 'accepted' ? (
                                                             <>

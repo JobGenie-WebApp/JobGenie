@@ -304,12 +304,12 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
                                         <div className="flex items-center gap-1.5">
                                             {interview.interview_mode === "online" ? (
                                                 <>
-                                                    <Video className="h-4 w-4 text-blue-600" />
+                                                    <Video className="h-4 w-4 text-primary" />
                                                     <span className="text-sm">Online</span>
                                                 </>
                                             ) : interview.interview_mode === "physical" ? (
                                                 <>
-                                                    <MapPin className="h-4 w-4 text-purple-600" />
+                                                    <MapPin className="h-4 w-4 text-primary" />
                                                     <span className="text-sm">Physical</span>
                                                 </>
                                             ) : (
@@ -347,7 +347,7 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
                                     </div>
                                     {interview.viewed_at && (
                                         <div className="flex items-start gap-3">
-                                            <div className="h-2 w-2 rounded-full bg-blue-500 mt-1.5" />
+                                            <div className="h-2 w-2 rounded-full bg-primary mt-1.5" />
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium">Invitation Viewed</p>
                                                 <p className="text-xs text-muted-foreground">
@@ -358,7 +358,7 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
                                     )}
                                     {interview.responded_at && (
                                         <div className="flex items-start gap-3">
-                                            <div className="h-2 w-2 rounded-full bg-purple-500 mt-1.5" />
+                                            <div className="h-2 w-2 rounded-full bg-primary mt-1.5" />
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium">Candidate Responded</p>
                                                 <p className="text-xs text-muted-foreground">
@@ -410,7 +410,7 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
                                                                                     : round.status === "confirmed"
                                                                                         ? "text-green-600 border-green-300 bg-green-50"
                                                                                         : round.status === "completed"
-                                                                                            ? "text-blue-600 border-blue-300 bg-blue-50"
+                                                                                            ? "text-primary border-primary/25 bg-primary/10"
                                                                                             : "text-amber-600 border-amber-300 bg-amber-50"
                                                                         }
                                                                     >
@@ -521,7 +521,7 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <MapPin className="h-4 w-4 text-purple-600" />
+                                                        <MapPin className="h-4 w-4 text-primary" />
                                                         <span className="text-sm">Physical</span>
                                                     </>
                                                 )}

@@ -237,7 +237,7 @@ export function BRCertificateUpload({
                                 {/* Verification Status */}
                                 <div className="mt-3">
                                     {(isUploading || isVerifying) && (
-                                        <div className="flex items-center gap-2 text-blue-600">
+                                        <div className="flex items-center gap-2 text-primary">
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                             <span className="text-sm">
                                                 {isUploading ? "Uploading..." : "Verifying with AI..."}

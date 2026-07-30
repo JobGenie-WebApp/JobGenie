@@ -62,11 +62,11 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
     const getAvailabilityColor = (status: string | null) => {
         switch (status) {
             case "available":
-                return "bg-green-500/10 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400 dark:border-green-800";
+                return "border-border/70 bg-background/70 text-primary";
             case "open_to_opportunities":
-                return "bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-800";
+                return "border-border/70 bg-background/70 text-foreground";
             case "not_looking":
-                return "bg-gray-500/10 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-400 dark:border-gray-800";
+                return "border-border/70 bg-background/70 text-muted-foreground";
             default:
                 return "";
         }
@@ -81,9 +81,9 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
 
     return (
         <>
-            <Card className="overflow-hidden group relative pt-0">
-                {/* Cover Image — shows the candidate's cover photo, or a styled default gradient */}
-                <div className="relative h-48 w-full overflow-hidden sm:h-60">
+            <Card className="group relative overflow-hidden pt-0">
+                {/* Cover Image — shows the candidate's cover photo, or a restrained tonal placeholder */}
+                <div className="relative h-36 w-full overflow-hidden sm:h-44">
                     {profile.cover_image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -92,13 +92,13 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                             className="h-full w-full object-cover"
                         />
                     ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-primary/80 via-primary to-emerald-700">
-                            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.18)_1px,transparent_0)] [background-size:22px_22px]" />
-                        </div>
+                        <div className="profile-cover-placeholder h-full w-full" />
                     )}
 
                     {/* Subtle gradient so overlaid controls stay readable */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+                    {profile.cover_image_url ? (
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                    ) : null}
 
                     {/* Hidden file input for cover upload */}
                     <input
@@ -111,13 +111,13 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
 
                     {/* Change cover control — bottom-right, with recommended size hint */}
                     <div className="absolute bottom-3 right-3 flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                        <span className="hidden rounded-md bg-black/45 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm sm:inline">
+                        <span className="hidden rounded-md border border-border/60 bg-background/75 px-2 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-sm sm:inline">
                             Recommended: 1500 × 400px · max 5MB
                         </span>
                         <Button
-                            variant="secondary"
+                            variant="outline"
                             size="sm"
-                            className="h-9 gap-2 shadow-lg"
+                            className="h-9 gap-2 bg-background/75 shadow-none backdrop-blur-sm"
                             disabled={uploadingCover}
                             onClick={() => coverInputRef.current?.click()}
                         >
@@ -134,9 +134,9 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                 {/* Edit Button - visible on hover on desktop, always visible on mobile */}
                 <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <Button
-                        variant="secondary"
+                        variant="outline"
                         size="icon"
-                        className="h-9 w-9 shadow-lg"
+                        className="h-9 w-9 bg-background/75 shadow-none backdrop-blur-sm"
                         onClick={() => setDialogOpen(true)}
                     >
                         <Pencil className="h-4 w-4" />
@@ -144,12 +144,12 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                 </div>
 
                 {/* Profile Content */}
-                <div className="px-4 pb-6 sm:px-6">
+                <div className="px-4 pb-5 sm:px-6">
                     {/* Avatar - Overlapping cover */}
-                    <div className="flex items-start justify-between -mt-12 mb-4 sm:-mt-16">
-                        <Avatar className="h-24 w-24 border-4 border-background shadow-lg sm:h-32 sm:w-32">
+                    <div className="-mt-10 mb-4 flex items-start justify-between sm:-mt-12">
+                        <Avatar className="h-20 w-20 border-[3px] border-card shadow-sm sm:h-24 sm:w-24">
                             <AvatarImage src={profile.profile_image_url || undefined} alt={`${profile.first_name} ${profile.last_name}`} />
-                            <AvatarFallback className="text-xl font-semibold bg-primary/10 text-primary sm:text-2xl">
+                            <AvatarFallback className="bg-secondary text-lg font-semibold text-foreground sm:text-xl">
                                 {initials}
                             </AvatarFallback>
                         </Avatar>
@@ -157,7 +157,7 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                         {profile.availability_status && (
                             <Badge
                                 variant="outline"
-                                className={`mt-14 sm:mt-16 ${getAvailabilityColor(profile.availability_status)}`}
+                                className={`mt-12 sm:mt-14 ${getAvailabilityColor(profile.availability_status)}`}
                             >
                                 {formatAvailabilityStatus(profile.availability_status)}
                             </Badge>
@@ -167,7 +167,7 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                     {/* Name and Position */}
                     <div className="space-y-2 mb-4">
                         <div>
-                            <h1 className="text-2xl font-bold sm:text-3xl">
+                            <h1 className="text-2xl font-semibold tracking-tight">
                                 {profile.first_name} {profile.last_name}
                             </h1>
                             {profile.membership_no && (
@@ -176,7 +176,7 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                                 </p>
                             )}
                         </div>
-                        <p className="text-lg text-muted-foreground flex items-center gap-2 font-semibold">
+                        <p className="flex items-center gap-2 text-base font-medium text-muted-foreground">
                             <Briefcase className="h-4 w-4" />
                             {profile.current_position}
                         </p>
@@ -195,7 +195,7 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
 
                         {profile.resume_url && (
                             <div className="mt-3">
-                                <Button variant="default" size="sm" className="h-8 gap-2 bg-green-500" asChild>
+                                <Button variant="outline" size="sm" className="h-8 gap-2" asChild>
                                     <a href={profile.resume_url} target="_blank" rel="noopener noreferrer">
                                         <FileText className="h-3.5 w-3.5" />
                                         View Resume
@@ -206,7 +206,7 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                     </div>
 
                     {/* Contact Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-1 gap-3 border-t border-border/60 pt-4 text-sm md:grid-cols-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <Mail className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate">{profile.email}</span>

@@ -120,7 +120,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
 
 const APP_STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
     pending:     { label: "Pending",     icon: <Clock className="h-3.5 w-3.5" />,        color: "text-muted-foreground" },
-    reviewed:    { label: "Reviewed",    icon: <Eye className="h-3.5 w-3.5" />,          color: "text-blue-500" },
+    reviewed:    { label: "Reviewed",    icon: <Eye className="h-3.5 w-3.5" />,          color: "text-primary" },
     shortlisted: { label: "Shortlisted", icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: "text-primary" },
     rejected:    { label: "Rejected",    icon: <XCircle className="h-3.5 w-3.5" />,      color: "text-destructive" },
     hired:       { label: "Hired",       icon: <UserCheck className="h-3.5 w-3.5" />,    color: "text-emerald-600" },

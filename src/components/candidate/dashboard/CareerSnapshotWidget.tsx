@@ -21,7 +21,7 @@ function formatDateRange(start: string, end: string | null, isCurrent: boolean):
 
 const educationStatusColors: Record<string, string> = {
     completed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    in_progress: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    in_progress: "bg-primary/10 text-primary",
     incomplete: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
@@ -39,8 +39,8 @@ export function CareerSnapshotWidget({ experiences, educations }: CareerSnapshot
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
-                        <Briefcase className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                        <Briefcase className="h-4 w-4 text-primary" />
                     </div>
                     <h3 className="text-sm font-semibold text-foreground">Career Snapshot</h3>
                 </div>
@@ -131,8 +131,8 @@ export function CareerSnapshotWidget({ experiences, educations }: CareerSnapshot
                                         const statusLabel = educationStatusLabels[statusKey] || statusKey;
                                         return (
                                             <div key={edu.id} className="flex items-start gap-3">
-                                                <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
-                                                    <GraduationCap className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                                                <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                                                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between gap-2">

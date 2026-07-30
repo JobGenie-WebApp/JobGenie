@@ -113,12 +113,12 @@ export function InterviewFeedbackDialog({
             label: 'Offer Job',
             description: 'Candidate passed all rounds and is ready to receive a job offer',
             icon: Briefcase,
-            iconColor: 'text-blue-600 dark:text-blue-400',
-            labelClass: 'text-blue-900 dark:text-blue-50',
-            descClass: 'text-blue-800 dark:text-blue-200',
+            iconColor: 'text-primary',
+            labelClass: 'text-foreground',
+            descClass: 'text-muted-foreground',
             bgColor:
-                'bg-blue-50 hover:bg-blue-100 border-blue-200 dark:bg-blue-950/55 dark:hover:bg-blue-950/75 dark:border-blue-800',
-            selectedBg: 'bg-blue-100 border-blue-500 dark:bg-blue-950 dark:border-blue-400'
+                'border-primary/20 bg-primary/5 hover:bg-primary/10',
+            selectedBg: 'border-primary bg-primary/10'
         }
     ] as const;
 
@@ -208,8 +208,8 @@ export function InterviewFeedbackDialog({
                         </div>
                     )}
                     {outcome === 'offer' && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 dark:bg-blue-950/45 dark:border-blue-800">
-                            <p className="text-sm text-blue-800 dark:text-blue-100">
+                        <div className="rounded-md border border-primary/20 bg-primary/10 p-3">
+                            <p className="text-sm text-foreground">
                                 After saving, you&apos;ll be able to create and send a formal job offer to this candidate.
                             </p>
                         </div>

@@ -241,9 +241,9 @@ function PaymentsTab() {
                     ))
                 ) : stats ? (
                     <>
-                        <KpiCard title="Total Revenue" value={fmtAmount(stats.total_revenue)} icon={DollarSign} color="text-green-600" bgColor="bg-green-50" />
+                        <KpiCard title="Total Revenue" value={fmtAmount(stats.total_revenue)} icon={DollarSign} color="text-primary" bgColor="bg-primary/10" />
                         <KpiCard title="Pending Payment" value={`${stats.pending_count} · ${fmtAmount(stats.pending_amount)}`} icon={Clock} color="text-amber-600" bgColor="bg-amber-50" />
-                        <KpiCard title="Under Review" value={String(stats.under_review_count)} icon={Eye} color="text-blue-600" bgColor="bg-blue-50" />
+                        <KpiCard title="Under Review" value={String(stats.under_review_count)} icon={Eye} color="text-primary" bgColor="bg-primary/10" />
                         <KpiCard title="Overdue" value={String(stats.overdue_count)} icon={AlertTriangle} color="text-red-600" bgColor="bg-red-50" />
                     </>
                 ) : null}
@@ -373,7 +373,7 @@ function PaymentsTab() {
                                         <TD>
                                             {latestProof ? (
                                                 <a href={`/api/payments/proofs/${latestProof.id}`} target="_blank" rel="noopener noreferrer"
-                                                    className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                                                    className="flex items-center gap-1 text-xs text-primary hover:underline">
                                                     <FileText className="h-3 w-3" />{latestProof.file_name.slice(0, 16)}…
                                                 </a>
                                             ) : <span className="text-xs text-muted-foreground">None</span>}
@@ -706,7 +706,7 @@ function PaymentDetailDialog({ open, payment, onClose, onChanged }: {
                                     <div key={proof.id} className="rounded-lg border p-3 text-sm space-y-1">
                                         <div className="flex items-center justify-between">
                                             <a href={`/api/payments/proofs/${proof.id}`} target="_blank" rel="noopener noreferrer"
-                                                className="flex items-center gap-1.5 text-blue-600 hover:underline font-medium">
+                                                className="flex items-center gap-1.5 text-primary hover:underline font-medium">
                                                 <FileText className="h-4 w-4" />{proof.file_name}
                                                 <ExternalLink className="h-3 w-3" />
                                             </a>
@@ -869,7 +869,7 @@ function ReviewProofDialog({ open, payment, onClose, onReviewed }: {
                         <div className="rounded-lg border p-3 space-y-2">
                             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Submitted Proof</div>
                             <a href={`/api/payments/proofs/${latestProof.id}`} target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-blue-600 hover:underline font-medium">
+                                className="flex items-center gap-2 text-primary hover:underline font-medium">
                                 <FileText className="h-4 w-4" />{latestProof.file_name}
                                 <ExternalLink className="h-3.5 w-3.5" />
                             </a>
@@ -1008,7 +1008,7 @@ function ComplianceTab() {
                                             <div className="font-medium">Employer resubmission</div>
                                             {flag.employer_doc_url && (
                                                 <a href={flag.employer_doc_url} target="_blank" rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1 text-blue-600 hover:underline text-xs">
+                                                    className="inline-flex items-center gap-1 text-primary hover:underline text-xs">
                                                     <FileText className="h-3.5 w-3.5" />{flag.employer_doc_name ?? "View document"}
                                                     <ExternalLink className="h-3 w-3" />
                                                 </a>
