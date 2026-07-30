@@ -9,13 +9,10 @@ import {
   BarChart3,
   BriefcaseBusiness,
   CalendarCheck2,
-  Check,
   ChevronRight,
   CircleCheckBig,
   FileCheck2,
-  Fingerprint,
   LayoutDashboard,
-  MessageSquareText,
   Search,
   ShieldCheck,
   Sparkles,
@@ -28,9 +25,9 @@ import { useEffect, useState } from 'react';
 import { landingContent } from '@/content/site';
 import type {
   LandingContent,
-  LandingFeatureIcon,
   LandingStepIcon,
 } from '@/content/types';
+import { T } from '@/components/cms/T';
 
 const reveal = {
   hidden: { opacity: 0, y: 26 },
@@ -76,10 +73,10 @@ function MagicCursor() {
   return <div className="jg-magic-cursor" aria-hidden="true" />;
 }
 
-function MagicLamp({ active, onRub }: { active: boolean; onRub: () => void }) {
+function MagicLamp({ active, label, onRub }: { active: boolean; label: string; onRub: () => void }) {
   return (
-    <button className={`jg-lamp ${active ? 'is-rubbed' : ''}`} onClick={onRub} aria-label="Rub the JobGenie magic lamp">
-      <span>Rub the lamp</span>
+    <button className={`jg-lamp ${active ? 'is-rubbed' : ''}`} onClick={onRub} aria-label={label}>
+      <span><T k="landing.hero.lampLabel">{label}</T></span>
       <svg viewBox="0 0 250 150" role="img" aria-hidden="true">
         <defs>
           <linearGradient id="lampGold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff1a7"/><stop offset=".32" stopColor="#f7bd3c"/><stop offset=".68" stopColor="#b96a08"/><stop offset="1" stopColor="#ffe17b"/></linearGradient>
@@ -102,13 +99,9 @@ function MagicLamp({ active, onRub }: { active: boolean; onRub: () => void }) {
   );
 }
 
-function GenieScene() {
+function GenieScene({ content }: { content: LandingContent['hero'] }) {
   const [rubbed, setRubbed] = useState(false);
-  const rubLamp = () => {
-    setRubbed(false);
-    requestAnimationFrame(() => setRubbed(true));
-    window.setTimeout(() => setRubbed(false), 2400);
-  };
+  const rubLamp = () => {};
   return (
     <div className={`jg-genie-scene ${rubbed ? 'is-awake' : ''}`}>
       <div className="jg-magic-moon"><span>JG</span>{Array.from({ length: 3 }, (_, i) => <i key={i} />)}</div>
@@ -125,7 +118,7 @@ function GenieScene() {
       <motion.div className="jg-genie" initial={{ opacity: 0, x: 45, scale: .88 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: 1, delay: .15, ease: [0.22, 1, 0.36, 1] }}>
         <Image
           src="/genie.png"
-          alt="The JobGenie emerging from a magic lamp"
+          alt={content.genieImageAlt}
           fill
           priority
           sizes="(max-width: 640px) 100vw, (max-width: 900px) 88vw, 560px"
@@ -133,14 +126,22 @@ function GenieScene() {
         />
       </motion.div>
       <div className="jg-wish-orbit" aria-hidden="true"><i /><i /><i /></div>
-      <div className="jg-wish-card jg-wish-card--job"><span><BriefcaseBusiness size={15} /></span><div><small>WISH MATCHED</small><b>Product Designer</b><em>94% match</em></div></div>
-      <div className="jg-wish-card jg-wish-card--talent"><span><UsersRound size={15} /></span><div><small>TOP TALENT FOUND</small><b>3 verified candidates</b><em>Ready to interview</em></div></div>
-      <MagicLamp active={rubbed} onRub={rubLamp} />
+      {content.wishCards.map((card, i) => (
+        <div className={`jg-wish-card ${i === 0 ? 'jg-wish-card--job' : 'jg-wish-card--talent'}`} key={i}>
+          <span>{i === 0 ? <BriefcaseBusiness size={15} /> : <UsersRound size={15} />}</span>
+          <div>
+            <small><T k={`landing.hero.wishCards.${i}.eyebrow`}>{card.eyebrow}</T></small>
+            <b><T k={`landing.hero.wishCards.${i}.title`}>{card.title}</T></b>
+            <em><T k={`landing.hero.wishCards.${i}.note`}>{card.note}</T></em>
+          </div>
+        </div>
+      ))}
+      <MagicLamp active={rubbed} label={content.lampLabel} onRub={rubLamp} />
     </div>
   );
 }
 
-function HeroDashboard() {
+function HeroDashboard({ content }: { content: LandingContent['heroDashboard'] }) {
   return (
     <motion.div
       className="jg-dashboard"
@@ -150,8 +151,8 @@ function HeroDashboard() {
     >
       <div className="jg-dashboard__top">
         <div className="jg-window-dots"><i /><i /><i /></div>
-        <span>Recruitment command center</span>
-        <span className="jg-live"><i /> LIVE</span>
+        <span><T k="landing.heroDashboard.title">{content.title}</T></span>
+        <span className="jg-live"><i /> <T k="landing.heroDashboard.liveLabel">{content.liveLabel}</T></span>
       </div>
       <div className="jg-dashboard__body">
         <aside className="jg-dashboard__rail">
@@ -161,23 +162,20 @@ function HeroDashboard() {
           <div><BarChart3 size={15} /></div>
         </aside>
         <div className="jg-dashboard__content">
-          <div className="jg-mini-heading">
-            <div><small>OPEN ROLE</small><strong>Senior Product Designer</strong></div>
-            <span>18 candidates</span>
-          </div>
           <div className="jg-pipeline">
-            {[
-              ['New', '08', ['AM', 'DK', 'SL']],
-              ['Shortlist', '05', ['NR', 'JT']],
-              ['Interview', '03', ['KM', 'RB']],
-              ['Offer', '02', ['EP']],
-            ].map(([title, count, people], col) => (
-              <div className="jg-pipeline__col" key={title as string}>
-                <div><span>{title as string}</span><b>{count as string}</b></div>
-                {(people as string[]).map((person, index) => (
-                  <div className={`jg-person ${col === 2 && index === 0 ? 'is-glowing' : ''}`} key={person}>
-                    <i>{person}</i>
-                    <span><b>{['Alex Morgan', 'Dinu K.', 'Sara Lee', 'Nina R.', 'James T.', 'Kavi M.', 'Ravi B.', 'Emma P.'][(col * 2 + index) % 8]}</b><small>{96 - col * 7 - index * 3}% match</small></span>
+            {content.columns.map((column, col) => (
+              <div className="jg-pipeline__col" key={col}>
+                <div>
+                  <span><T k={`landing.heroDashboard.columns.${col}.title`}>{column.title}</T></span>
+                  <b><T k={`landing.heroDashboard.columns.${col}.count`}>{column.count}</T></b>
+                </div>
+                {column.people.map((person, index) => (
+                  <div className={`jg-person ${col === 2 && index === 0 ? 'is-glowing' : ''}`} key={index}>
+                    <i><T k={`landing.heroDashboard.columns.${col}.people.${index}.initials`}>{person.initials}</T></i>
+                    <span>
+                      <b><T k={`landing.heroDashboard.columns.${col}.people.${index}.name`}>{person.name}</T></b>
+                      <small><T k={`landing.heroDashboard.columns.${col}.people.${index}.match`}>{person.match}</T></small>
+                    </span>
                     {col === 2 && index === 0 && <Sparkles size={12} />}
                   </div>
                 ))}
@@ -186,22 +184,9 @@ function HeroDashboard() {
           </div>
         </div>
       </div>
-      <div className="jg-match-pop">
-        <span><Sparkles size={15} /></span>
-        <div><small>GENIE MATCH</small><strong>Top candidate found</strong></div>
-        <b>96%</b>
-      </div>
     </motion.div>
   );
 }
-
-const featureIconMap: Record<LandingFeatureIcon, typeof WandSparkles> = {
-  wand: WandSparkles,
-  fingerprint: Fingerprint,
-  calendar: CalendarCheck2,
-  chart: BarChart3,
-  message: MessageSquareText,
-};
 
 const stepIconMap: Record<LandingStepIcon, typeof Search> = {
   file: FileCheck2,
@@ -212,49 +197,6 @@ const stepIconMap: Record<LandingStepIcon, typeof Search> = {
   zap: Zap,
 };
 
-function FeatureVisual({ type }: { type: string }) {
-  if (type === 'match') return (
-    <div className="jg-feature-match">
-      <div><i>NM</i><span><small>TOP TALENT</small><b>Nethmi M.</b><em>Product Designer</em></span></div>
-      <div className="jg-score-ring"><strong>96</strong><small>%</small></div>
-      <ul><li><Check size={11} /> Skills</li><li><Check size={11} /> Experience</li><li><Check size={11} /> Culture</li></ul>
-    </div>
-  );
-  if (type === 'verify') return <div className="jg-feature-center"><div className="jg-verify-orbit"><BadgeCheck size={31} /><i /><i /></div><span>Identity verified</span></div>;
-  if (type === 'calendar') return <div className="jg-calendar"><span>MON<small>08</small></span><span className="is-picked">TUE<small>09</small></span><span>WED<small>10</small></span><div><i /> Interview confirmed · 10:30</div></div>;
-  if (type === 'chart') return <div className="jg-chart">{[38, 52, 45, 68, 61, 82, 94].map((n, i) => <i key={i} style={{ height: `${n}%` }} />)}<span>+28% this month</span></div>;
-  return <div className="jg-team"><div>{['AM', 'KD', 'NR', 'ST'].map(x => <i key={x}>{x}</i>)}</div><span><b>Hiring team</b><small>4 people reviewing now</small></span><strong><i /> Live</strong></div>;
-}
-
-function Features({ content }: { content: LandingContent['features'] }) {
-  return (
-    <section id="features" className="jg-section jg-features">
-      <div className="jg-container">
-        <Reveal className="jg-section-heading">
-          <span className="jg-kicker"><Sparkles size={13} /> {content.kicker}</span>
-          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
-          <p>{content.description}</p>
-        </Reveal>
-        <div className="jg-bento">
-          {content.cards.map((card, i) => {
-            const Icon = featureIconMap[card.icon] ?? WandSparkles;
-            return (
-              <Reveal className={`jg-feature-card ${card.className}`} delay={i * 0.06} key={card.title}>
-                <div className="jg-feature-card__copy">
-                  <span><Icon size={15} /> {card.eyebrow}</span>
-                  <h3>{card.title}</h3>
-                  <p>{card.text}</p>
-                </div>
-                <FeatureVisual type={card.visual} />
-              </Reveal>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function HowItWorks({ content }: { content: LandingContent['journeys'] }) {
   const [mode, setMode] = useState<'candidate' | 'employer'>('candidate');
   const activeSteps = content[mode];
@@ -263,20 +205,26 @@ function HowItWorks({ content }: { content: LandingContent['journeys'] }) {
     <section id="how-it-works" className="jg-section jg-journey">
       <div className="jg-container">
         <Reveal className="jg-section-heading is-left">
-          <span className="jg-kicker"><WandSparkles size={13} /> {content.kicker}</span>
-          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
+          <span className="jg-kicker"><WandSparkles size={13} /> <T k="landing.journeys.kicker">{content.kicker}</T></span>
+          <h2><T k="landing.journeys.title">{content.title}</T> <em><T k="landing.journeys.emphasizedTitle">{content.emphasizedTitle}</T></em></h2>
           <div className="jg-role-toggle" role="tablist" aria-label="Choose your journey">
-            <button className={mode === 'candidate' ? 'is-active' : ''} onClick={() => setMode('candidate')}>{content.candidateLabel}</button>
-            <button className={mode === 'employer' ? 'is-active' : ''} onClick={() => setMode('employer')}>{content.employerLabel}</button>
+            <button className={mode === 'candidate' ? 'is-active' : ''} onClick={() => setMode('candidate')}><T k="landing.journeys.candidateLabel">{content.candidateLabel}</T></button>
+            <button className={mode === 'employer' ? 'is-active' : ''} onClick={() => setMode('employer')}><T k="landing.journeys.employerLabel">{content.employerLabel}</T></button>
           </div>
         </Reveal>
         <motion.div className="jg-steps" key={mode} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
           {activeSteps.map((step, index) => {
             const StepIcon = stepIconMap[step.icon] ?? Search;
             return (
-              <div className="jg-step" key={step.title}>
-                <div className="jg-step__number"><span>{step.number}</span><StepIcon size={22} /></div>
-                <div><h3>{step.title}</h3><p>{step.text}</p></div>
+              <div className="jg-step" key={index}>
+                <div className="jg-step__number">
+                  <span><T k={`landing.journeys.${mode}.${index}.number`}>{step.number}</T></span>
+                  <StepIcon size={22} />
+                </div>
+                <div>
+                  <h3><T k={`landing.journeys.${mode}.${index}.title`}>{step.title}</T></h3>
+                  <p><T k={`landing.journeys.${mode}.${index}.text`}>{step.text}</T></p>
+                </div>
                 {index < 2 && <ChevronRight className="jg-step__arrow" size={20} />}
               </div>
             );
@@ -293,12 +241,21 @@ function Testimonial({ content }: { content: LandingContent['testimonial'] }) {
       <div className="jg-container jg-proof__grid">
         <Reveal className="jg-proof__quote">
           <div className="jg-stars">{Array.from({ length: 5 }, (_, i) => <Star key={i} size={16} fill="currentColor" />)}</div>
-          <blockquote>“{content.quote}”</blockquote>
-          <div className="jg-author"><i>{content.authorInitials}</i><span><b>{content.authorName}</b><small>{content.authorRole}</small></span></div>
+          <blockquote>“<T k="landing.testimonial.quote">{content.quote}</T>”</blockquote>
+          <div className="jg-author">
+            <i><T k="landing.testimonial.authorInitials">{content.authorInitials}</T></i>
+            <span>
+              <b><T k="landing.testimonial.authorName">{content.authorName}</T></b>
+              <small><T k="landing.testimonial.authorRole">{content.authorRole}</T></small>
+            </span>
+          </div>
         </Reveal>
         <div className="jg-proof__stats">
           {content.stats.map(({ value, label }, i) => (
-            <Reveal className="jg-proof-stat" delay={i * 0.08} key={value}><strong>{value}</strong><span>{label}</span></Reveal>
+            <Reveal className="jg-proof-stat" delay={i * 0.08} key={i}>
+              <strong><T k={`landing.testimonial.stats.${i}.value`}>{value}</T></strong>
+              <span><T k={`landing.testimonial.stats.${i}.label`}>{label}</T></span>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -306,36 +263,39 @@ function Testimonial({ content }: { content: LandingContent['testimonial'] }) {
   );
 }
 
-function PortalShowcase({ content }: { content: LandingContent['portals'] }) {
-  const [portal, setPortal] = useState<'candidate' | 'employer'>('employer');
+const highlightIcons = [Search, BarChart3, ShieldCheck] as const;
+
+function PlatformHighlights({ content }: { content: LandingContent['highlights'] }) {
   return (
-    <section id="portals" className="jg-section jg-portals">
+    <section id="features" className="jg-section jg-highlights">
       <div className="jg-container">
-        <Reveal className="jg-section-heading">
-          <span className="jg-kicker"><LayoutDashboard size={13} /> {content.kicker}</span>
-          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
-          <p>{content.description}</p>
-        </Reveal>
-        <div className="jg-portal-tabs">
-          <button onClick={() => setPortal('candidate')} className={portal === 'candidate' ? 'is-active' : ''}>{content.candidateLabel}</button>
-          <button onClick={() => setPortal('employer')} className={portal === 'employer' ? 'is-active' : ''}>{content.employerLabel}</button>
+        <div className="jg-highlight-list">
+          {content.map((item, index) => {
+            const Icon = highlightIcons[index] ?? Sparkles;
+            return (
+              <Reveal className="jg-highlight" delay={index * 0.06} key={index}>
+                <div className="jg-highlight__intro">
+                  <div className="jg-highlight__meta">
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <i><Icon size={20} /></i>
+                  </div>
+                  <p><T k={`landing.highlights.${index}.eyebrow`}>{item.eyebrow}</T></p>
+                </div>
+                <div className="jg-highlight__content">
+                  <h2><T k={`landing.highlights.${index}.title`}>{item.title}</T></h2>
+                  <p><T k={`landing.highlights.${index}.description`}>{item.description}</T></p>
+                  <ul>
+                    {item.points.map((point, pointIndex) => (
+                      <li key={pointIndex}>
+                        <CircleCheckBig size={17} /> <T k={`landing.highlights.${index}.points.${pointIndex}`}>{point}</T>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            );
+          })}
         </div>
-        <motion.div className="jg-portal-window" key={portal} initial={{ opacity: 0, scale: 0.985 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35 }}>
-          <div className="jg-portal-sidebar">
-            <div className="jg-portal-mark"><Sparkles size={17} /></div>
-            {[LayoutDashboard, portal === 'employer' ? UsersRound : Search, CalendarCheck2, MessageSquareText].map((Icon, i) => <span className={i === 0 ? 'is-active' : ''} key={i}><Icon size={16} /></span>)}
-          </div>
-          <div className="jg-portal-main">
-            <div className="jg-portal-head"><div><small>GOOD MORNING</small><h3>{portal === 'employer' ? content.employerHeading : content.candidateHeading}</h3></div><span><i /> All caught up</span></div>
-            <div className="jg-portal-metrics">
-              {(portal === 'employer' ? [['Active roles', '12'], ['New candidates', '48'], ['Interviews', '09']] : [['Applications', '14'], ['Profile views', '62'], ['Interviews', '04']]).map(([label, value], i) => <div key={label}><span>{label}</span><strong>{value}</strong><small>↗ {8 + i * 4}% this week</small></div>)}
-            </div>
-            <div className="jg-portal-lower">
-              <div><span>{portal === 'employer' ? 'Hiring activity' : 'Application activity'}</span><div className="jg-line-chart"><svg viewBox="0 0 500 120" preserveAspectRatio="none"><defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#22c55e" stopOpacity=".28"/><stop offset="1" stopColor="#22c55e" stopOpacity="0"/></linearGradient></defs><path d="M0,100 C70,92 70,65 140,72 S230,85 280,42 S370,70 500,18 L500,120 L0,120Z" fill="url(#chartFill)"/><path d="M0,100 C70,92 70,65 140,72 S230,85 280,42 S370,70 500,18" fill="none" stroke="#22c55e" strokeWidth="3"/></svg></div></div>
-              <div className="jg-next-list"><span>Up next</span>{['Design interview', 'Review shortlist', 'Team sync'].map((x, i) => <p key={x}><i>{10 + i}:30</i><b>{x}</b><small>{i === 0 ? 'Today' : 'Tomorrow'}</small></p>)}</div>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
@@ -348,11 +308,14 @@ function CTA({ content }: { content: LandingContent['cta'] }) {
         <Reveal className="jg-cta">
           <MagicDust />
           <div className="jg-cta__orb"><Sparkles size={25} /></div>
-          <span className="jg-kicker">{content.kicker}</span>
-          <h2>{content.title} <em>{content.emphasizedTitle}</em></h2>
-          <p>{content.description}</p>
-          <div className="jg-cta__actions"><Link href={content.primaryCta.href}>{content.primaryCta.label} <ArrowRight size={17} /></Link><Link href={content.secondaryCta.href}>{content.secondaryCta.label}</Link></div>
-          <small><ShieldCheck size={13} /> {content.trustNote}</small>
+          <span className="jg-kicker"><T k="landing.cta.kicker">{content.kicker}</T></span>
+          <h2><T k="landing.cta.title">{content.title}</T> <em><T k="landing.cta.emphasizedTitle">{content.emphasizedTitle}</T></em></h2>
+          <p><T k="landing.cta.description">{content.description}</T></p>
+          <div className="jg-cta__actions">
+            <Link href={content.primaryCta.href}><T k="landing.cta.primaryCta.label">{content.primaryCta.label}</T> <ArrowRight size={17} /></Link>
+            <Link href={content.secondaryCta.href}><T k="landing.cta.secondaryCta.label">{content.secondaryCta.label}</T></Link>
+          </div>
+          <small><ShieldCheck size={13} /> <T k="landing.cta.trustNote">{content.trustNote}</T></small>
         </Reveal>
       </div>
     </section>
@@ -367,23 +330,23 @@ export function LandingExperience({ content = landingContent }: { content?: Land
         <div className="jg-aurora" aria-hidden="true" /><MagicDust />
         <div className="jg-container jg-hero__grid">
           <div className="jg-hero__copy">
-            <motion.div className="jg-kicker" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}><Sparkles size={13} /> {content.hero.kicker}</motion.div>
-            <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}>{content.hero.title} <em>{content.hero.emphasizedTitle}</em></motion.h1>
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.18 }}>{content.hero.description}</motion.p>
-            <motion.div className="jg-hero__actions" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.28 }}>
-              <Link className="jg-button is-primary" href={content.hero.primaryCta.href}>{content.hero.primaryCta.label} <ArrowRight size={17} /></Link>
-              <Link className="jg-button is-secondary" href={content.hero.secondaryCta.href}>{content.hero.secondaryCta.label}</Link>
-            </motion.div>
+            <motion.div className="jg-kicker" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}><Sparkles size={13} /> <T k="landing.hero.kicker">{content.hero.kicker}</T></motion.div>
+            <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}><T k="landing.hero.title">{content.hero.title}</T> <em><T k="landing.hero.emphasizedTitle">{content.hero.emphasizedTitle}</T></em></motion.h1>
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.18 }}><T k="landing.hero.description">{content.hero.description}</T></motion.p>
           </div>
-          <div className="jg-hero__visual"><GenieScene /></div>
+          <div className="jg-hero__visual"><GenieScene content={content.hero} /></div>
         </div>
-        <div className="jg-container jg-hero-dashboard-wrap"><HeroDashboard /></div>
+        <div className="jg-container jg-hero-dashboard-wrap"><HeroDashboard content={content.heroDashboard} /></div>
       </section>
-      <div className="jg-trust-strip"><span>{content.trustStrip.label}</span>{content.trustStrip.items.map(x => <p key={x}><BadgeCheck size={16} /> {x}</p>)}</div>
-      <Features content={content.features} />
+      <div className="jg-trust-strip">
+        <span><T k="landing.trustStrip.label">{content.trustStrip.label}</T></span>
+        {content.trustStrip.items.map((x, i) => (
+          <p key={i}><BadgeCheck size={16} /> <T k={`landing.trustStrip.items.${i}`}>{x}</T></p>
+        ))}
+      </div>
+      <PlatformHighlights content={content.highlights} />
       <HowItWorks content={content.journeys} />
       <Testimonial content={content.testimonial} />
-      <PortalShowcase content={content.portals} />
       <CTA content={content.cta} />
     </main>
   );

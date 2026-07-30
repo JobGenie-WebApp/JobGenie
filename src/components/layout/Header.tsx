@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { useLandingSectionSpy } from '@/hooks/useLandingSectionSpy';
 import { navigationContent } from '@/content/site';
 import type { SiteNavigationContent } from '@/content/types';
+import { T, navKey } from '@/components/cms/T';
 import { cn } from '@/lib/utils';
 
 export function Header({
@@ -18,10 +20,18 @@ export function Header({
 }) {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    /** Order matches section layout on the landing page (top -> bottom). */
+    const pathname = usePathname();
     const navLinks = navigation.links.length ? navigation.links : navigationContent.links;
-    const navLinkIds = navLinks.map((l) => l.id);
+    const navLinkIds = useMemo(
+        () => navLinks.filter((link) => link.href.startsWith('#')).map((link) => link.id),
+        [navLinks],
+    );
     const activeId = useLandingSectionSpy(navLinkIds);
+    const isLinkActive = (href: string, id: string) => (
+        href.startsWith('#')
+            ? activeId === id
+            : pathname === href || pathname.startsWith(`${href}/`)
+    );
 
     useEffect(() => {
         const fn = () => setScrolled(window.scrollY > 20);
@@ -29,9 +39,9 @@ export function Header({
         return () => window.removeEventListener('scroll', fn);
     }, []);
 
-    // Close menu on resize to desktop
+    // Close the compact menu when the full navigation becomes visible.
     useEffect(() => {
-        const fn = () => { if (window.innerWidth >= 768) setMobileOpen(false); };
+        const fn = () => { if (window.innerWidth >= 1280) setMobileOpen(false); };
         window.addEventListener('resize', fn);
         return () => window.removeEventListener('resize', fn);
     }, []);
@@ -55,53 +65,58 @@ export function Header({
                 className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 no-underline">
                 <div className="jg-brand-mark"><Sparkles size={18} /></div>
                 <span style={{ fontWeight: 700, fontSize: 'clamp(17px, 4.5vw, 22px)', letterSpacing: '-0.02em', color: 'var(--lp-text)', whiteSpace: 'nowrap' }}>
-                    Job<span style={{ color: 'var(--c-green)', fontWeight: 900 }}>Genie</span>
+                    <T k="navigation.brand.prefix">{navigation.brand.prefix}</T>
+                    <span style={{ color: 'var(--c-green)', fontWeight: 900 }}>
+                        <T k="navigation.brand.suffix">{navigation.brand.suffix}</T>
+                    </span>
                 </span>
             </Link>
 
-            {/* Desktop nav — hidden below md */}
-            <nav className="hidden md:flex flex-1 justify-center gap-0.5">
+            {/* Desktop nav */}
+            <nav className="hidden xl:flex flex-1 justify-center gap-0.5">
                 {navLinks.map((l) => {
-                    const isActive = activeId === l.id;
+                    const isActive = isLinkActive(l.href, l.id);
                     return (
-                        <a
+                        <Link
                             key={l.href}
                             href={l.href}
                             className={cn('lp-header-nav-link', isActive && 'is-active')}
-                            aria-current={isActive ? 'location' : undefined}
+                            aria-current={isActive ? (l.href.startsWith('#') ? 'location' : 'page') : undefined}
                         >
-                            <span className="lp-header-nav-link__label">{l.label}</span>
-                        </a>
+                            <span className="lp-header-nav-link__label">
+                                <T k={navKey(l.cmsId, 'label')}>{l.label}</T>
+                            </span>
+                        </Link>
                     );
                 })}
             </nav>
 
             {/* Right actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-auto md:ml-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-auto xl:ml-0">
                 <ThemeToggle />
 
                 {showSignIn && (
                     <>
                         <Link href={navigation.signIn.href}
-                            className="hidden md:inline-block"
+                            className="hidden xl:inline-block"
                             style={{ padding: '7px 16px', borderRadius: 7, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-45)', fontSize: 13, fontWeight: 500, textDecoration: 'none', transition: 'all 160ms', whiteSpace: 'nowrap' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--c-green-40)'; (e.currentTarget as HTMLElement).style.background = 'var(--lp-surface)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-45)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--lp-border)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                            {navigation.signIn.label}
+                            <T k="navigation.signIn.label">{navigation.signIn.label}</T>
                         </Link>
                         <Link href={navigation.getStarted.href}
-                            className="hidden md:inline-block"
+                            className="hidden xl:inline-block"
                             style={{ padding: '8px 18px', borderRadius: 7, background: 'var(--c-green)', color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 22px var(--c-green-30)', transition: 'all 160ms', whiteSpace: 'nowrap' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 36px var(--c-green-60)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 22px var(--c-green-30)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}>
-                            {navigation.getStarted.label} →
+                            <T k="navigation.getStarted.label">{navigation.getStarted.label}</T> →
                         </Link>
                     </>
                 )}
 
-                {/* Hamburger — visible below md */}
+                {/* Compact navigation */}
                 <button
-                    className="md:hidden flex items-center justify-center rounded-lg transition-colors touch-manipulation"
+                    className="xl:hidden flex items-center justify-center rounded-lg transition-colors touch-manipulation"
                     onClick={() => setMobileOpen(o => !o)}
                     style={{ width: 'clamp(36px, 10vw, 40px)', height: 'clamp(36px, 10vw, 40px)', minWidth: 36, minHeight: 36, background: mobileOpen ? 'var(--lp-surface)' : 'none', border: '1px solid ' + (mobileOpen ? 'var(--lp-border)' : 'transparent'), cursor: 'pointer', color: 'var(--lp-text)' }}
                     aria-label="Toggle menu"
@@ -115,7 +130,7 @@ export function Header({
 
             {/* Mobile dropdown menu */}
             <div
-                className="md:hidden absolute left-0 right-0 overflow-hidden transition-all duration-300"
+                className="xl:hidden absolute left-0 right-0 overflow-hidden transition-all duration-300"
                 style={{
                     top: 'clamp(60px, 15vw, 72px)',
                     maxHeight: mobileOpen ? 500 : 0,
@@ -130,17 +145,17 @@ export function Header({
                 <div style={{ padding: 'clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px) clamp(16px, 4vw, 20px)' }}>
                     <nav className="flex flex-col gap-1 mb-4">
                         {navLinks.map((l) => {
-                            const isActive = activeId === l.id;
+                            const isActive = isLinkActive(l.href, l.id);
                             return (
-                                <a
+                                <Link
                                     key={l.href}
                                     href={l.href}
                                     onClick={() => setMobileOpen(false)}
                                     className={cn('lp-header-nav-link-mobile touch-manipulation', isActive && 'is-active')}
-                                    aria-current={isActive ? 'location' : undefined}
+                                    aria-current={isActive ? (l.href.startsWith('#') ? 'location' : 'page') : undefined}
                                 >
-                                    {l.label}
-                                </a>
+                                    <T k={navKey(l.cmsId, 'label')}>{l.label}</T>
+                                </Link>
                             );
                         })}
                     </nav>
@@ -149,12 +164,12 @@ export function Header({
                             <Link href={navigation.signIn.href} onClick={() => setMobileOpen(false)}
                                 className="flex-1 text-center touch-manipulation"
                                 style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-60)', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 500, textDecoration: 'none' }}>
-                                {navigation.signIn.label}
+                                <T k="navigation.signIn.label">{navigation.signIn.label}</T>
                             </Link>
                             <Link href={navigation.getStarted.href} onClick={() => setMobileOpen(false)}
                                 className="flex-1 text-center touch-manipulation"
                                 style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--c-green)', color: '#fff', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 20px var(--c-green-30)' }}>
-                                {navigation.getStarted.label}
+                                <T k="navigation.getStarted.label">{navigation.getStarted.label}</T>
                             </Link>
                         </div>
                     )}

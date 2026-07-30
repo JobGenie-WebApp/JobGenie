@@ -1,14 +1,6 @@
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { LandingExperience } from '@/components/landing/LandingExperience';
-import { siteContent } from '@/content/site';
+import { SiteHome } from '@/components/landing/SiteHome';
+import { getSiteContent } from '@/lib/cms/site-content';
 
-export default function Home() {
-  return (
-    <div className="landing-page jobgenie-home">
-      <Header navigation={siteContent.navigation} />
-      <LandingExperience content={siteContent.landing} />
-      <Footer content={siteContent.footer} />
-    </div>
-  );
+export default async function Home() {
+  return <SiteHome content={await getSiteContent()} />;
 }
