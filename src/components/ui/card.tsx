@@ -11,7 +11,7 @@ function Card({ className, variant = "default", ...props }: CardProps) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        "bg-card text-card-foreground flex flex-col gap-5 rounded-xl border border-border/40 py-5",
         variant === "glass" && "glass-card",
         className
       )}

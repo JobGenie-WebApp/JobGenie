@@ -37,16 +37,16 @@ function getNotificationMeta(type: string): {
     return { Icon: Clock, iconBg: "bg-amber-100 dark:bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400" };
   }
   if (type.includes("offer")) {
-    return { Icon: Gift, iconBg: "bg-violet-100 dark:bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" };
+    return { Icon: Gift, iconBg: "bg-primary/10", iconColor: "text-primary" };
   }
   if (type.includes("scheduled") || type.includes("interview")) {
-    return { Icon: Calendar, iconBg: "bg-blue-100 dark:bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400" };
+    return { Icon: Calendar, iconBg: "bg-primary/10", iconColor: "text-primary" };
   }
   if (type.includes("application") || type.includes("submitted") || type.includes("applied")) {
-    return { Icon: FileText, iconBg: "bg-sky-100 dark:bg-sky-500/15", iconColor: "text-sky-600 dark:text-sky-400" };
+    return { Icon: FileText, iconBg: "bg-primary/10", iconColor: "text-primary" };
   }
   if (type.includes("sent") || type.includes("received") || type.includes("invitation")) {
-    return { Icon: Send, iconBg: "bg-sky-100 dark:bg-sky-500/15", iconColor: "text-sky-600 dark:text-sky-400" };
+    return { Icon: Send, iconBg: "bg-primary/10", iconColor: "text-primary" };
   }
   return { Icon: Clock, iconBg: "bg-muted", iconColor: "text-muted-foreground" };
 }

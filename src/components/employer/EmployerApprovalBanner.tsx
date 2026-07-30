@@ -50,8 +50,8 @@ export function EmployerApprovalBanner({
 
     if (approvalStatus === "pending") {
         return (
-            <Alert className="mb-6 bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900 dark:text-blue-200 relative">
-                <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <Alert className="relative mb-6 border-primary/20 bg-primary/10 text-foreground">
+                <AlertCircle className="h-5 w-5 text-primary" />
                 <AlertTitle className="ml-2 font-semibold">Approval Pending</AlertTitle>
                 <AlertDescription className="ml-2 mt-1">
                     Your company profile is currently under review by our MIS, admins.
@@ -60,7 +60,7 @@ export function EmployerApprovalBanner({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 h-6 w-6 text-blue-900/40 hover:text-blue-900 hover:bg-blue-100 dark:text-blue-200/40 dark:hover:text-blue-200"
+                    className="absolute right-2 top-2 h-6 w-6 text-muted-foreground hover:bg-primary/10 hover:text-foreground"
                     onClick={handleDismiss}
                 >
                     <X className="h-4 w-4" />

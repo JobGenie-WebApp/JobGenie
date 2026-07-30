@@ -214,22 +214,22 @@ function buildColumns(invitations: Invitation[]): KanbanColumn[] {
         .map((n) => ({
             id: `round_${n}`,
             label: roundMap.get(n) || `Round ${n}`,
-            accent: "bg-violet-500",
-            headerCls: "text-violet-600 dark:text-violet-300",
-            borderCls: "border-violet-200 dark:border-violet-800/60",
-            bgCls: "bg-violet-50 dark:bg-violet-950/20",
-            countBg: "bg-violet-500",
+            accent: "bg-primary",
+            headerCls: "text-primary",
+            borderCls: "border-primary/20",
+            bgCls: "bg-primary/5",
+            countBg: "bg-primary",
         }));
 
     return [
         ...(hasInvited ? [{
             id: "invited",
             label: "Invited",
-            accent: "bg-sky-500",
-            headerCls: "text-sky-600 dark:text-sky-300",
-            borderCls: "border-sky-200 dark:border-sky-800/60",
-            bgCls: "bg-sky-50 dark:bg-sky-950/20",
-            countBg: "bg-sky-500",
+            accent: "bg-primary",
+            headerCls: "text-primary",
+            borderCls: "border-primary/20",
+            bgCls: "bg-primary/5",
+            countBg: "bg-primary",
         } as KanbanColumn] : []),
         ...roundCols,
         {
@@ -659,14 +659,14 @@ function InvitationModal({
 
                     {/* Needs confirmation (candidate accepted, employer hasn't confirmed yet) */}
                     {needsConfirmation && (
-                        <div className="rounded-xl border-2 border-blue-300 dark:border-blue-700 bg-blue-50/60 dark:bg-blue-950/20 p-4 space-y-4">
+                        <div className="space-y-4 rounded-xl border border-primary/25 bg-primary/10 p-4">
                             <div className="flex items-center gap-2.5">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
-                                    <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                                    <CheckCircle2 className="h-5 w-5 text-primary" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-blue-900 dark:text-blue-100">Action Required: Confirm Interview</p>
-                                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                                    <p className="text-sm font-bold text-foreground">Action Required: Confirm Interview</p>
+                                    <p className="text-xs text-muted-foreground">
                                         Candidate accepted for {formatUTCDate(inv.selected_time_slot?.date ?? '', "EEEE, MMM d")}
                                         {!isAlternativeSlot && inv.selected_time_slot?.time &&
                                             ` at ${formatUTCTime(inv.selected_time_slot.date, inv.selected_time_slot.time)}`}
@@ -676,7 +676,7 @@ function InvitationModal({
 
                             {isAlternativeSlot && (
                                 <div>
-                                    <label className="text-xs font-semibold mb-2 block text-blue-900 dark:text-blue-200">Select Time Slot *</label>
+                                    <label className="mb-2 block text-xs font-semibold text-foreground">Select Time Slot *</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         {["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00"].map(time => (
                                             <button
@@ -686,8 +686,8 @@ function InvitationModal({
                                                 className={cn(
                                                     "rounded-lg py-2 text-xs font-medium border transition-all",
                                                     confirmedTime === time
-                                                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                                        : "bg-white dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 hover:border-blue-400"
+                                                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                                        : "border-border bg-background text-foreground hover:border-primary/50"
                                                 )}
                                             >{time}</button>
                                         ))}
@@ -697,22 +697,22 @@ function InvitationModal({
 
                             {inv.interview_mode === "online" && (
                                 <div>
-                                    <label className="text-xs font-semibold mb-1.5 block text-blue-900 dark:text-blue-200">Meeting Link *</label>
-                                    <Input type="url" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} className="h-9 text-sm bg-white dark:bg-blue-950/30" placeholder="https://meet.google.com/... or Zoom/Teams link" />
-                                    <p className="mt-1 text-[11px] text-blue-700/80 dark:text-blue-400">{inv.meeting_link ? "Pre-filled from scheduling — edit if needed. The candidate sees it once you confirm." : "The candidate sees this link once you confirm."}</p>
+                                    <label className="mb-1.5 block text-xs font-semibold text-foreground">Meeting Link *</label>
+                                    <Input type="url" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} className="h-9 text-sm" placeholder="https://meet.google.com/... or Zoom/Teams link" />
+                                    <p className="mt-1 text-[11px] text-muted-foreground">{inv.meeting_link ? "Pre-filled from scheduling — edit if needed. The candidate sees it once you confirm." : "The candidate sees this link once you confirm."}</p>
                                 </div>
                             )}
 
                             {inv.interview_mode === "physical" && (
-                                <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white/50 dark:bg-blue-950/20 px-3 py-2.5">
-                                    <p className="text-xs text-blue-800 dark:text-blue-300">
+                                <div className="rounded-lg border border-border bg-background/60 px-3 py-2.5">
+                                    <p className="text-xs text-muted-foreground">
                                         Location was shared with the candidate at scheduling. Confirming will notify them the interview is set.
                                     </p>
-                                    {inv.interview_address && <p className="text-xs font-medium text-blue-900 dark:text-blue-200 mt-1">{inv.interview_address}</p>}
+                                    {inv.interview_address && <p className="mt-1 text-xs font-medium text-foreground">{inv.interview_address}</p>}
                                 </div>
                             )}
 
-                            <Button onClick={handleConfirm} disabled={isConfirming} className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="sm">
+                            <Button onClick={handleConfirm} disabled={isConfirming} className="w-full" size="sm">
                                 {isConfirming
                                     ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Confirming...</>
                                     : <><CheckCircle2 className="h-4 w-4 mr-2" />Confirm Interview</>}

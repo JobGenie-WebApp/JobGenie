@@ -209,7 +209,7 @@ export function EmployerProfileView({ companyId, onClose }: EmployerProfileViewP
                                         {/* Certificate Download */}
                                         <div className="col-span-2 mt-2">
                                             <p className="text-muted-foreground mb-1">Business Registration Certificate</p>
-                                            <Button variant="default" size="sm" asChild className="h-9 w-full sm:w-auto bg-blue-600 hover:bg-blue-700">
+                                            <Button variant="default" size="sm" asChild className="h-9 w-full sm:w-auto">
                                                 <a href={company.br_certificate_url} target="_blank" rel="noopener noreferrer">
                                                     <FileText className="mr-2 h-4 w-4" />
                                                     View Registration Certificate

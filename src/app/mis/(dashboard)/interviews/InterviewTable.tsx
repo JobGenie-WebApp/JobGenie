@@ -176,7 +176,7 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
             return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Responded</Badge>;
         }
         if (interview.viewed_at) {
-            return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Viewed</Badge>;
+            return <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">Viewed</Badge>;
         }
         return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Sent</Badge>;
     };
@@ -343,12 +343,12 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
                                     </TableCell>
                                     <TableCell>
                                         {interview.interview_mode === "online" ? (
-                                            <Badge variant="outline" className="gap-1 bg-blue-50 text-blue-700 border-blue-200">
+                                            <Badge variant="outline" className="gap-1 border-primary/20 bg-primary/10 text-primary">
                                                 <Video className="h-3 w-3" />
                                                 Online
                                             </Badge>
                                         ) : interview.interview_mode === "physical" ? (
-                                            <Badge variant="outline" className="gap-1 bg-purple-50 text-purple-700 border-purple-200">
+                                            <Badge variant="outline" className="gap-1 border-border bg-muted text-muted-foreground">
                                                 <MapPin className="h-3 w-3" />
                                                 Physical
                                             </Badge>

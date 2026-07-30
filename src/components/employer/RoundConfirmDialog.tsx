@@ -149,8 +149,8 @@ export function RoundConfirmDialog({
                         </div>
                     )}
 
-                    <div className="rounded-xl border border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 px-4 py-3">
-                        <p className="text-sm text-blue-900 dark:text-blue-100">
+                    <div className="rounded-xl border border-primary/20 bg-primary/[0.06] px-4 py-3">
+                        <p className="text-sm text-foreground">
                             The candidate will receive a confirmation email with all interview details.
                         </p>
                     </div>

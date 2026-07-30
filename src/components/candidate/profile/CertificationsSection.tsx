@@ -158,8 +158,8 @@ export function CertificationsSection({ certificates }: CertificationsSectionPro
                                 <div className="group relative flex gap-4">
                                     {/* Icon - hidden on mobile */}
                                     <div className="flex-shrink-0 hidden md:flex">
-                                        <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                            <Award className="h-6 w-6 text-primary" />
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                            <Award className="h-6 w-6 text-muted-foreground" />
                                         </div>
                                     </div>
 

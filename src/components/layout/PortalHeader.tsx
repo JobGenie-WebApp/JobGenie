@@ -27,8 +27,8 @@ export function PortalHeader({ notificationRole, breadcrumbOverride, scrolled }:
         <header className={cn(
             // sticky so the header stays pinned while the document scrolls (ClassPass model).
             // On scroll: shadow + a frosted translucent backdrop, matching ClassPass's after:backdrop-blur.
-            "sticky top-0 z-40 flex h-14 items-center gap-3 px-4 transition-[box-shadow,background-color] duration-200 md:px-5 rounded-t-lg",
-            scrolled ? "bg-card/80 shadow-sm backdrop-blur-lg" : "bg-card"
+            "sticky top-0 z-40 flex h-14 items-center gap-3 rounded-t-lg border-b border-border/60 px-4 transition-[box-shadow,background-color] duration-200 md:px-5",
+            scrolled ? "bg-background/88 shadow-sm backdrop-blur-lg" : "bg-background"
         )}>
             <button
                 onClick={handleToggle}

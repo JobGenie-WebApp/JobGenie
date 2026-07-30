@@ -122,8 +122,8 @@ interface ReportData {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const PIE_COLORS = ["#22c55e", "#f59e0b", "#ef4444", "#3b82f6", "#a855f7", "#06b6d4", "#f97316"];
-const AREA_COLORS = { candidates: "#3b82f6", employers: "#a855f7", mis: "#22c55e", total: "#f59e0b" };
+const PIE_COLORS = ["#15803d", "#22c55e", "#65a30d", "#4ade80", "#f59e0b", "#ef4444", "#a3e635"];
+const AREA_COLORS = { candidates: "#15803d", employers: "#22c55e", mis: "#4ade80", total: "#f59e0b" };
 
 const FILTER_TABS: { id: FilterDimension; label: string; icon: React.ElementType }[] = [
     { id: "all", label: "Overview", icon: BarChart3 },
@@ -328,7 +328,7 @@ function DonutChart({ data }: { data: NameValue[] }) {
     );
 }
 
-function SimpleAreaChart({ data, color = "#3b82f6" }: { data: TimeSeries[]; color?: string }) {
+function SimpleAreaChart({ data, color = "#22c55e" }: { data: TimeSeries[]; color?: string }) {
     if (!data || data.length === 0 || data.every(d => d.count === 0)) return <NoData />;
     return (
         <ResponsiveContainer width="100%" height={190}>
@@ -406,16 +406,16 @@ function AllView({ data }: { data: ReportData }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <KpiCard title="New Users" value={data.totalNewUsers ?? 0} icon={Users} color="text-blue-500" bgColor="bg-blue-500/10" subtitle="In period" />
-                <KpiCard title="Candidates" value={data.candidateCount ?? 0} icon={Users} color="text-green-500" bgColor="bg-green-500/10" />
-                <KpiCard title="Employers" value={data.employerCount ?? 0} icon={Building2} color="text-purple-500" bgColor="bg-purple-500/10" />
-                <KpiCard title="Companies" value={data.companyCount ?? 0} icon={Building2} color="text-orange-500" bgColor="bg-orange-500/10" />
-                <KpiCard title="Jobs Posted" value={data.jobCount ?? 0} icon={Briefcase} color="text-cyan-500" bgColor="bg-cyan-500/10" />
+                <KpiCard title="New Users" value={data.totalNewUsers ?? 0} icon={Users} color="text-primary" bgColor="bg-primary/10" subtitle="In period" />
+                <KpiCard title="Candidates" value={data.candidateCount ?? 0} icon={Users} color="text-primary" bgColor="bg-primary/10" />
+                <KpiCard title="Employers" value={data.employerCount ?? 0} icon={Building2} color="text-primary" bgColor="bg-primary/10" />
+                <KpiCard title="Companies" value={data.companyCount ?? 0} icon={Building2} color="text-primary" bgColor="bg-primary/10" />
+                <KpiCard title="Jobs Posted" value={data.jobCount ?? 0} icon={Briefcase} color="text-primary" bgColor="bg-primary/10" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <ChartCard title="New User Registrations Over Time" description="Candidates + Employers combined">
-                    <SimpleAreaChart data={allTS} color="#3b82f6" />
+                    <SimpleAreaChart data={allTS} color="#22c55e" />
                 </ChartCard>
                 <ChartCard title="Registration Source">
                     <DonutChart data={data.registrationSource || []} />
@@ -508,12 +508,12 @@ function CandidatesView({ data }: { data: ReportData }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <KpiCard title="Total Registered" value={total} icon={Users} color="text-blue-500" bgColor="bg-blue-500/10" subtitle="In period" />
-                <KpiCard title="Approved" value={approved} icon={CheckCircle} color="text-green-500" bgColor="bg-green-500/10"
+                <KpiCard title="Total Registered" value={total} icon={Users} color="text-primary" bgColor="bg-primary/10" subtitle="In period" />
+                <KpiCard title="Approved" value={approved} icon={CheckCircle} color="text-primary" bgColor="bg-primary/10"
                     subtitle={total > 0 ? `${Math.round((approved / total) * 100)}% rate` : undefined} />
                 <KpiCard title="Pending Review" value={pending} icon={Clock} color="text-yellow-500" bgColor="bg-yellow-500/10" />
                 <KpiCard title="Avg Days to Approval" value={data.avgDaysToApproval != null ? `${data.avgDaysToApproval}d` : "—"}
-                    icon={TrendingUp} color="text-purple-500" bgColor="bg-purple-500/10" />
+                    icon={TrendingUp} color="text-primary" bgColor="bg-primary/10" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -621,7 +621,7 @@ function EmployersView({ data }: { data: ReportData }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <KpiCard title="Total Employers Registered" value={data.totalEmployers ?? 0} icon={Users} color="text-purple-500" bgColor="bg-purple-500/10" subtitle="In period" />
+                <KpiCard title="Total Employers Registered" value={data.totalEmployers ?? 0} icon={Users} color="text-primary" bgColor="bg-primary/10" subtitle="In period" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -698,8 +698,8 @@ function CompaniesView({ data }: { data: ReportData }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <KpiCard title="Total Companies" value={total} icon={Building2} color="text-orange-500" bgColor="bg-orange-500/10" subtitle="Registered in period" />
-                <KpiCard title="Approved" value={approved} icon={CheckCircle} color="text-green-500" bgColor="bg-green-500/10"
+                <KpiCard title="Total Companies" value={total} icon={Building2} color="text-primary" bgColor="bg-primary/10" subtitle="Registered in period" />
+                <KpiCard title="Approved" value={approved} icon={CheckCircle} color="text-primary" bgColor="bg-primary/10"
                     subtitle={total > 0 ? `${Math.round((approved / total) * 100)}% rate` : undefined} />
                 <KpiCard title="Pending" value={data.pendingCount ?? 0} icon={Clock} color="text-yellow-500" bgColor="bg-yellow-500/10" />
                 <KpiCard title="Rejected" value={data.rejectedCount ?? 0} icon={Activity} color="text-red-500" bgColor="bg-red-500/10" />
@@ -785,9 +785,9 @@ function JobsView({ data }: { data: ReportData }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <KpiCard title="Total Jobs" value={data.totalJobs ?? 0} icon={Briefcase} color="text-green-500" bgColor="bg-green-500/10" subtitle="In period" />
+                <KpiCard title="Total Jobs" value={data.totalJobs ?? 0} icon={Briefcase} color="text-primary" bgColor="bg-primary/10" subtitle="In period" />
                 <KpiCard title="Published" value={data.statusBreakdown?.find(s => s.name === "published")?.value ?? 0}
-                    icon={CheckCircle} color="text-blue-500" bgColor="bg-blue-500/10" />
+                    icon={CheckCircle} color="text-primary" bgColor="bg-primary/10" />
                 <KpiCard title="Draft" value={data.statusBreakdown?.find(s => s.name === "draft")?.value ?? 0}
                     icon={Clock} color="text-yellow-500" bgColor="bg-yellow-500/10" />
                 <KpiCard title="Closed / Archived" value={(data.statusBreakdown?.find(s => s.name === "closed")?.value ?? 0) + (data.statusBreakdown?.find(s => s.name === "archived")?.value ?? 0)}
@@ -891,14 +891,14 @@ function ApplicationsView({ data }: { data: ReportData }) {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <KpiCard title="Applications Sent" value={total} icon={Calendar} color="text-blue-500" bgColor="bg-blue-500/10" subtitle="In period" />
-                <KpiCard title="Offers Made" value={data.offersMade ?? 0} icon={Briefcase} color="text-green-500" bgColor="bg-green-500/10" />
-                <KpiCard title="Offers Accepted" value={data.offersAccepted ?? 0} icon={CheckCircle} color="text-emerald-500" bgColor="bg-emerald-500/10" />
-                <KpiCard title="Offer Acceptance Rate" value={`${data.offerAcceptanceRate ?? 0}%`} icon={TrendingUp} color="text-purple-500" bgColor="bg-purple-500/10" />
+                <KpiCard title="Applications Sent" value={total} icon={Calendar} color="text-primary" bgColor="bg-primary/10" subtitle="In period" />
+                <KpiCard title="Offers Made" value={data.offersMade ?? 0} icon={Briefcase} color="text-primary" bgColor="bg-primary/10" />
+                <KpiCard title="Offers Accepted" value={data.offersAccepted ?? 0} icon={CheckCircle} color="text-primary" bgColor="bg-primary/10" />
+                <KpiCard title="Offer Acceptance Rate" value={`${data.offerAcceptanceRate ?? 0}%`} icon={TrendingUp} color="text-primary" bgColor="bg-primary/10" />
             </div>
 
             <ChartCard title="Applications Over Time">
-                <SimpleAreaChart data={data.applicationsOverTime || []} color="#3b82f6" />
+                <SimpleAreaChart data={data.applicationsOverTime || []} color="#22c55e" />
             </ChartCard>
 
             {data.funnel && (

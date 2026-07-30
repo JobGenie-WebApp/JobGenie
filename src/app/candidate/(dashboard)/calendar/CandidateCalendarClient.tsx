@@ -87,7 +87,7 @@ function EventDetailModal({ event, onClose }: EventDetailModalProps) {
                                 </span>
                             )}
                             {r.misRescheduled && (
-                                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Rescheduled</span>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">Rescheduled</span>
                             )}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">

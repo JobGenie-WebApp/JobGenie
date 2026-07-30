@@ -15,10 +15,10 @@ interface DashboardStatsCardProps {
 
 const colorMap = {
     blue: {
-        iconBg: "bg-blue-100 dark:bg-blue-900/20",
-        iconColor: "text-blue-600 dark:text-blue-400",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary",
         valueColor: "text-foreground",
-        border: "border-blue-100 dark:border-blue-900/30",
+        border: "border-border/50",
     },
     green: {
         iconBg: "bg-primary/10",
@@ -33,10 +33,10 @@ const colorMap = {
         border: "border-amber-100 dark:border-amber-900/30",
     },
     purple: {
-        iconBg: "bg-violet-100 dark:bg-violet-900/20",
-        iconColor: "text-violet-600 dark:text-violet-400",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary",
         valueColor: "text-foreground",
-        border: "border-violet-100 dark:border-violet-900/30",
+        border: "border-border/50",
     },
     rose: {
         iconBg: "bg-rose-100 dark:bg-rose-900/20",
@@ -45,10 +45,10 @@ const colorMap = {
         border: "border-rose-100 dark:border-rose-900/30",
     },
     cyan: {
-        iconBg: "bg-cyan-100 dark:bg-cyan-900/20",
-        iconColor: "text-cyan-600 dark:text-cyan-400",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary",
         valueColor: "text-foreground",
-        border: "border-cyan-100 dark:border-cyan-900/30",
+        border: "border-border/50",
     },
 };
 

@@ -138,7 +138,7 @@ export function VerifyEmailForm({ email }: VerifyEmailFormProps) {
                         state?.success
                             ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
                             : resendMessage && !state?.message
-                                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                                ? "bg-primary/10 text-primary"
                                 : "bg-destructive/10 text-destructive"
                     )}
                 >

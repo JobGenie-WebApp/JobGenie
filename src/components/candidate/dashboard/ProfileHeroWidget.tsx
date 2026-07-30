@@ -22,7 +22,7 @@ interface ProfileHeroWidgetProps {
 const availabilityColors: Record<string, string> = {
     available: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
     not_available: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
-    open_to_opportunities: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+    open_to_opportunities: "border-primary/20 bg-primary/10 text-primary",
 };
 
 const availabilityLabels: Record<string, string> = {
@@ -44,8 +44,7 @@ function CircularProgress({ percent }: { percent: number }) {
     const offset = circumference - (percent / 100) * circumference;
 
     const getColor = () => {
-        if (percent >= 80) return "#10b981"; // emerald
-        if (percent >= 50) return "#3b82f6"; // blue
+        if (percent >= 50) return "var(--primary)";
         return "#f59e0b"; // amber
     };
 
@@ -107,7 +106,7 @@ export function ProfileHeroWidget({ data }: ProfileHeroWidgetProps) {
     return (
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             {/* Header gradient band */}
-            <div className="h-24 bg-gradient-to-r from-primary/80 via-primary/60 to-blue-600/40 relative">
+            <div className="relative h-24 bg-gradient-to-r from-primary/70 via-primary/45 to-primary/15">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
                 {approvalStatus && (
                     <div className="absolute top-3 right-4">

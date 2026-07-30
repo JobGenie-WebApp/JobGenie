@@ -95,8 +95,8 @@ export function AboutSection({ profile }: AboutSectionProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 py-2 gap-4">
                         {profile.highest_qualification && (
                             <div className="flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-primary/10">
-                                    <GraduationCap className="h-4 w-4 text-primary" />
+                                <div className="rounded-lg bg-muted p-2">
+                                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Highest Qualification</p>
@@ -109,8 +109,8 @@ export function AboutSection({ profile }: AboutSectionProps) {
 
                         {profile.years_of_experience !== null && (
                             <div className="flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-primary/10">
-                                    <TrendingUp className="h-4 w-4 text-primary" />
+                                <div className="rounded-lg bg-muted p-2">
+                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Experience</p>
@@ -128,8 +128,8 @@ export function AboutSection({ profile }: AboutSectionProps) {
 
                         {profile.expected_monthly_salary && (
                             <div className="flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-primary/10">
-                                    <DollarSign className="h-4 w-4 text-primary" />
+                                <div className="rounded-lg bg-muted p-2">
+                                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Expected Salary</p>
@@ -142,8 +142,8 @@ export function AboutSection({ profile }: AboutSectionProps) {
 
                         {profile.notice_period && (
                             <div className="flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-primary/10">
-                                    <Clock className="h-4 w-4 text-primary" />
+                                <div className="rounded-lg bg-muted p-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Notice Period</p>
@@ -156,8 +156,8 @@ export function AboutSection({ profile }: AboutSectionProps) {
 
                         {profile.employment_type && (
                             <div className="flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-primary/10">
-                                    <Briefcase className="h-4 w-4 text-primary" />
+                                <div className="rounded-lg bg-muted p-2">
+                                    <Briefcase className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Employment Type</p>

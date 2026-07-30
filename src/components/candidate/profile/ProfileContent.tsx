@@ -17,7 +17,7 @@ import { AlertCircle } from "lucide-react";
 
 function ProfileSkeleton() {
     return (
-        <div className="space-y-6">
+        <div className="space-y-5">
             {/* Header Skeleton */}
             <Card variant="glass" className="overflow-hidden">
                 <Skeleton className="h-32 w-full" />
@@ -109,7 +109,7 @@ export function ProfileContent() {
     }
 
     return (
-        <div className="w-full space-y-6">
+        <div className="w-full space-y-5">
             {/* Profile Header */}
             <ProfileHeader profile={profile} onProfileUpdated={refreshProfile} />
 

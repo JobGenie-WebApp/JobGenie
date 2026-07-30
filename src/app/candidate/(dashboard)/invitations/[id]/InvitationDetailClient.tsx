@@ -345,7 +345,7 @@ function DetailRow({ icon, label, value, children }: { icon: React.ReactNode; la
 
 function StatusBanner({ icon, title, description, variant }: { icon: React.ReactNode; title: string; description?: string; variant: "info" | "success" | "warning" | "error" | "muted" }) {
     const styles = {
-        info:    "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200",
+        info:    "border-primary/20 bg-primary/10 text-foreground",
         success: "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-200",
         warning: "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-200",
         error:   "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/30 dark:border-red-800 dark:text-red-200",
@@ -412,7 +412,7 @@ function InterviewScheduleCard({
 
     const accent = tone === "success"
         ? { ring: "bg-emerald-500/15", icon: "text-emerald-600 dark:text-emerald-400", chip: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", grad: "from-emerald-50/70 dark:from-emerald-950/20" }
-        : { ring: "bg-indigo-500/15", icon: "text-indigo-600 dark:text-indigo-400", chip: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400", grad: "from-indigo-50/70 dark:from-indigo-950/20" };
+        : { ring: "bg-primary/15", icon: "text-primary", chip: "bg-primary/10 text-primary", grad: "from-primary/5" };
 
     return (
         <div className={cn("rounded-2xl border border-border bg-gradient-to-b to-card p-5 space-y-4 shadow-sm", accent.grad, isPast && "opacity-60")}>
@@ -1024,8 +1024,8 @@ export default function InvitationDetailClient({ invitationId, onMutateList }: {
     }, offerForJourney);
 
     const journeyPill: Record<typeof journey.variant, string> = {
-        pending: "bg-blue-500/10 text-blue-700 dark:text-blue-400 ring-blue-500/20",
-        info:    "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 ring-indigo-500/20",
+        pending: "bg-primary/10 text-primary ring-primary/20",
+        info:    "bg-primary/10 text-primary ring-primary/20",
         success: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 ring-emerald-500/20",
         warning: "bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-amber-500/20",
         danger:  "bg-red-500/10 text-red-700 dark:text-red-400 ring-red-500/20",

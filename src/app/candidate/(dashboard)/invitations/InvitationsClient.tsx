@@ -66,12 +66,12 @@ const FILTERS = [
 
 // Dot color per journey variant
 const variantDot: Record<string, string> = {
-    pending: "bg-blue-500",
-    info:    "bg-indigo-500",
-    success: "bg-emerald-500",
+    pending: "bg-primary",
+    info:    "bg-primary",
+    success: "bg-primary",
     warning: "bg-amber-500",
     danger:  "bg-red-500",
-    muted:   "bg-slate-400",
+    muted:   "bg-muted-foreground",
 };
 
 export default function InvitationsClient() {

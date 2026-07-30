@@ -32,7 +32,7 @@ const statusConfig: Record<
     completed: {
         label: "Completed",
         icon: CheckCircle,
-        classes: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+        classes: "bg-primary/10 text-primary",
     },
     rejected: {
         label: "Declined",
@@ -64,8 +64,8 @@ export function InvitationsWidget({ invitations, totalCount }: InvitationsWidget
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
-                        <Mail className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                        <Mail className="h-4 w-4 text-primary" />
                     </div>
                     <div>
                         <h3 className="text-sm font-semibold text-foreground">Job Invitations</h3>

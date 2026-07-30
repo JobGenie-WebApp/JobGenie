@@ -93,11 +93,11 @@ export function JobOfferCard({
                 };
             default:
                 return {
-                    color: 'bg-blue-500',
+                    color: 'bg-primary',
                     text: 'Pending Response',
                     icon: Clock,
-                    bgClass: 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/60 dark:to-blue-900/40',
-                    borderClass: 'border-blue-300 dark:border-blue-700'
+                    bgClass: 'bg-primary/10',
+                    borderClass: 'border-primary/20'
                 };
         }
     };
@@ -121,7 +121,7 @@ export function JobOfferCard({
             <CardContent className="p-6">
                 {/* Header */}
                 <div className="flex items-start gap-4 mb-4">
-                    <div className="h-14 w-14 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                    <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-primary">
                         <Briefcase className="h-7 w-7 text-white" />
                     </div>
                     <div className="flex-1">
@@ -131,10 +131,10 @@ export function JobOfferCard({
                                     <StatusIcon className="h-3 w-3 mr-1" />
                                     {statusConfig.text}
                                 </Badge>
-                                <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-50">
+                                <h3 className="text-2xl font-bold text-foreground">
                                     Job Offer Received! 🎉
                                 </h3>
-                                <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                                <p className="mt-1 text-sm text-muted-foreground">
                                     {companyName} has sent a formal job offer for the position of {offer.job_title}
                                 </p>
                             </div>
@@ -145,7 +145,7 @@ export function JobOfferCard({
                 {/* Offer Details */}
                 <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border space-y-3 mb-4">
                     <div className="flex items-start gap-3">
-                        <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <Briefcase className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
                         <div className="flex-1">
                             <p className="text-sm text-muted-foreground">Position</p>
                             <p className="font-semibold text-lg">{offer.job_title}</p>
@@ -169,7 +169,7 @@ export function JobOfferCard({
                         <>
                             <Separator />
                             <div className="flex items-start gap-3">
-                                <Calendar className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+                                <Calendar className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
                                 <div className="flex-1">
                                     <p className="text-sm text-muted-foreground">Proposed Start Date</p>
                                     <p className="font-semibold">
@@ -214,7 +214,7 @@ export function JobOfferCard({
                         <>
                             <Separator />
                             <div className="flex items-center gap-3">
-                                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                <FileText className="h-5 w-5 flex-shrink-0 text-primary" />
                                 <div className="flex-1">
                                     <p className="text-sm text-muted-foreground mb-2">Formal Offer Letter</p>
                                     <Link href={offer.offer_letter_url} target="_blank">
@@ -231,8 +231,8 @@ export function JobOfferCard({
 
                 {/* Response Section */}
                 {offer.status === 'pending' && !isExpired && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 dark:bg-blue-950/30 dark:border-blue-800">
-                        <p className="text-sm text-blue-800 dark:text-blue-100 mb-3 font-medium">
+                    <div className="rounded-lg border border-primary/20 bg-primary/10 p-4">
+                        <p className="mb-3 text-sm font-medium text-foreground">
                             ⏰ Action Required: Please review the offer and respond
                         </p>
                         <div className="grid gap-2 sm:grid-cols-2">

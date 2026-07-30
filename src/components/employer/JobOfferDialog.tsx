@@ -245,8 +245,8 @@ export function JobOfferDialog({
                         </p>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                        <p className="text-sm text-blue-800">
+                    <div className="rounded-md border border-primary/20 bg-primary/[0.06] p-3">
+                        <p className="text-sm text-foreground">
                             The candidate will be notified about this job offer and can accept or decline it through their dashboard.
                         </p>
                     </div>
