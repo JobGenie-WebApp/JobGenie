@@ -258,7 +258,7 @@ export async function sendMISInvitationEmail(
 <p style="margin:12px 0 0;font-size:12px;color:#92400e;"><strong>Important:</strong> You will need this password to set up your new password.</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${setupUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">Set Up Your Account</a>
+<a href="${setupUrl}" style="display:inline-block;background: #2563eb;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">Set Up Your Account</a>
 </div>
 <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:#6b7280;text-align:center;">Or copy this link: <a href="${setupUrl}" style="color:#3b82f6;">${setupUrl}</a></p>
 <div style="background-color:#fee2e2;border-left:4px solid #ef4444;border-radius:0 8px 8px 0;padding:16px 20px;margin:24px 0;">
@@ -355,7 +355,7 @@ export async function sendEmployerInvitationEmail(
 <p style="margin:12px 0 0;font-size:12px;color:#92400e;"><strong>Important:</strong> You will need this password to set up your new password.</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${setupUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">Set Up Your Account</a>
+<a href="${setupUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">Set Up Your Account</a>
 </div>
 <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:#6b7280;text-align:center;">Or copy this link: <a href="${setupUrl}" style="color:#22c55e;">${setupUrl}</a></p>
 <div style="background-color:#fee2e2;border-left:4px solid #ef4444;border-radius:0 8px 8px 0;padding:16px 20px;margin:24px 0;">
@@ -459,7 +459,7 @@ function getApprovalEmailTemplate(firstName: string, loginUrl: string): string {
                             
                             <!-- Login Button -->
                             <div style="text-align: center; margin: 32px 0;">
-                                <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);">
+                                <a href="${loginUrl}" style="display: inline-block; background: #16a34a; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);">
                                     Login to Your Account
                                 </a>
                             </div>
@@ -568,7 +568,7 @@ function getRejectionEmailTemplate(firstName: string, rejectionReason: string, l
                             
                             <!-- Login Button -->
                             <div style="text-align: center; margin: 32px 0;">
-                                <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);">
+                                <a href="${loginUrl}" style="display: inline-block; background: #d97706; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);">
                                     Update Your Profile
                                 </a>
                             </div>
@@ -766,7 +766,7 @@ function getPasswordResetEmailTemplate(firstName: string, resetUrl: string): str
 
                             <!-- Reset Button -->
                             <div style="text-align: center; margin: 32px 0;">
-                                <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);">
+                                <a href="${resetUrl}" style="display: inline-block; background: #16a34a; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);">
                                     Reset My Password
                                 </a>
                             </div>

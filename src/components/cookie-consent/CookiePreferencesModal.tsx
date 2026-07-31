@@ -104,7 +104,6 @@ export function CookiePreferencesModal() {
               Accept All
             </Button>
             <Button
-              variant="gradient"
               size="sm"
               onClick={() => savePreferences({ analytics, marketing })}
             >

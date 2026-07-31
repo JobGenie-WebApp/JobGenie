@@ -296,6 +296,9 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
         : undefined;
     const isL = (k: string) => actionLoading === k;
     const appCount = job.job_applications?.length ?? 0;
+    const canEdit =
+        ["published", "paused", "expired"].includes(job.status) ||
+        (job.status === "draft" && !pendingPr);
 
     // Apply the ATS cutoff + date sort for the applicant list.
     const cutoff = minScore.trim() === "" ? null : Number(minScore);
@@ -332,16 +335,20 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                    {canEdit && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/employer/jobs/${jobId}/edit`)}
+                        >
+                            <Pencil className="h-4 w-4 mr-1" /> Edit
+                        </Button>
+                    )}
                     {job.status === "draft" && !pendingPr && (
-                        <>
-                            <Button variant="outline" size="sm" onClick={() => router.push(`/employer/jobs/${jobId}/edit`)}>
-                                <Pencil className="h-4 w-4 mr-1" /> Edit
-                            </Button>
-                            <Button size="sm" onClick={openPublishModal}>
-                                <CreditCard className="h-4 w-4 mr-1" />
-                                Pay &amp; Publish
-                            </Button>
-                        </>
+                        <Button size="sm" onClick={openPublishModal}>
+                            <CreditCard className="h-4 w-4 mr-1" />
+                            Pay &amp; Publish
+                        </Button>
                     )}
                     {job.status === "draft" && pendingPr && (
                         <Button variant="outline" size="sm" onClick={() => router.push("/employer/payments")}>

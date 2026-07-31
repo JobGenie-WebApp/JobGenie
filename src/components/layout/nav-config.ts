@@ -192,7 +192,7 @@ export const misNav: NavGroup[] = [
     {
         label: "System",
         items: [
-            { title: "Site Content", href: "/mis/content", icon: PanelsTopLeft },
+            { title: "Site Settings", href: "/mis/content", icon: PanelsTopLeft },
             { title: "Audit Logs", href: "/mis/audit", icon: FileText },
             {
                 title: "Master Data", href: "/mis/settings", icon: Settings,

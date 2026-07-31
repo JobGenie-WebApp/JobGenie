@@ -68,6 +68,15 @@ const JOB_TYPES: Record<string, string> = {
     internship: "Internship", freelance: "Freelance",
 };
 
+const INDUSTRY_NAME_ALIASES: Record<string, string> = {
+    "it / software development": "information technology",
+};
+
+function comparableIndustryName(value: string) {
+    const normalized = value.trim().toLowerCase();
+    return INDUSTRY_NAME_ALIASES[normalized] ?? normalized;
+}
+
 // ── Salary formatter ───────────────────────────────────────────────────────────
 
 function formatSalary(min: string, max: string, currency: string) {
@@ -172,16 +181,18 @@ function DesignationCombobox({
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [designations, setDesignations] = useState<Designation[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loadedIndustryId, setLoadedIndustryId] = useState("");
     const wrapperRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const loading = Boolean(industryId) && loadedIndustryId !== industryId;
 
     useEffect(() => {
-        if (!industryId) { setDesignations([]); return; }
-        setLoading(true);
+        if (!industryId) return;
+        let cancelled = false;
         fetch(`/api/job-designations?industryId=${industryId}`)
             .then((r) => r.json())
             .then((d) => {
+                if (cancelled) return;
                 if (d.success && Array.isArray(d.data)) {
                     const seen = new Set<string>();
                     const unique = d.data.filter((des: Designation) => {
@@ -192,9 +203,14 @@ function DesignationCombobox({
                     });
                     setDesignations(unique);
                 }
+                setLoadedIndustryId(industryId);
             })
-            .catch(() => {})
-            .finally(() => setLoading(false));
+            .catch(() => {
+                if (!cancelled) setLoadedIndustryId(industryId);
+            });
+        return () => {
+            cancelled = true;
+        };
     }, [industryId]);
 
     // Close on outside click
@@ -312,9 +328,12 @@ export function JobFormClient({ mode, jobId }: Props) {
     const [loading, setLoading] = useState(mode === "edit");
     const [companyName, setCompanyName] = useState("Your Company");
     const [industries, setIndustries] = useState<Industry[]>([]);
+    const [jobStatus, setJobStatus] = useState("draft");
+    const [serverForm, setServerForm] = useState<JobFormData | null>(null);
     const [hasDraft, setHasDraft] = useState(false);
     const storageKey = mode === "create" ? "job_form_draft_new" : `job_form_draft_${jobId}`;
     const isInitialLoad = useRef(true);
+    const canEditValidity = mode === "create" || jobStatus === "draft";
 
 
     // Fetch company name + industries in parallel
@@ -353,6 +372,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                 .then((r) => r.json())
                 .then(({ job }) => {
                     if (!job) return;
+                    setJobStatus(job.status ?? "draft");
                     const loaded: JobFormData = {
                         job_title: job.job_title ?? "",
                         location: job.location ?? "",
@@ -371,6 +391,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                         custom_end_date: job.custom_end_date ? job.custom_end_date.slice(0, 10) : "",
                         advertisement_link: job.advertisement_link ?? "",
                     };
+                    setServerForm(loaded);
                     try {
                         const saved = localStorage.getItem(storageKey);
                         if (saved) {
@@ -388,6 +409,23 @@ export function JobFormClient({ mode, jobId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode, jobId]);
 
+    // Jobs store the industry name, while the form select uses the master-data ID.
+    // Resolve legacy/existing records once both payloads are available.
+    useEffect(() => {
+        if (mode !== "edit" || industries.length === 0) return;
+        setForm((current) => {
+            if (current.industry_id || !current.industry_name) return current;
+            const match = industries.find(
+                (industry) =>
+                    comparableIndustryName(industry.industry_name) ===
+                    comparableIndustryName(current.industry_name)
+            );
+            return match
+                ? { ...current, industry_id: String(match.industry_id) }
+                : current;
+        });
+    }, [form.industry_id, form.industry_name, industries, mode]);
+
     // Auto-save to localStorage
     useEffect(() => {
         if (isInitialLoad.current) return;
@@ -400,15 +438,15 @@ export function JobFormClient({ mode, jobId }: Props) {
 
     function clearDraft() {
         try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
-        setForm(INITIAL);
+        setForm(mode === "edit" && serverForm ? serverForm : INITIAL);
         setHasDraft(false);
     }
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!form.job_title.trim()) { toast.error("Job title is required"); return; }
-        if (!form.industry_id) { toast.error("Please select an industry"); return; }
-        if (form.validity_type === "custom") {
+        if (!form.industry_name.trim()) { toast.error("Please select an industry"); return; }
+        if (canEditValidity && form.validity_type === "custom") {
             if (!form.custom_start_date || !form.custom_end_date) { toast.error("Please select both start and end dates"); return; }
             const days = Math.round((new Date(form.custom_end_date).getTime() - new Date(form.custom_start_date).getTime()) / (1000 * 60 * 60 * 24));
             if (days <= 0) { toast.error("End date must be after start date"); return; }
@@ -439,10 +477,12 @@ export function JobFormClient({ mode, jobId }: Props) {
                 salary_currency: form.salary_currency,
                 experience_level: form.experience_level || null,
                 positions_available: parseInt(form.positions_available) || 1,
-                validity_days: computedValidityDays,
-                custom_start_date: customStartDate,
-                custom_end_date: customEndDate,
                 advertisement_link: form.advertisement_link || null,
+                ...(canEditValidity && {
+                    validity_days: computedValidityDays,
+                    custom_start_date: customStartDate,
+                    custom_end_date: customEndDate,
+                }),
             };
 
             const url = mode === "create" ? "/api/employer/jobs" : `/api/employer/jobs/${jobId}`;
@@ -509,7 +549,9 @@ export function JobFormClient({ mode, jobId }: Props) {
                                                 const ind = industries.find((i) => String(i.industry_id) === v);
                                                 set("industry_id", v);
                                                 set("industry_name", ind?.industry_name ?? "");
-                                                set("job_title", "");
+                                                if (ind?.industry_name !== form.industry_name) {
+                                                    set("job_title", "");
+                                                }
                                             }}
                                         >
                                             <SelectTrigger>
@@ -614,6 +656,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                         <Label>Ad Validity Period <span className="text-destructive">*</span></Label>
                                         <Select
                                             value={form.validity_type === "custom" ? "custom" : form.validity_days}
+                                            disabled={!canEditValidity}
                                             onValueChange={(v) => {
                                                 if (v === "custom") {
                                                     set("validity_type", "custom");
@@ -641,6 +684,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                                     <DateField
                                                         value={form.custom_start_date}
                                                         minDate={new Date().toISOString().slice(0, 10)}
+                                                        disabled={!canEditValidity}
                                                         onChange={(v) => set("custom_start_date", v)}
                                                         placeholder="Start date"
                                                     />
@@ -650,6 +694,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                                     <DateField
                                                         value={form.custom_end_date}
                                                         minDate={form.custom_start_date || new Date().toISOString().slice(0, 10)}
+                                                        disabled={!canEditValidity}
                                                         onChange={(v) => set("custom_end_date", v)}
                                                         placeholder="End date"
                                                     />
@@ -665,8 +710,12 @@ export function JobFormClient({ mode, jobId }: Props) {
                                                     ) : null;
                                                 })()}
                                             </div>
-                                        ) : (
+                                        ) : canEditValidity ? (
                                             <p className="text-xs text-muted-foreground">Ad stays live for this duration after payment is confirmed.</p>
+                                        ) : (
+                                            <p className="text-xs text-muted-foreground">
+                                                The paid validity period cannot be changed here. Use Extend after it expires.
+                                            </p>
                                         )}
                                     </div>
                                     <div className="space-y-1.5">

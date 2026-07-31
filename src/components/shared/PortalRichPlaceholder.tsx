@@ -28,7 +28,7 @@ export function PortalRichPlaceholder({
                     {(primaryAction || secondaryAction) && (
                         <div className="flex flex-wrap items-center justify-center gap-3 pt-3 md:justify-start">
                             {primaryAction ? (
-                                <Button variant="gradient" asChild>
+                                <Button asChild>
                                     <Link href={primaryAction.href}>{primaryAction.label}</Link>
                                 </Button>
                             ) : null}

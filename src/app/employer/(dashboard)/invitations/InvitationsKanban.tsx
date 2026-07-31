@@ -19,6 +19,7 @@ import { DateField } from "@/components/ui/date-field";
 import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InterviewRoundsDisplay } from "@/components/employer/InterviewRoundsDisplay";
+import { NextRoundDialog } from "@/components/employer/NextRoundDialog";
 
 const INTERVIEW_TIME_SLOTS = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -96,6 +97,7 @@ export interface Invitation {
     reschedule_request_reason?: string | null;
     job_offers?: { id: string; status: string } | { id: string; status: string }[] | null;
     interview_rounds?: {
+        id: string;
         round_number: number;
         round_label: string | null;
         status: string;
@@ -123,6 +125,18 @@ interface KanbanColumn {
     countBg: string;
 }
 
+function getNextRoundToSchedule(inv: Invitation): number | null {
+    const rounds = inv.interview_rounds ?? [];
+    if (rounds.length === 0) return null;
+
+    const latestRound = [...rounds].sort((a, b) => b.round_number - a.round_number)[0];
+    if (latestRound.outcome !== "advance" || latestRound.round_canceled) return null;
+
+    const nextRoundNumber = latestRound.round_number + 1;
+    const nextRoundExists = rounds.some((round) => round.round_number === nextRoundNumber);
+    return nextRoundExists ? null : nextRoundNumber;
+}
+
 function getColumnId(inv: Invitation): string {
     // Terminal pipeline states take priority regardless of cancellation
     const pipeline = inv.pipeline_status;
@@ -137,6 +151,11 @@ function getColumnId(inv: Invitation): string {
         return "offered";
     }
     if (pipeline === "offered") return "offered";
+
+    // Feedback has advanced the candidate, but the next interview has not been scheduled yet.
+    // Place the candidate in the target round so the board reflects the employer's next action.
+    const nextRoundToSchedule = getNextRoundToSchedule(inv);
+    if (nextRoundToSchedule) return `round_${nextRoundToSchedule}`;
 
     // For any MIS-rescheduled invitation, current_round_number is always authoritative.
     // The invitation started at round 1 (MIS reschedule of initial interview) but may have
@@ -302,17 +321,28 @@ function KanbanCard({ inv, onClick }: { inv: Invitation; onClick: () => void }) 
     const isRescheduled =
         (inv.mis_rescheduled && (!inv.current_round_number || inv.current_round_number <= 1)) ||
         inv.interview_rounds?.some(r => r.mis_rescheduled && r.round_number === 1 && !r.outcome);
+    const nextRoundToSchedule = getNextRoundToSchedule(inv);
+    const candidateName = `${inv.candidate.first_name} ${inv.candidate.last_name}`;
 
     return (
         <button
+            type="button"
             onClick={onClick}
+            aria-label={
+                nextRoundToSchedule
+                    ? `Open ${candidateName} and schedule Round ${nextRoundToSchedule} interview`
+                    : `Open ${candidateName} invitation details`
+            }
             className={cn(
                 "w-full text-left rounded-xl border bg-card p-3",
-                isRescheduled
+                nextRoundToSchedule
+                    ? "border-amber-300/70 dark:border-amber-700/60"
+                    : isRescheduled
                     ? "border-amber-300/60 dark:border-amber-600/40"
                     : "border-border",
-                "hover:border-primary/30 hover:shadow-md hover:-translate-y-px",
-                "active:translate-y-0 transition-all duration-150 cursor-pointer"
+                "hover:border-primary/40 hover:shadow-md hover:-translate-y-px",
+                "active:translate-y-0 transition-all duration-150 cursor-pointer",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
             )}
         >
             <div className="flex items-center gap-2.5 mb-2.5">
@@ -331,7 +361,12 @@ function KanbanCard({ inv, onClick }: { inv: Invitation; onClick: () => void }) 
             </div>
             <div className="flex items-center justify-between gap-1 flex-wrap">
                 <div className="flex items-center gap-1 flex-wrap">
-                    {isRescheduled ? (
+                    {nextRoundToSchedule ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                            Action required
+                        </span>
+                    ) : isRescheduled ? (
                         <span className="inline-flex items-center gap-1 text-[9px] font-semibold rounded-full px-1.5 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                             Rescheduled
@@ -347,6 +382,22 @@ function KanbanCard({ inv, onClick }: { inv: Invitation; onClick: () => void }) 
                     {formatTimestamp(inv.sent_at, "MMM d")}
                 </span>
             </div>
+            {nextRoundToSchedule && (
+                <div className="mt-2.5 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-amber-950 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-100">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-200">
+                        <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                        <span className="block text-[10px] font-semibold leading-4">
+                            Schedule Round {nextRoundToSchedule} interview
+                        </span>
+                        <span className="block truncate text-[9px] leading-3.5 text-amber-700 dark:text-amber-300">
+                            Advanced · next interview pending
+                        </span>
+                    </span>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                </div>
+            )}
         </button>
     );
 }
@@ -486,6 +537,13 @@ function InvitationModal({
         offer
     );
     const { className: badgeCls } = journeyVariantToEmployerBadgeProps(journey.variant);
+    const nextRoundToSchedule = getNextRoundToSchedule(inv);
+    const displayedBadgeClass = nextRoundToSchedule
+        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+        : badgeCls;
+    const displayedBadgeLabel = nextRoundToSchedule
+        ? `Round ${nextRoundToSchedule} · Scheduling required`
+        : journey.label;
     const isCanceled = inv.invitation_canceled && !inv.mis_rescheduled;
 
     // The interview process is concluded once the candidate is rejected or reaches an offer/hired
@@ -549,9 +607,9 @@ function InvitationModal({
                                         <Pencil className="h-3 w-3" />Edit
                                     </Button>
                                 )}
-                                <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5", badgeCls)}>
+                                <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5", displayedBadgeClass)}>
                                     <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                                    {journey.label}
+                                    {displayedBadgeLabel}
                                 </span>
                             </div>
                         </div>
@@ -946,6 +1004,11 @@ interface InvitationsKanbanProps {
 
 export function InvitationsKanban({ invitations, fetchInvitations }: InvitationsKanbanProps) {
     const [modalInv, setModalInv] = useState<Invitation | null>(null);
+    const [nextRoundAction, setNextRoundAction] = useState<{
+        previousRoundId: string;
+        nextRoundNumber: number;
+        candidateName: string;
+    } | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(false);
@@ -996,6 +1059,26 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
         scrollRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });
     };
 
+    const handleCardClick = (inv: Invitation) => {
+        const nextRoundNumber = getNextRoundToSchedule(inv);
+        if (nextRoundNumber) {
+            const previousRound = inv.interview_rounds?.find(
+                (round) => round.round_number === nextRoundNumber - 1 && round.outcome === "advance",
+            );
+
+            if (previousRound?.id) {
+                setNextRoundAction({
+                    previousRoundId: previousRound.id,
+                    nextRoundNumber,
+                    candidateName: `${inv.candidate.first_name} ${inv.candidate.last_name}`,
+                });
+                return;
+            }
+        }
+
+        setModalInv(inv);
+    };
+
     // When there are no invitations we still render the board itself — empty
     // columns (each showing "No candidates") rather than a generic empty state.
     return (
@@ -1031,7 +1114,7 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
                             key={col.id}
                             col={col}
                             cards={grouped.get(col.id) ?? []}
-                            onCardClick={setModalInv}
+                            onCardClick={handleCardClick}
                         />
                     ))}
                 </div>
@@ -1046,6 +1129,20 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
                     setModalInv(null);
                 }}
             />
+
+            {nextRoundAction && (
+                <NextRoundDialog
+                    previousRoundId={nextRoundAction.previousRoundId}
+                    nextRoundNumber={nextRoundAction.nextRoundNumber}
+                    candidateName={nextRoundAction.candidateName}
+                    isOpen
+                    onClose={() => setNextRoundAction(null)}
+                    onSuccess={() => {
+                        setNextRoundAction(null);
+                        fetchInvitations();
+                    }}
+                />
+            )}
         </>
     );
 }

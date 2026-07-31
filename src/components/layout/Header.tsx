@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { JobGenieLogo } from '@/components/brand/JobGenieLogo';
 import { useLandingSectionSpy } from '@/hooks/useLandingSectionSpy';
 import { navigationContent } from '@/content/site';
 import type { SiteNavigationContent } from '@/content/types';
@@ -62,14 +62,13 @@ export function Header({
         >
             {/* Logo */}
             <Link href="/"
-                className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 no-underline">
-                <div className="jg-brand-mark"><Sparkles size={18} /></div>
-                <span style={{ fontWeight: 700, fontSize: 'clamp(17px, 4.5vw, 22px)', letterSpacing: '-0.02em', color: 'var(--lp-text)', whiteSpace: 'nowrap' }}>
-                    <T k="navigation.brand.prefix">{navigation.brand.prefix}</T>
-                    <span style={{ color: 'var(--c-green)', fontWeight: 900 }}>
-                        <T k="navigation.brand.suffix">{navigation.brand.suffix}</T>
-                    </span>
-                </span>
+                className="flex-shrink-0 rounded-lg no-underline outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-green)] focus-visible:ring-offset-2">
+                <JobGenieLogo
+                    priority
+                    imageClassName="h-11 w-auto sm:h-12"
+                    wordmarkClassName="text-[var(--lp-text)]"
+                    sizes="(min-width: 640px) 48px, 44px"
+                />
             </Link>
 
             {/* Desktop nav */}

@@ -7,7 +7,6 @@ import {
     type CandidateRegistrationData,
 } from "@/lib/validations/candidate-schema";
 import { employerRegistrationSchema } from "@/lib/validations/employer-schema";
-import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import {
     generateVerificationCode,
@@ -48,6 +47,7 @@ export async function registerCandidate(
         email: formData.get("email") as string,
         password: formData.get("password") as string,
         confirmPassword: formData.get("confirmPassword") as string,
+        acceptPolicies: formData.get("acceptPolicies") === "true",
     };
 
     // Validate with Zod
@@ -1279,6 +1279,7 @@ export async function registerEmployer(
             companyName: formData.get("companyName") as string,
             businessRegistrationNo: formData.get("businessRegistrationNo") as string,
             industry: formData.get("industry") as string,
+            industryId: formData.get("industryId") as string,
             businessRegisteredAddress: formData.get("businessRegisteredAddress") as string,
             brCertificateUrl: formData.get("brCertificateUrl") as string,
         };
@@ -1293,11 +1294,13 @@ export async function registerEmployer(
             confirmPassword: formData.get("confirmPassword") as string,
             jobTitle: formData.get("jobTitle") as string,
         };
+        const acceptPolicies = formData.get("acceptPolicies") === "true";
 
         // Validate with Zod
         const validationResult = employerRegistrationSchema.safeParse({
             company: companyData,
             employer: employerData,
+            acceptPolicies,
         });
 
         if (!validationResult.success) {
@@ -1322,6 +1325,47 @@ export async function registerEmployer(
         // Create Supabase clients
         const supabase = await createClient();
         const adminClient = createAdminClient();
+
+        const [
+            { data: selectedIndustry, error: industryLookupError },
+            { data: matchingDesignations, error: designationLookupError },
+        ] = await Promise.all([
+            adminClient
+                .from("industries")
+                .select("industry_id, industry_name")
+                .eq("industry_id", validatedData.company.industryId)
+                .maybeSingle(),
+            adminClient
+                .from("job_designations")
+                .select("designation_id")
+                .eq("designation_name", validatedData.employer.jobTitle)
+                .limit(1),
+        ]);
+
+        if (industryLookupError || designationLookupError) {
+            console.error("Employer designation lookup failed:", {
+                industryLookupError,
+                designationLookupError,
+            });
+            return {
+                success: false,
+                message: "Unable to verify the selected job designation. Please try again.",
+            };
+        }
+
+        if (
+            !selectedIndustry
+            || selectedIndustry.industry_name !== validatedData.company.industry
+            || !matchingDesignations?.length
+        ) {
+            return {
+                success: false,
+                message: "Please select a valid job designation.",
+                errors: {
+                    "employer.jobTitle": ["Select a designation from the available list"],
+                },
+            };
+        }
 
         // Check if email already exists
         const { data: existingUser } = await adminClient

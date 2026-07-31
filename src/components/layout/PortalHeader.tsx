@@ -5,6 +5,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { PortalBreadcrumb } from "./PortalBreadcrumb";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { JobGenieLogo } from "@/components/brand/JobGenieLogo";
 import { PanelLeft } from "lucide-react";
 
 interface PortalHeaderProps {
@@ -37,6 +38,13 @@ export function PortalHeader({ notificationRole, breadcrumbOverride, scrolled }:
             >
                 <PanelLeft className="h-4 w-4" />
             </button>
+
+            <JobGenieLogo
+                className="md:hidden"
+                imageClassName="h-8 w-auto"
+                wordmarkClassName="!hidden"
+                sizes="32px"
+            />
 
             <div className="min-w-0 flex-1">
                 <PortalBreadcrumb breadcrumbOverride={breadcrumbOverride} />

@@ -71,7 +71,7 @@ export async function GET(request: Request) {
                 pipeline_status,
                 current_round_number,
                 job_offers(id, status),
-                interview_rounds(round_number, round_label, status, outcome, mis_rescheduled, round_canceled, given_time_slots, selected_time_slot, interview_mode, meeting_link, interview_address, map_link),
+                interview_rounds(id, round_number, round_label, status, outcome, mis_rescheduled, round_canceled, given_time_slots, selected_time_slot, interview_mode, meeting_link, interview_address, map_link),
                 candidate:candidates(id, first_name, last_name, email, phone, current_position, profile_image_url),
                 employer:employers(id, first_name, last_name)
             `)
@@ -304,4 +304,3 @@ export async function POST(request: Request) {
         );
     }
 }
-

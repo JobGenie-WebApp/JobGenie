@@ -816,6 +816,18 @@ model InterviewRound {
   interview_address   String?        @db.Text
   map_link            String?        @db.Text
   confirmed_at        DateTime?      @db.Timestamptz(6)
+  assessment_delivery_mode AssessmentDeliveryMode?
+  assessment_deadline      DateTime? @db.Timestamptz(6)
+  assessment_link          String?   @db.Text
+  assessment_attachment_path String? @db.Text
+  assessment_attachment_name String? @db.VarChar(255)
+  assessment_start_at       DateTime? @db.Timestamptz(6)
+  assessment_end_at         DateTime? @db.Timestamptz(6)
+  assessment_submission_file_path String? @db.Text
+  assessment_submission_file_name String? @db.VarChar(255)
+  assessment_submission_file_type String? @db.VarChar(100)
+  assessment_submission_links Json?
+  assessment_submitted_at   DateTime? @db.Timestamptz(6)
 
   // ---- Cancellation ----
   round_canceled      Boolean     @default(false)
@@ -1057,6 +1069,12 @@ enum InvitationStatus {
 }
 
 enum InterviewMode {
+  online
+  physical
+  assessment
+}
+
+enum AssessmentDeliveryMode {
   online
   physical
 }

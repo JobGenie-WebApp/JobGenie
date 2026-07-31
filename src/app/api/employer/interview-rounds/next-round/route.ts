@@ -4,13 +4,45 @@ import { NextResponse } from "next/server";
 import { logBusiness, logError } from "@/lib/logger";
 import { sendInterviewInvitationEmail } from "@/lib/interview-emails";
 import { getUserTimezoneByEmail } from "@/lib/user-timezone";
+import { validateUpload } from "@/lib/storage";
+
+const ASSESSMENT_BUCKET = "assessment-attachments";
+const MAX_ASSESSMENT_FILE_SIZE = 10 * 1024 * 1024;
+const ASSESSMENT_FILE_TYPES = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain",
+];
 
 // POST /api/employer/interview-rounds/next-round
 // Create the next interview round after a candidate has been advanced
 export async function POST(request: Request) {
     try {
         const authClient = await createClient();
-        const body = await request.json();
+        const contentType = request.headers.get("content-type") || "";
+        let body: Record<string, unknown>;
+        let assessmentAttachment: File | null = null;
+
+        if (contentType.includes("multipart/form-data")) {
+            const formData = await request.formData();
+            const payload = formData.get("payload");
+            if (typeof payload !== "string") {
+                return NextResponse.json({ success: false, error: "Round details are required" }, { status: 400 });
+            }
+            try {
+                body = JSON.parse(payload) as Record<string, unknown>;
+            } catch {
+                return NextResponse.json({ success: false, error: "Invalid round details" }, { status: 400 });
+            }
+            const attachment = formData.get("assessment_attachment");
+            assessmentAttachment = attachment instanceof File && attachment.size > 0 ? attachment : null;
+        } else {
+            body = await request.json() as Record<string, unknown>;
+        }
+
         const {
             previous_round_id,
             round_label,
@@ -19,17 +51,29 @@ export async function POST(request: Request) {
             interview_address,
             map_link,
             time_slots,
+            assessment_delivery_mode,
+            assessment_deadline,
+            assessment_start_at,
+            assessment_end_at,
+            assessment_link,
         } = body;
 
+        const isAssessment = interview_mode === "assessment";
+        const isPhysical = interview_mode === "physical" || (isAssessment && assessment_delivery_mode === "physical");
+
         // Validation
-        if (!previous_round_id) {
+        if (typeof previous_round_id !== "string" || !previous_round_id) {
             return NextResponse.json(
                 { success: false, error: "Previous round ID is required" },
                 { status: 400 }
             );
         }
 
-        if (!time_slots || !Array.isArray(time_slots) || time_slots.length === 0 || time_slots.length > 3) {
+        if (!["online", "physical", "assessment"].includes(String(interview_mode))) {
+            return NextResponse.json({ success: false, error: "Invalid interview mode" }, { status: 400 });
+        }
+
+        if (!isAssessment && (!Array.isArray(time_slots) || time_slots.length === 0 || time_slots.length > 3)) {
             return NextResponse.json(
                 { success: false, error: "Invalid time slots (must be 1-3)" },
                 { status: 400 }
@@ -37,13 +81,73 @@ export async function POST(request: Request) {
         }
 
         // Validate time slots
-        for (const slot of time_slots) {
-            if (!slot.date || !slot.time || !slot.order) {
+        for (const slot of Array.isArray(time_slots) ? time_slots : []) {
+            if (!slot || typeof slot !== "object") {
                 return NextResponse.json(
                     { success: false, error: "Incomplete time slot data" },
                     { status: 400 }
                 );
             }
+            const value = slot as Record<string, unknown>;
+            if (
+                typeof value.date !== "string" || !value.date
+                || typeof value.time !== "string" || !value.time
+                || typeof value.order !== "number" || value.order < 1
+            ) {
+                return NextResponse.json(
+                    { success: false, error: "Incomplete time slot data" },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (isPhysical && (typeof interview_address !== "string" || !interview_address.trim())) {
+            return NextResponse.json({ success: false, error: "A physical address is required" }, { status: 400 });
+        }
+
+        for (const [label, value] of [["Meeting link", meeting_link], ["Map link", map_link], ["Assessment link", assessment_link]] as const) {
+            if (value && (typeof value !== "string" || !isHttpUrl(value))) {
+                return NextResponse.json({ success: false, error: `${label} must be a valid http(s) URL` }, { status: 400 });
+            }
+        }
+
+        let parsedAssessmentDeadline: string | null = null;
+        let parsedAssessmentStartAt: string | null = null;
+        let parsedAssessmentEndAt: string | null = null;
+        if (isAssessment) {
+            if (assessment_delivery_mode !== "online" && assessment_delivery_mode !== "physical") {
+                return NextResponse.json({ success: false, error: "Assessment delivery mode is required" }, { status: 400 });
+            }
+            if (assessment_delivery_mode === "online") {
+                const deadline = new Date(String(assessment_deadline || ""));
+                if (Number.isNaN(deadline.getTime()) || deadline <= new Date()) {
+                    return NextResponse.json({ success: false, error: "Assessment deadline must be in the future" }, { status: 400 });
+                }
+                parsedAssessmentDeadline = deadline.toISOString();
+            } else {
+                const startAt = new Date(String(assessment_start_at || ""));
+                const endAt = new Date(String(assessment_end_at || ""));
+                if (Number.isNaN(startAt.getTime()) || startAt <= new Date()) {
+                    return NextResponse.json({ success: false, error: "Assessment start time must be in the future" }, { status: 400 });
+                }
+                if (Number.isNaN(endAt.getTime()) || endAt <= startAt) {
+                    return NextResponse.json({ success: false, error: "Assessment end time must be after the start time" }, { status: 400 });
+                }
+                parsedAssessmentStartAt = startAt.toISOString();
+                parsedAssessmentEndAt = endAt.toISOString();
+            }
+            if (assessmentAttachment) {
+                try {
+                    validateUpload(assessmentAttachment, ASSESSMENT_FILE_TYPES, MAX_ASSESSMENT_FILE_SIZE);
+                } catch (error) {
+                    return NextResponse.json(
+                        { success: false, error: error instanceof Error ? error.message : "Invalid assessment attachment" },
+                        { status: 400 },
+                    );
+                }
+            }
+        } else if (assessmentAttachment) {
+            return NextResponse.json({ success: false, error: "Attachments are only supported for assessment rounds" }, { status: 400 });
         }
 
         // Get the current user
@@ -138,30 +242,78 @@ export async function POST(request: Request) {
             );
         }
 
-        // Calculate alternative dates (same logic as invitation creation)
-        const alternativeDates = calculateAlternativeDatesArray(time_slots);
+        const typedTimeSlots = Array.isArray(time_slots) ? time_slots as { date: string; time: string; order: number }[] : [];
+        const alternativeDates = isAssessment ? [] : calculateAlternativeDatesArray(typedTimeSlots);
+        let assessmentAttachmentPath: string | null = null;
+        let assessmentAttachmentName: string | null = null;
+
+        if (isAssessment && assessmentAttachment) {
+            const { data: buckets, error: bucketListError } = await supabase.storage.listBuckets();
+            if (bucketListError) {
+                console.error("Error listing assessment storage buckets:", bucketListError);
+                return NextResponse.json({ success: false, error: "Failed to prepare attachment storage" }, { status: 500 });
+            }
+            if (!buckets?.some(bucket => bucket.name === ASSESSMENT_BUCKET)) {
+                const { error: bucketError } = await supabase.storage.createBucket(ASSESSMENT_BUCKET, {
+                    public: false,
+                    fileSizeLimit: MAX_ASSESSMENT_FILE_SIZE,
+                    allowedMimeTypes: ASSESSMENT_FILE_TYPES,
+                });
+                if (bucketError) {
+                    console.error("Error creating assessment storage bucket:", bucketError);
+                    return NextResponse.json({ success: false, error: "Failed to prepare attachment storage" }, { status: 500 });
+                }
+            }
+
+            assessmentAttachmentName = assessmentAttachment.name.slice(0, 255);
+            const safeName = assessmentAttachment.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-160);
+            assessmentAttachmentPath = `${employer.company_id}/${invitation.id}/${crypto.randomUUID()}-${safeName}`;
+            const { error: uploadError } = await supabase.storage
+                .from(ASSESSMENT_BUCKET)
+                .upload(assessmentAttachmentPath, Buffer.from(await assessmentAttachment.arrayBuffer()), {
+                    contentType: assessmentAttachment.type,
+                    upsert: false,
+                });
+            if (uploadError) {
+                console.error("Error uploading assessment attachment:", uploadError);
+                return NextResponse.json({ success: false, error: "Failed to upload assessment attachment" }, { status: 500 });
+            }
+        }
 
         // Create the next interview round
+        const now = new Date().toISOString();
         const { data: newRound, error: createError } = await supabase
             .from('interview_rounds')
             .insert({
                 invitation_id: invitation.id,
                 round_number: nextRoundNumber,
                 round_label: round_label || `Round ${nextRoundNumber}`,
-                status: 'pending',
-                interview_mode: interview_mode || 'online',
-                meeting_link: (interview_mode || 'online') === 'online' ? (meeting_link || null) : null,
-                interview_address: interview_mode === 'physical' ? (interview_address || null) : null,
-                map_link: interview_mode === 'physical' ? (map_link || null) : null,
-                given_time_slots: time_slots,
+                status: isAssessment ? 'confirmed' : 'pending',
+                interview_mode,
+                interview_confirmed: isAssessment,
+                confirmed_at: isAssessment ? now : null,
+                meeting_link: interview_mode === 'online' ? (meeting_link || null) : null,
+                interview_address: isPhysical ? interview_address : null,
+                map_link: isPhysical ? (map_link || null) : null,
+                given_time_slots: typedTimeSlots,
                 alternative_dates: alternativeDates,
-                sent_at: new Date().toISOString()
+                assessment_delivery_mode: isAssessment ? assessment_delivery_mode : null,
+                assessment_deadline: parsedAssessmentDeadline,
+                assessment_start_at: parsedAssessmentStartAt,
+                assessment_end_at: parsedAssessmentEndAt,
+                assessment_link: isAssessment ? (assessment_link || null) : null,
+                assessment_attachment_path: assessmentAttachmentPath,
+                assessment_attachment_name: assessmentAttachmentName,
+                sent_at: now
             })
             .select()
             .single();
 
         if (createError) {
             console.error('Error creating next round:', createError);
+            if (assessmentAttachmentPath) {
+                await supabase.storage.from(ASSESSMENT_BUCKET).remove([assessmentAttachmentPath]);
+            }
             return NextResponse.json(
                 { success: false, error: "Failed to create next interview round" },
                 { status: 500 }
@@ -222,9 +374,19 @@ export async function POST(request: Request) {
                 candidate.first_name,
                 company.company_name,
                 `${invitation.job_designation} - ${round_label || `Round ${nextRoundNumber}`}`,
-                time_slots,
+                typedTimeSlots,
                 invitation.id,
-                recipientTz
+                recipientTz,
+                isAssessment ? {
+                    deadline: parsedAssessmentDeadline,
+                    startAt: parsedAssessmentStartAt,
+                    endAt: parsedAssessmentEndAt,
+                    deliveryMode: assessment_delivery_mode as "online" | "physical",
+                    assessmentLink: typeof assessment_link === "string" ? assessment_link : null,
+                    attachmentName: assessmentAttachmentName,
+                    address: typeof interview_address === "string" ? interview_address : null,
+                    mapLink: typeof map_link === "string" ? map_link : null,
+                } : undefined,
             ).catch(err => console.error('Email send error:', err));
         }
 
@@ -237,7 +399,8 @@ export async function POST(request: Request) {
             { 
                 invitation_id: invitation.id, 
                 round_number: nextRoundNumber,
-                candidate_id: invitation.candidate_id
+                candidate_id: invitation.candidate_id,
+                interview_mode,
             }
         );
 
@@ -293,4 +456,13 @@ function calculateAlternativeDatesArray(timeSlots: { date: string }[]): { date: 
     }
 
     return alternatives;
+}
+
+function isHttpUrl(value: string): boolean {
+    try {
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
+    }
 }

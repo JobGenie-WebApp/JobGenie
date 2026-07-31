@@ -1,372 +1,205 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Check } from 'lucide-react';
-import { AuthCardAnimator } from '@/components/layout/AuthCardAnimator';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import Image from "next/image";
+import Link from "next/link";
+import {
+    ArrowLeft,
+    BadgeCheck,
+    Check,
+    ShieldCheck,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { JobGenieLogo } from "@/components/brand/JobGenieLogo";
+import { cn } from "@/lib/utils";
 
-// ── Cursor spotlight ──────────────────────────────────────────────────────────
-function CursorSpotlight() {
-    const [pos, setPos] = useState({ x: -9999, y: -9999 });
-    useEffect(() => {
-        const fn = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
-        window.addEventListener('mousemove', fn, { passive: true });
-        return () => window.removeEventListener('mousemove', fn);
-    }, []);
-    return (
-        <div
-            className="pointer-events-none fixed inset-0 z-1 hidden md:block"
-            style={{
-                background: `radial-gradient(520px at ${pos.x}px ${pos.y}px, rgba(0,200,80,0.07), transparent 40%)`,
-            }}
-            aria-hidden
-        />
-    );
-}
-
-// ── Animated ambient orbs ─────────────────────────────────────────────────────
-const ORBS = [
-    { size: 320, top: '-8%', left: '-6%',  duration: 22, delay: 0,  opacityDark: 0.18, opacityLight: 0.10 },
-    { size: 260, top: '55%', left: '80%',  duration: 28, delay: 6,  opacityDark: 0.14, opacityLight: 0.08 },
-    { size: 200, top: '30%', left: '42%',  duration: 34, delay: 12, opacityDark: 0.10, opacityLight: 0.06 },
-    { size: 180, top: '80%', left: '15%',  duration: 26, delay: 4,  opacityDark: 0.12, opacityLight: 0.07 },
-    { size: 140, top: '10%', left: '70%',  duration: 30, delay: 9,  opacityDark: 0.13, opacityLight: 0.07 },
-];
-
-const GLOWS = [
-    { size: 44, top: '18%', left: '22%', duration: 8,  delay: 0 },
-    { size: 36, top: '72%', left: '65%', duration: 10, delay: 2 },
-    { size: 50, top: '45%', left: '88%', duration: 9,  delay: 4 },
-    { size: 38, top: '88%', left: '38%', duration: 11, delay: 1 },
-    { size: 42, top: '5%',  left: '55%', duration: 7,  delay: 3 },
-];
-
-function AuthBackground() {
-    return (
-        <>
-            {/* Large ambient blobs — opacity differs per theme via CSS classes */}
-            <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
-                {ORBS.map((o, i) => (
-                    <div
-                        key={i}
-                        className="auth-orb absolute rounded-full"
-                        style={{
-                            width:  o.size,
-                            height: o.size,
-                            top:    o.top,
-                            left:   o.left,
-                            filter: 'blur(60px)',
-                            animation: `authOrbFloat ${o.duration}s ${o.delay}s ease-in-out infinite`,
-                            willChange: 'transform',
-                            // CSS vars swap with theme; see keyframe injection
-                            ['--op-dark' as string]: o.opacityDark,
-                            ['--op-light' as string]: o.opacityLight,
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Small sharp glows */}
-            <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
-                {GLOWS.map((g, i) => (
-                    <div
-                        key={i}
-                        className="auth-glow absolute rounded-full"
-                        style={{
-                            width:  g.size,
-                            height: g.size,
-                            top:    g.top,
-                            left:   g.left,
-                            filter: 'blur(7px)',
-                            animation: `authGlowFloat${i} ${g.duration}s ${g.delay}s ease-in-out infinite`,
-                            willChange: 'transform',
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Base atmosphere gradients — theme-aware via CSS class */}
-            <div className="auth-atmosphere pointer-events-none fixed inset-0 z-0" aria-hidden />
-
-            {/* Grid — theme-aware via CSS class */}
-            <div className="auth-grid pointer-events-none fixed inset-0 z-0" aria-hidden />
-        </>
-    );
-}
-
-// ── Keyframe + theme-aware style injection ────────────────────────────────────
-function AuthKeyframes() {
-    useEffect(() => {
-        const id = 'auth-shell-keyframes';
-        if (document.getElementById(id)) return;
-        const style = document.createElement('style');
-        style.id = id;
-        style.textContent = `
-            /* Background — dark default */
-            .auth-shell-root {
-                background-color: oklch(0.10 0.006 155);
-            }
-            /* Background — light mode */
-            :root:not(.dark) .auth-shell-root {
-                background-color: oklch(0.97 0.006 145);
-            }
-
-            /* Orbs */
-            .auth-orb {
-                background: radial-gradient(circle,
-                    rgba(0,220,80, var(--op-dark, 0.14)) 0%,
-                    rgba(0,180,60, calc(var(--op-dark, 0.14) * 0.5)) 40%,
-                    transparent 70%);
-            }
-            :root:not(.dark) .auth-orb {
-                background: radial-gradient(circle,
-                    rgba(0,180,60, var(--op-light, 0.08)) 0%,
-                    rgba(0,150,50, calc(var(--op-light, 0.08) * 0.5)) 40%,
-                    transparent 70%);
-            }
-
-            /* Small glows */
-            .auth-glow {
-                background: radial-gradient(circle, rgba(0,255,100,0.55) 0%, rgba(0,220,80,0.30) 40%, transparent 70%);
-                box-shadow: 0 0 18px rgba(0,255,100,0.35), 0 0 36px rgba(0,220,80,0.15);
-            }
-            :root:not(.dark) .auth-glow {
-                background: radial-gradient(circle, rgba(0,200,70,0.40) 0%, rgba(0,170,60,0.20) 40%, transparent 70%);
-                box-shadow: 0 0 14px rgba(0,200,70,0.25), 0 0 28px rgba(0,170,60,0.10);
-            }
-
-            /* Atmosphere */
-            .auth-atmosphere {
-                background:
-                    radial-gradient(ellipse 75% 55% at 10% 10%, oklch(0.28 0.08 155 / 0.28), transparent 55%),
-                    radial-gradient(ellipse 55% 45% at 90% 90%, oklch(0.24 0.06 175 / 0.20), transparent 50%);
-            }
-            :root:not(.dark) .auth-atmosphere {
-                background:
-                    radial-gradient(ellipse 75% 55% at 10% 10%, oklch(0.55 0.18 155 / 0.10), transparent 55%),
-                    radial-gradient(ellipse 55% 45% at 90% 90%, oklch(0.52 0.16 175 / 0.08), transparent 50%);
-            }
-
-            /* Grid */
-            .auth-grid {
-                background-image:
-                    linear-gradient(to right,  rgba(0,255,100,0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0,255,100,0.05) 1px, transparent 1px);
-                background-size: 48px 48px;
-            }
-            :root:not(.dark) .auth-grid {
-                background-image:
-                    linear-gradient(to right,  rgba(0,160,60,0.07) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0,160,60,0.07) 1px, transparent 1px);
-                background-size: 48px 48px;
-            }
-
-            /* Header — glassmorphism */
-            .auth-header {
-                background: rgba(8, 14, 10, 0.55);
-                backdrop-filter: blur(24px) saturate(180%);
-                -webkit-backdrop-filter: blur(24px) saturate(180%);
-                border-bottom: 1px solid rgba(255,255,255,0.08);
-                box-shadow: 0 1px 0 rgba(0,200,80,0.06), 0 4px 24px rgba(0,0,0,0.18);
-            }
-            :root:not(.dark) .auth-header {
-                background: rgba(247, 250, 247, 0.72);
-                backdrop-filter: blur(24px) saturate(180%);
-                -webkit-backdrop-filter: blur(24px) saturate(180%);
-                border-bottom: 1px solid rgba(0,130,50,0.14);
-                box-shadow: 0 1px 0 rgba(0,160,60,0.08), 0 4px 20px rgba(0,60,20,0.07);
-            }
-
-            /* Sidebar border */
-            .auth-sidebar {
-                border-right: 1px solid rgba(255,255,255,0.07);
-            }
-            :root:not(.dark) .auth-sidebar {
-                border-right: 1px solid rgba(0,120,50,0.10);
-            }
-
-            /* Footer border */
-            .auth-footer {
-                border-top: 1px solid rgba(255,255,255,0.06);
-            }
-            :root:not(.dark) .auth-footer {
-                border-top: 1px solid rgba(0,120,50,0.10);
-            }
-
-            /* Card */
-            .auth-card {
-                border: 1px solid rgba(255,255,255,0.13);
-                background: rgba(18,28,20,0.82);
-                box-shadow: 0 0 0 1px rgba(0,200,80,0.06), 0 20px 60px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.30);
-            }
-            :root:not(.dark) .auth-card {
-                border: 1px solid rgba(0,130,55,0.22);
-                background: rgba(255,255,255,0.96);
-                box-shadow: 0 0 0 1px rgba(0,150,60,0.08), 0 8px 40px rgba(0,60,20,0.12), 0 2px 8px rgba(0,0,0,0.06);
-            }
-
-            @keyframes authOrbFloat {
-                0%,100% { transform: translateY(0px)   scale(1);    }
-                33%      { transform: translateY(-20px) scale(1.04); }
-                66%      { transform: translateY(10px)  scale(0.97); }
-            }
-            @keyframes authGlowFloat0 {
-                0%,100% { transform: translate(0,0);        opacity:.6; }
-                50%     { transform: translate(14px,-18px); opacity:1;  }
-            }
-            @keyframes authGlowFloat1 {
-                0%,100% { transform: translate(0,0);         opacity:.5; }
-                50%     { transform: translate(-12px,16px);  opacity:.9; }
-            }
-            @keyframes authGlowFloat2 {
-                0%,100% { transform: translate(0,0);        opacity:.7; }
-                50%     { transform: translate(10px,12px);  opacity:1;  }
-            }
-            @keyframes authGlowFloat3 {
-                0%,100% { transform: translate(0,0);          opacity:.5; }
-                50%     { transform: translate(-16px,-14px);  opacity:.9; }
-            }
-            @keyframes authGlowFloat4 {
-                0%,100% { transform: translate(0,0);        opacity:.6; }
-                50%     { transform: translate(12px,20px);  opacity:1;  }
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .auth-orb, .auth-glow { animation: none !important; }
-            }
-        `;
-        document.head.appendChild(style);
-    }, []);
-    return null;
-}
-
-// ── Shell ─────────────────────────────────────────────────────────────────────
 const DEFAULT_BULLETS = [
-    'Verified employers & credential-backed candidates',
-    'Interview orchestration in one timeline',
-    'Audit-ready trails for enterprise teams',
+    "Verified employers & credential-backed candidates",
+    "Interview orchestration in one timeline",
+    "Audit-ready trails for enterprise teams",
 ];
 
-type FormWidthKey = 'md' | 'lg' | 'xl' | '2xl';
+type FormWidthKey = "md" | "lg" | "xl" | "2xl";
 
 const formMaxWidth: Record<FormWidthKey, string> = {
-    md:    'max-w-md',
-    lg:    'max-w-lg',
-    xl:    'max-w-xl',
-    '2xl': 'max-w-4xl',
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+    "2xl": "max-w-4xl",
 };
 
 export type AuthShellProps = {
-    sideHeadline:     string;
+    sideHeadline: string;
     sideDescription?: string;
-    bullets?:         string[];
-    formWidth?:       FormWidthKey;
-    bare?:            boolean;
-    children:         React.ReactNode;
+    bullets?: string[];
+    formWidth?: FormWidthKey;
+    bare?: boolean;
+    children: React.ReactNode;
 };
+
+function Brand() {
+    return (
+        <Link
+            href="/"
+            className="group inline-flex min-h-11 items-center gap-3 rounded-xl outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label="JobGenie home"
+        >
+            <JobGenieLogo
+                priority
+                imageClassName="h-12 w-auto"
+                wordmarkClassName="lg:text-white"
+            />
+        </Link>
+    );
+}
+
+function TrustPanel({
+    headline,
+    description,
+    bullets,
+}: {
+    headline: string;
+    description: string;
+    bullets: string[];
+}) {
+    return (
+        <aside className="relative hidden h-dvh min-h-0 overflow-hidden bg-[#07150e] px-8 pb-10 pt-28 text-white lg:flex lg:flex-col lg:justify-between xl:px-12">
+            <div
+                className="pointer-events-none absolute inset-0 opacity-90"
+                style={{
+                    background:
+                        "radial-gradient(circle at 15% 10%, rgba(53,199,120,.26), transparent 32%), radial-gradient(circle at 90% 70%, rgba(53,199,120,.16), transparent 36%), linear-gradient(145deg, rgba(255,255,255,.03), transparent 50%)",
+                }}
+                aria-hidden="true"
+            />
+            <div
+                className="pointer-events-none absolute inset-0 opacity-[0.14]"
+                style={{
+                    backgroundImage:
+                        "linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px)",
+                    backgroundSize: "44px 44px",
+                    maskImage: "linear-gradient(to bottom, black, transparent 80%)",
+                }}
+                aria-hidden="true"
+            />
+
+            <div className="relative z-10 max-w-lg">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200">
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    Trusted hiring workspace
+                </div>
+
+                <h2 className="mt-6 max-w-md text-3xl font-bold leading-[1.08] tracking-[-0.04em] text-white xl:text-[2.7rem]">
+                    {headline}
+                </h2>
+                <p className="mt-5 max-w-md text-[15px] leading-7 text-white/62">
+                    {description}
+                </p>
+
+                <ul className="mt-8 max-w-md space-y-3.5">
+                    {bullets.map((item) => (
+                        <li key={item} className="flex items-start gap-3 text-sm leading-6 text-white/78">
+                            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-300/15 text-emerald-300 ring-1 ring-emerald-200/20">
+                                <Check className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
+                            </span>
+                            {item}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            <div className="pointer-events-none absolute -bottom-28 -right-24 z-[1] h-[650px] w-[440px] opacity-[0.32] xl:-right-16 xl:opacity-[0.44]" aria-hidden="true">
+                <Image
+                    src="/Genie3.png"
+                    alt=""
+                    fill
+                    sizes="440px"
+                    className="object-contain object-bottom"
+                    priority
+                />
+            </div>
+
+            <div className="relative z-10 max-w-sm rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-300/15 text-emerald-300 ring-1 ring-emerald-200/20">
+                        <BadgeCheck className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                        <p className="text-sm font-semibold text-white">Built around verified trust</p>
+                        <p className="mt-0.5 text-xs leading-5 text-white/55">
+                            One secure platform for candidates and hiring teams.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    );
+}
 
 export function AuthShell({
     sideHeadline,
-    sideDescription = 'One workspace for discovery, screening, and scheduling — built for teams that treat hiring like infrastructure.',
+    sideDescription = "One workspace for discovery, screening, and scheduling — built for teams that treat hiring like infrastructure.",
     bullets = DEFAULT_BULLETS,
-    formWidth = 'md',
+    formWidth = "md",
     bare = false,
     children,
 }: AuthShellProps) {
     const year = new Date().getFullYear();
-    const mw   = formMaxWidth[formWidth];
 
     return (
-        <div className="auth-shell-root relative flex h-screen flex-col text-foreground">
-            <AuthKeyframes />
-            <AuthBackground />
-            <CursorSpotlight />
+        <div className="relative h-dvh overflow-hidden bg-background text-foreground">
+            <div className="pointer-events-none fixed inset-0 z-0 lg:left-[42%]" aria-hidden="true">
+                <div className="absolute -right-24 -top-32 h-96 w-96 rounded-full bg-primary/[0.08] blur-3xl" />
+                <div className="absolute -bottom-36 left-0 h-80 w-80 rounded-full bg-primary/[0.06] blur-3xl" />
+                <div
+                    className="absolute inset-0 opacity-[0.24] dark:opacity-[0.12]"
+                    style={{
+                        backgroundImage:
+                            "radial-gradient(circle at center, color-mix(in oklch, var(--primary) 28%, transparent) 1px, transparent 1px)",
+                        backgroundSize: "28px 28px",
+                        maskImage: "radial-gradient(circle at 60% 40%, black, transparent 72%)",
+                    }}
+                />
+            </div>
 
-            {/* ── Header ── */}
-            <header className="auth-header relative z-30 flex h-14 sm:h-16 shrink-0 items-center justify-between px-4 sm:px-6 lg:px-8">
-                <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-85">
-                    <div className="relative h-8 w-8 sm:h-9 sm:w-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-border">
-                        <Image
-                            src="/logo.jpg"
-                            alt="JobGenie"
-                            fill
-                            sizes="36px"
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                    <span className="text-[15px] sm:text-base font-bold tracking-tight text-foreground">
-                        Job<span className="text-primary">Genie</span>
-                    </span>
-                </Link>
-                <div className="flex items-center gap-1.5">
+            <header className="absolute inset-x-0 top-0 z-30 flex h-20 items-center justify-between px-4 sm:px-7 lg:px-10 xl:px-12">
+                <Brand />
+                <div className="flex items-center gap-2">
                     <ThemeToggle />
                     <Link
                         href="/"
-                        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border/80 bg-background/70 px-3.5 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
-                        <ArrowLeft className="h-3.5 w-3.5" />
-                        <span>Home</span>
+                        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                        <span className="hidden sm:inline">Back home</span>
+                        <span className="sm:hidden">Home</span>
                     </Link>
                 </div>
             </header>
 
-            {/* ── Body ── */}
-            <div className="relative z-10 flex flex-1 min-h-0">
+            <div className="relative z-10 grid h-dvh min-h-0 overflow-hidden lg:grid-cols-[42%_58%]">
+                <TrustPanel headline={sideHeadline} description={sideDescription} bullets={bullets} />
 
-                {/* Left brand column */}
-                <aside className="auth-sidebar hidden lg:flex lg:w-[300px] xl:w-[360px] shrink-0 flex-col justify-between overflow-y-auto p-8 xl:p-10">
-                    <div className="flex flex-col gap-8">
-                        <div>
-                            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.22em] text-primary mb-4">
-                                JobGenie
-                            </span>
-                            <h2 className="text-2xl xl:text-3xl font-bold leading-tight tracking-tight text-foreground">
-                                {sideHeadline}
-                            </h2>
-                            <p className="mt-4 text-sm xl:text-[15px] leading-relaxed text-muted-foreground">
-                                {sideDescription}
-                            </p>
-                        </div>
-
-                        <ul className="space-y-3">
-                            {bullets.map((item) => (
-                                <li key={item} className="flex gap-3 text-sm leading-snug text-foreground/70">
-                                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 ring-1 ring-primary/30 text-primary">
-                                        <Check className="h-3 w-3" strokeWidth={2.5} />
-                                    </span>
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground/60">© {year} JobGenie</p>
-                </aside>
-
-                {/* Right form column */}
-                <main className="flex flex-1 flex-col overflow-y-auto">
-                    <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
-                        <div className={`w-full ${mw}`}>
-                            {bare ? (
-                                children
-                            ) : (
-                                <AuthCardAnimator>
-                                    <div className="auth-card rounded-2xl backdrop-blur-sm p-6 sm:p-8">
+                <main className="flex h-dvh min-h-0 flex-col overflow-hidden pt-20">
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
+                        <div className="flex min-h-full items-center justify-center px-4 py-8 sm:px-7 sm:py-10 xl:px-12">
+                            <div className={cn("w-full", formMaxWidth[formWidth])}>
+                                {bare ? (
+                                    children
+                                ) : (
+                                    <div className="rounded-[1.5rem] border border-border/80 bg-card/95 p-6 shadow-[0_20px_70px_-36px_rgba(0,0,0,.42)] ring-1 ring-primary/[0.05] backdrop-blur-xl sm:p-8">
                                         {children}
                                     </div>
-                                </AuthCardAnimator>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    <footer className="auth-footer py-4 text-center text-[12px] text-muted-foreground/60">
-                        © {year} JobGenie
-                        <span className="mx-2 opacity-40">·</span>
-                        <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-                        <span className="mx-2 opacity-40">·</span>
-                        <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+                    <footer className="flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-border/60 bg-background/70 px-4 py-4 text-xs text-muted-foreground backdrop-blur-md">
+                        <span>© {year} JobGenie</span>
+                        <span aria-hidden="true">·</span>
+                        <Link href="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
+                        <span aria-hidden="true">·</span>
+                        <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
                     </footer>
                 </main>
             </div>

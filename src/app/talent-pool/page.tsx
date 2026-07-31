@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, MapPin, Sparkles, UsersRound } from 'lucide-react';
+import { ArrowUpRight, BriefcaseBusiness, MapPin, UsersRound } from 'lucide-react';
 import {
   DirectoryPagination,
   DirectorySearch,
@@ -17,10 +17,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-function label(value: string | null) {
-  return value ? value.replaceAll('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase()) : '';
-}
 
 export default async function TalentPoolPage({
   searchParams,
@@ -50,45 +46,43 @@ export default async function TalentPoolPage({
               description="Try another role, candidate name or industry."
             />
           ) : (
-            <div className="grid gap-px overflow-hidden border-x border-b border-[var(--jg-line)] bg-[var(--jg-line)] md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 py-4 sm:grid-cols-2 lg:grid-cols-4">
               {candidates.items.map((candidate) => {
                 const fullName = `${candidate.first_name} ${candidate.last_name}`;
                 const initials = `${candidate.first_name[0] ?? ''}${candidate.last_name[0] ?? ''}`.toUpperCase();
                 return (
-                  <article className="flex min-h-[390px] flex-col bg-white p-6 dark:bg-[#0a1510]" key={candidate.id}>
-                    <div className="flex items-start justify-between gap-4">
-                      <Avatar className="h-16 w-16 rounded-lg bg-[#dff5e7] dark:bg-white/10">
-                        {candidate.profile_image_url && <AvatarImage alt={fullName} src={candidate.profile_image_url} />}
-                        <AvatarFallback className="rounded-lg bg-transparent text-sm font-extrabold text-[var(--jg-green)]">{initials}</AvatarFallback>
-                      </Avatar>
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--jg-green)]"><BadgeCheck size={16} /> Approved</span>
-                    </div>
-                    <h2 className="mt-6 text-2xl font-bold leading-8 text-[var(--jg-ink)]">{fullName}</h2>
-                    <p className="mt-1 text-sm font-bold text-[var(--jg-green)]">{candidate.current_position}</p>
-                    <div className="mt-5 grid gap-2.5 text-sm text-[var(--jg-muted)]">
-                      <span className="flex items-center gap-2"><BriefcaseBusiness size={15} /> {candidate.industry}</span>
-                      {candidate.country && <span className="flex items-center gap-2"><MapPin size={15} /> {candidate.country}</span>}
-                      <span className="flex items-center gap-2"><Sparkles size={15} /> {candidate.years_of_experience ?? 0} years experience</span>
-                    </div>
-                    {candidate.professional_summary && (
-                      <p className="mt-5 line-clamp-3 text-sm leading-6 text-[var(--jg-muted)]">{candidate.professional_summary}</p>
-                    )}
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {(candidate.expected_positions ?? []).slice(0, 2).map((position) => (
-                        <span className="rounded-md bg-[#eef8f1] px-2.5 py-1 text-xs font-medium text-[var(--jg-ink)] dark:bg-white/5" key={position}>{position}</span>
-                      ))}
-                      {candidate.availability_status && (
-                        <span className="rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-400/10 dark:text-amber-200">
-                          {label(candidate.availability_status)}
+                  <Link
+                    aria-label={`View ${fullName}`}
+                    className="group rounded-xl border border-[var(--jg-line)] bg-white outline-none transition hover:-translate-y-0.5 hover:border-green-600/35 hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--jg-green)] focus-visible:ring-offset-2 dark:bg-[#0a1510]"
+                    href="/employer/signup"
+                    key={candidate.id}
+                  >
+                    <article className="flex min-h-[176px] h-full flex-col p-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar className="h-11 w-11 shrink-0 rounded-lg bg-[#dff5e7] dark:bg-white/10">
+                          {candidate.profile_image_url && <AvatarImage alt={fullName} className="object-cover" src={candidate.profile_image_url} />}
+                          <AvatarFallback className="rounded-lg bg-transparent text-xs font-extrabold text-[var(--jg-green)]">{initials}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <h2 className="truncate text-sm font-bold text-[var(--jg-ink)]">{fullName}</h2>
+                          <p className="mt-0.5 truncate text-xs font-bold text-[var(--jg-green)]">
+                            {candidate.current_position || 'Open to opportunities'}
+                          </p>
+                        </div>
+                        <ArrowUpRight className="shrink-0 text-[var(--jg-muted)] transition group-hover:text-[var(--jg-green)]" size={15} aria-hidden="true" />
+                      </div>
+                      <div className="mt-auto grid gap-1.5 border-t border-[var(--jg-line)] pt-3 text-xs text-[var(--jg-muted)]">
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <BriefcaseBusiness className="shrink-0" size={13} aria-hidden="true" />
+                          <span className="truncate">{candidate.industry}</span>
                         </span>
-                      )}
-                    </div>
-                    <div className="mt-auto border-t border-[var(--jg-line)] pt-5">
-                      <Link className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[var(--jg-ink)] hover:text-[var(--jg-green)]" href="/employer/signup">
-                        Connect with this talent <ArrowRight size={16} />
-                      </Link>
-                    </div>
-                  </article>
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <MapPin className="shrink-0" size={13} aria-hidden="true" />
+                          <span className="truncate">{candidate.country || 'Location not specified'}</span>
+                        </span>
+                      </div>
+                    </article>
+                  </Link>
                 );
               })}
             </div>

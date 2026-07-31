@@ -20,7 +20,13 @@ import {
     Loader2,
     MessageSquare,
     Video,
-    MapPinned
+    MapPinned,
+    ClipboardCheck,
+    CalendarClock,
+    FileText,
+    Globe,
+    Download,
+    Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatUTCDate, formatUTCTime, formatTimestamp } from "@/lib/date-utils";
@@ -70,6 +76,15 @@ interface InterviewRound {
     meeting_link: string | null;
     interview_address: string | null;
     map_link?: string | null;
+    assessment_delivery_mode?: "online" | "physical" | null;
+    assessment_deadline?: string | null;
+    assessment_start_at?: string | null;
+    assessment_end_at?: string | null;
+    assessment_link?: string | null;
+    assessment_attachment_name?: string | null;
+    assessment_submission_file_name?: string | null;
+    assessment_submission_links?: string[] | null;
+    assessment_submitted_at?: string | null;
     given_time_slots?: InterviewTimeSlot[] | null;
     round_canceled?: boolean;
     canceled_by?: string | null;
@@ -89,6 +104,41 @@ interface InterviewRoundsDisplayProps {
     autoSeed?: boolean;
     /** When true, renders the current active round's details as a top card (like the MIS card) */
     showActiveRoundCard?: boolean;
+}
+
+function CandidateAssessmentSubmission({ round }: { round: InterviewRound }) {
+    if (!round.assessment_submitted_at) {
+        return (
+            <div className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+                No candidate submission yet.
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900 dark:bg-emerald-950/20">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Submitted {formatTimestamp(round.assessment_submitted_at, "MMM d, yyyy 'at' h:mm a")}
+            </div>
+            <div className="flex flex-wrap gap-2">
+                {round.assessment_submission_file_name && (
+                    <Button variant="outline" size="sm" className="h-8 max-w-full bg-background text-xs" asChild>
+                        <a href={`/api/employer/interview-rounds/${round.id}/assessment-submission`}>
+                            <Download className="mr-1.5 h-3.5 w-3.5 shrink-0" /><span className="max-w-56 truncate">{round.assessment_submission_file_name}</span>
+                        </a>
+                    </Button>
+                )}
+                {(round.assessment_submission_links ?? []).map(link => (
+                    <Button key={link} variant="outline" size="sm" className="h-8 max-w-full bg-background text-xs" asChild>
+                        <a href={link} target="_blank" rel="noopener noreferrer">
+                            <Link2 className="mr-1.5 h-3.5 w-3.5 shrink-0" /><span className="max-w-56 truncate">{link}</span>
+                        </a>
+                    </Button>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 function NoRoundsState({
@@ -516,11 +566,36 @@ export function InterviewRoundsDisplay({
                 return (
                     <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-4">
                         <div className="flex items-center gap-2 mb-3">
-                            <Calendar className="h-4 w-4 text-primary" />
+                            {mode === "assessment" ? <ClipboardCheck className="h-4 w-4 text-primary" /> : <Calendar className="h-4 w-4 text-primary" />}
                             <span className="text-sm font-semibold">{label}</span>
                             <span className="ml-auto text-xs text-muted-foreground capitalize">{activeRound.status}</span>
                         </div>
-                        {slot ? (
+                        {mode === "assessment" ? (
+                            <div className="space-y-2 text-xs">
+                                {activeRound.assessment_delivery_mode === "online" && activeRound.assessment_deadline && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-2">
+                                        <CalendarClock className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                        <span>Due {formatTimestamp(activeRound.assessment_deadline, "MMM d, yyyy 'at' h:mm a")}</span>
+                                    </div>
+                                )}
+                                {activeRound.assessment_delivery_mode === "physical" && activeRound.assessment_start_at && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-2">
+                                        <CalendarClock className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                        <span>Starts {formatTimestamp(activeRound.assessment_start_at, "MMM d, yyyy 'at' h:mm a")}</span>
+                                    </div>
+                                )}
+                                {activeRound.assessment_delivery_mode === "physical" && activeRound.assessment_end_at && (
+                                    <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-2">
+                                        <Clock className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                        <span>Ends {formatTimestamp(activeRound.assessment_end_at, "MMM d, yyyy 'at' h:mm a")}</span>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-2">
+                                    {activeRound.assessment_delivery_mode === "physical" ? <MapPinned className="h-3.5 w-3.5 shrink-0 text-primary" /> : <Globe className="h-3.5 w-3.5 shrink-0 text-primary" />}
+                                    <span className="capitalize">{activeRound.assessment_delivery_mode} assessment</span>
+                                </div>
+                            </div>
+                        ) : slot ? (
                             <div className="grid grid-cols-3 gap-2 text-xs">
                                 <div className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-2">
                                     <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -571,6 +646,29 @@ export function InterviewRoundsDisplay({
                             <div className="flex items-start gap-2 mt-2 text-xs text-muted-foreground">
                                 <MapPinned className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                                 <span>{activeRound.interview_address}</span>
+                            </div>
+                        )}
+                        {mode === "assessment" && activeRound.assessment_link && (
+                            <Button variant="outline" size="sm" className="mt-2 h-8 text-xs" asChild>
+                                <a href={activeRound.assessment_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Open assessment</a>
+                            </Button>
+                        )}
+                        {mode === "assessment" && activeRound.assessment_delivery_mode === "physical" && activeRound.interview_address && (
+                            <div className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+                                <MapPinned className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                <span>{activeRound.interview_address}</span>
+                            </div>
+                        )}
+                        {mode === "assessment" && activeRound.assessment_attachment_name && (
+                            <Button variant="outline" size="sm" className="mt-2 h-8 min-w-0 text-xs" asChild>
+                                <a href={`/api/employer/interview-rounds/${activeRound.id}/assessment-attachment`}>
+                                    <Download className="mr-1.5 h-3.5 w-3.5 shrink-0" /><span className="max-w-48 truncate">{activeRound.assessment_attachment_name}</span>
+                                </a>
+                            </Button>
+                        )}
+                        {mode === "assessment" && activeRound.assessment_delivery_mode === "online" && (
+                            <div className="mt-3">
+                                <CandidateAssessmentSubmission round={activeRound} />
                             </div>
                         )}
                     </div>
@@ -780,6 +878,63 @@ export function InterviewRoundsDisplay({
                                         {shouldShowInterviewDetails && !round.mis_rescheduled && !(showActiveRoundCard && isDone === false && round.round_number > 1) && (() => {
                                             const slot = round.selected_time_slot;
                                             const mis = round.mis_reschedule_data;
+                                            if (round.interview_mode === "assessment") {
+                                                return (
+                                                    <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                                                        <p className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                                                            <ClipboardCheck className="h-3.5 w-3.5 text-primary" />Assessment Details
+                                                        </p>
+                                                        <div className="grid gap-2 text-sm">
+                                                            {round.assessment_delivery_mode === "online" && round.assessment_deadline && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                    <span>Due {formatTimestamp(round.assessment_deadline, "MMM d, yyyy 'at' h:mm a")}</span>
+                                                                </div>
+                                                            )}
+                                                            {round.assessment_delivery_mode === "physical" && round.assessment_start_at && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                    <span>Starts {formatTimestamp(round.assessment_start_at, "MMM d, yyyy 'at' h:mm a")}</span>
+                                                                </div>
+                                                            )}
+                                                            {round.assessment_delivery_mode === "physical" && round.assessment_end_at && (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                    <span>Ends {formatTimestamp(round.assessment_end_at, "MMM d, yyyy 'at' h:mm a")}</span>
+                                                                </div>
+                                                            )}
+                                                            <div className="flex items-center gap-2">
+                                                                {round.assessment_delivery_mode === "physical" ? <MapPinned className="h-3.5 w-3.5 text-muted-foreground" /> : <Globe className="h-3.5 w-3.5 text-muted-foreground" />}
+                                                                <span className="capitalize">{round.assessment_delivery_mode} assessment</span>
+                                                            </div>
+                                                            {round.assessment_delivery_mode === "physical" && round.interview_address && (
+                                                                <div className="flex items-start gap-2">
+                                                                    <MapPinned className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                                                    <span>{round.interview_address}</span>
+                                                                </div>
+                                                            )}
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {round.assessment_link && (
+                                                                    <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+                                                                        <a href={round.assessment_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Open assessment</a>
+                                                                    </Button>
+                                                                )}
+                                                                {round.assessment_attachment_name && (
+                                                                    <Button variant="outline" size="sm" className="h-8 min-w-0 text-xs" asChild>
+                                                                        <a href={`/api/employer/interview-rounds/${round.id}/assessment-attachment`}>
+                                                                            <Download className="mr-1.5 h-3.5 w-3.5 shrink-0" /><span className="max-w-48 truncate">{round.assessment_attachment_name}</span>
+                                                                        </a>
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                            {round.assessment_attachment_name && (
+                                                                <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="h-3.5 w-3.5" />Secure assessment attachment</p>
+                                                            )}
+                                                            {round.assessment_delivery_mode === "online" && <CandidateAssessmentSubmission round={round} />}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
                                             // Confirmed round: show selected slot
                                             if (slot || mis) {
                                                 const date = slot?.date ?? mis?.date;

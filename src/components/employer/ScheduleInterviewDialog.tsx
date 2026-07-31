@@ -22,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { DateField } from "@/components/ui/date-field";
-import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +72,14 @@ function getAvailableTimeOptions(dateStr: string): string[] {
             return slotTime.getTime() > now.getTime() + 30 * 60 * 1000;
         })
         .map((t) => t.label);
+}
+
+function formatTimeLabel(value: string): string {
+    const [hourValue, minute] = value.split(":");
+    const hour = Number(hourValue);
+    const period = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minute} ${period}`;
 }
 
 export function ScheduleInterviewDialog({
@@ -223,85 +230,121 @@ export function ScheduleInterviewDialog({
 
                 <div className="space-y-4 py-4">
                     {/* Time Slots Section */}
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <Label>Available Time Slots *</Label>
+                    <fieldset>
+                        <legend className="text-sm font-semibold text-foreground">
+                            Available Time Slots <span className="text-destructive">*</span>
+                        </legend>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                            Add up to three options for the candidate to choose from.
+                        </p>
+
+                        <div className="mt-3 space-y-2.5">
+                            {timeSlots.map((slot, index) => {
+                                const dateFieldId = `interview-slot-date-${slot.id}`;
+                                const timeFieldId = `interview-slot-time-${slot.id}`;
+
+                                return (
+                                    <div
+                                        key={slot.id}
+                                        className="rounded-xl border border-border bg-muted/20 p-3.5 shadow-xs"
+                                    >
+                                        <div className="mb-3 flex min-h-9 items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                                                    {index + 1}
+                                                </span>
+                                                <span className="text-sm font-medium text-foreground">
+                                                    Time slot {index + 1}
+                                                </span>
+                                            </div>
+                                            {timeSlots.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => removeTimeSlot(slot.id)}
+                                                    disabled={sending}
+                                                    className="h-9 w-9 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                                    aria-label={`Remove time slot ${index + 1}`}
+                                                >
+                                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor={dateFieldId} className="text-xs font-medium">
+                                                    Date <span className="text-destructive">*</span>
+                                                </Label>
+                                                <DateField
+                                                    id={dateFieldId}
+                                                    value={slot.date}
+                                                    onChange={(v) => updateSlotDate(slot.id, v)}
+                                                    placeholder="Select date"
+                                                    minDate={today}
+                                                    disabled={sending}
+                                                    triggerClassName="h-10 rounded-lg"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor={timeFieldId} className="text-xs font-medium">
+                                                    Time <span className="text-destructive">*</span>
+                                                </Label>
+                                                <Select
+                                                    value={slot.time}
+                                                    onValueChange={(v) => updateSlotTime(slot.id, v)}
+                                                    disabled={sending}
+                                                >
+                                                    <SelectTrigger
+                                                        id={timeFieldId}
+                                                        className="h-10 w-full rounded-lg"
+                                                    >
+                                                        <SelectValue placeholder="Select time" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {(() => {
+                                                            const opts = getAvailableTimeOptions(slot.date);
+                                                            return opts.length === 0 ? (
+                                                                <div className="px-3 py-2 text-sm text-muted-foreground">
+                                                                    No slots available for today
+                                                                </div>
+                                                            ) : (
+                                                                opts.map((t) => (
+                                                                    <SelectItem key={t} value={t}>
+                                                                        {formatTimeLabel(t)}
+                                                                    </SelectItem>
+                                                                ))
+                                                            );
+                                                        })()}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
                                 onClick={addTimeSlot}
                                 disabled={timeSlots.length >= 3 || sending}
+                                className="h-10 justify-center gap-2 border-dashed sm:w-auto"
                             >
-                                <Plus className="h-4 w-4 mr-1" />
-                                Add Time Slot
+                                <Plus className="h-4 w-4" aria-hidden="true" />
+                                {timeSlots.length >= 3 ? "Maximum slots added" : "Add another time slot"}
                             </Button>
+                            <p
+                                className="text-xs text-muted-foreground sm:ml-auto"
+                                aria-live="polite"
+                            >
+                                {timeSlots.length} of 3 slots added
+                            </p>
                         </div>
-
-                        {timeSlots.map((slot, index) => (
-                            <Card key={slot.id} className="p-4">
-                                <div className="flex items-start justify-between mb-3">
-                                    <Label className="font-medium">Time Slot {index + 1}</Label>
-                                    {timeSlots.length > 1 && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => removeTimeSlot(slot.id)}
-                                            disabled={sending}
-                                        >
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    )}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground">Date *</Label>
-                                        <DateField
-                                            value={slot.date}
-                                            onChange={(v) => updateSlotDate(slot.id, v)}
-                                            placeholder="Select date"
-                                            minDate={today}
-                                            disabled={sending}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-muted-foreground">Time Slot *</Label>
-                                        <Select
-                                            value={slot.time}
-                                            onValueChange={(v) => updateSlotTime(slot.id, v)}
-                                            disabled={sending}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select time" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {(() => {
-                                                    const opts = getAvailableTimeOptions(slot.date);
-                                                    return opts.length === 0 ? (
-                                                        <div className="px-3 py-2 text-sm text-muted-foreground">
-                                                            No slots available for today
-                                                        </div>
-                                                    ) : (
-                                                        opts.map((t) => (
-                                                            <SelectItem key={t} value={t}>
-                                                                {t}
-                                                            </SelectItem>
-                                                        ))
-                                                    );
-                                                })()}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-
-                        <p className="text-xs text-muted-foreground">
-                            {timeSlots.length} of 3 time slots added
-                        </p>
-                    </div>
+                    </fieldset>
 
                     {/* Interview Mode Section */}
                     <div className="space-y-3">

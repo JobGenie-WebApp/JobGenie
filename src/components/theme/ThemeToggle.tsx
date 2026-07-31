@@ -37,7 +37,7 @@ export function ThemeToggle() {
 
     if (!mounted) {
         return (
-            <Button variant="ghost" size="icon" className="hover:bg-primary/10" aria-hidden>
+            <Button variant="ghost" size="icon" className="size-11 hover:bg-primary/10" aria-hidden>
                 <Sun className="h-5 w-5 text-primary opacity-60" />
                 <span className="sr-only">Loading theme control</span>
             </Button>
@@ -52,7 +52,7 @@ export function ThemeToggle() {
             type="button"
             variant="ghost"
             size="icon"
-            className="hover:bg-primary/10"
+            className="size-11 hover:bg-primary/10"
             onClick={cycle}
             title={`Next: ${upcoming === 'light' ? 'Light' : upcoming === 'dark' ? 'Dark' : 'System'}`}
             aria-label={label}

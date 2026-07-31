@@ -9,13 +9,13 @@ import { useIndustries } from "@/hooks/useIndustries";
 import { cn } from "@/lib/utils";
 
 const inputCls = cn(
-    "w-full rounded-xl border border-border bg-muted/40 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60",
-    "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 focus:bg-background transition-all",
+    "min-h-12 w-full rounded-xl border border-border/80 bg-background/70 px-4 text-base text-foreground shadow-sm placeholder:text-muted-foreground/60 sm:text-sm",
+    "outline-none transition-[border-color,box-shadow,background-color] duration-200 focus:border-primary/60 focus:bg-background focus:ring-4 focus:ring-primary/10",
 );
-const labelCls = "block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5";
+const labelCls = "mb-2 block text-sm font-semibold text-foreground";
 
 interface CompanyInfoStepProps {
-    data: { companyName: string; businessRegistrationNo: string; industry: string; businessRegisteredAddress: string; brCertificateUrl: string; };
+    data: { companyName: string; businessRegistrationNo: string; industry: string; industryId: string; businessRegisteredAddress: string; brCertificateUrl: string; };
     onChange: (data: CompanyInfoStepProps["data"]) => void;
     onNext: () => void;
     onFileVerified: (verified: boolean) => void;
@@ -30,6 +30,22 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
     const set = (field: keyof typeof data, value: string) => {
         onChange({ ...data, [field]: value });
         if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
+    };
+
+    const setIndustry = (industryName: string) => {
+        const selectedIndustry = industries.find((industry) => industry.industry_name === industryName);
+        onChange({
+            ...data,
+            industry: industryName,
+            industryId: selectedIndustry ? String(selectedIndustry.industry_id) : "",
+        });
+        if (errors.industry) {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next.industry;
+                return next;
+            });
+        }
     };
 
     const validate = () => {
@@ -48,7 +64,7 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
     };
 
     return (
-        <div className="rounded-2xl border border-border bg-card/80 p-6 space-y-5 shadow-sm">
+        <div className="space-y-6 rounded-2xl border border-border/80 bg-card/95 p-5 shadow-[0_16px_50px_-36px_rgba(0,0,0,.5)] ring-1 ring-primary/[0.04] sm:p-7">
             {/* Header */}
             <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-primary/15 ring-1 ring-primary/25 flex items-center justify-center flex-shrink-0">
@@ -63,25 +79,25 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
             {/* Warning notice */}
             <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.08] px-4 py-3">
                 <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-300/90 leading-relaxed">
+                <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300">
                     Company name & Business registration number must match your BR certificate exactly. Please verify before continuing.
                 </p>
             </div>
 
             {/* Company Name */}
             <div>
-                <label htmlFor="companyName" className={labelCls}>Company Name <span className="text-red-400/80">*</span></label>
+                <label htmlFor="companyName" className={labelCls}>Company Name <span className="text-destructive">*</span></label>
                 <input id="companyName" placeholder="Enter your company name" value={data.companyName}
                     onChange={e => set("companyName", e.target.value)}
                     className={cn(inputCls, errors.companyName && "border-red-500/50")} />
-                {errors.companyName && <p className="mt-1.5 text-xs text-red-400">{errors.companyName}</p>}
+                {errors.companyName && <p className="mt-1.5 text-xs text-destructive" role="alert">{errors.companyName}</p>}
             </div>
 
             {/* BR Number */}
             <div>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="mb-2 flex items-center gap-2">
                     <label htmlFor="businessRegistrationNo" className={cn(labelCls, "mb-0")}>
-                        Business Registration No <span className="text-red-400/80">*</span>
+                        Business Registration No <span className="text-destructive">*</span>
                     </label>
                     <TooltipProvider>
                         <Tooltip>
@@ -104,16 +120,16 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
                 <input id="businessRegistrationNo" placeholder="e.g., PV 12345678"
                     value={data.businessRegistrationNo} onChange={e => set("businessRegistrationNo", e.target.value)}
                     className={cn(inputCls, errors.businessRegistrationNo && "border-red-500/50")} />
-                {errors.businessRegistrationNo && <p className="mt-1.5 text-xs text-red-400">{errors.businessRegistrationNo}</p>}
+                {errors.businessRegistrationNo && <p className="mt-1.5 text-xs text-destructive" role="alert">{errors.businessRegistrationNo}</p>}
             </div>
 
             {/* Industry */}
             <div>
-                <label htmlFor="industry" className={labelCls}>Industry <span className="text-red-400/80">*</span></label>
-                <Select value={data.industry} onValueChange={v => set("industry", v)} disabled={industriesLoading || industries.length === 0}>
-                    <SelectTrigger className={cn(
-                        "rounded-xl border border-border bg-muted/40 text-sm text-foreground h-[42px]",
-                        "focus:ring-2 focus:ring-primary/40 focus:border-primary/60",
+                <label htmlFor="industry" className={labelCls}>Industry <span className="text-destructive">*</span></label>
+                <Select value={data.industry} onValueChange={setIndustry} disabled={industriesLoading || industries.length === 0}>
+                    <SelectTrigger id="industry" className={cn(
+                        "h-12 w-full rounded-xl border border-border/80 bg-background/70 px-4 text-base text-foreground shadow-sm data-[size=default]:h-12 sm:text-sm",
+                        "focus:border-primary/60 focus:ring-4 focus:ring-primary/10",
                         !data.industry && "[&>span]:text-muted-foreground/60",
                         errors.industry && "border-red-500/50",
                     )}>
@@ -127,21 +143,21 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
                         ))}
                     </SelectContent>
                 </Select>
-                {(industriesError || errors.industry) && <p className="mt-1.5 text-xs text-red-400">{industriesError || errors.industry}</p>}
+                {(industriesError || errors.industry) && <p className="mt-1.5 text-xs text-destructive" role="alert">{industriesError || errors.industry}</p>}
             </div>
 
             {/* Address */}
             <div>
-                <label htmlFor="businessRegisteredAddress" className={labelCls}>Business Registered Address <span className="text-red-400/80">*</span></label>
-                <textarea id="businessRegisteredAddress" rows={3} placeholder="Enter business registered address"
+                <label htmlFor="businessRegisteredAddress" className={labelCls}>Business Registered Address <span className="text-destructive">*</span></label>
+                <input id="businessRegisteredAddress" placeholder="Enter business registered address"
                     value={data.businessRegisteredAddress} onChange={e => set("businessRegisteredAddress", e.target.value)}
-                    className={cn(inputCls, "resize-none", errors.businessRegisteredAddress && "border-red-500/50")} />
-                {errors.businessRegisteredAddress && <p className="mt-1.5 text-xs text-red-400">{errors.businessRegisteredAddress}</p>}
+                    className={cn(inputCls, errors.businessRegisteredAddress && "border-red-500/50")} />
+                {errors.businessRegisteredAddress && <p className="mt-1.5 text-xs text-destructive" role="alert">{errors.businessRegisteredAddress}</p>}
             </div>
 
             {/* BR Certificate */}
             <div>
-                <label className={labelCls}>Business Registration Certificate <span className="text-red-400/80">*</span></label>
+                <label className={labelCls}>Business Registration Certificate <span className="text-destructive">*</span></label>
                 <p className="text-xs text-muted-foreground/70 mb-3 leading-relaxed">
                     Upload your BR certificate. Our AI will automatically verify it matches your company details.
                 </p>
@@ -151,7 +167,7 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
                     companyName={data.companyName}
                     businessRegistrationNo={data.businessRegistrationNo}
                 />
-                {errors.brCertificate && <p className="mt-1.5 text-xs text-red-400">{errors.brCertificate}</p>}
+                {errors.brCertificate && <p className="mt-1.5 text-xs text-destructive" role="alert">{errors.brCertificate}</p>}
             </div>
 
             {/* Next button */}
@@ -160,9 +176,9 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
                     onClick={() => { if (validate()) onNext(); }}
                     disabled={!isVerified}
                     className={cn(
-                        "flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all",
-                        "bg-primary text-primary-foreground hover:brightness-110 active:scale-[0.99]",
-                        "shadow-lg shadow-primary/20",
+                        "flex min-h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground",
+                        "shadow-lg shadow-primary/20 transition-[filter,transform,box-shadow] duration-200 hover:brightness-105 active:scale-[0.99]",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card",
                         "disabled:opacity-40 disabled:cursor-not-allowed",
                     )}
                 >

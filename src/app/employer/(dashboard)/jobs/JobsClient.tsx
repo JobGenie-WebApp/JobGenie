@@ -6,7 +6,6 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     Plus, MapPin, Briefcase, Users, Clock, Pencil, Pause,
@@ -192,6 +191,9 @@ function JobDetail({
     const pendingPaymentId = getPendingPaymentId(job);
     const cfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.draft;
     const isLoading = (suffix: string) => actionLoading === job.id + suffix;
+    const canEdit =
+        ["published", "paused", "expired"].includes(job.status) ||
+        (job.status === "draft" && !pendingPaymentId);
 
     return (
         <div className="flex flex-col h-full">
@@ -218,16 +220,21 @@ function JobDetail({
 
                     {/* Actions */}
                     <div className="flex items-center gap-1.5 shrink-0">
+                        {canEdit && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push(`/employer/jobs/${job.id}/edit`)}
+                            >
+                                <Pencil className="mr-1 h-4 w-4" />
+                                Edit
+                            </Button>
+                        )}
                         {job.status === "draft" && !pendingPaymentId && (
-                            <>
-                                <Button variant="ghost" size="sm" onClick={() => router.push(`/employer/jobs/${job.id}/edit`)}>
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" onClick={() => onRequestPayment(job.id)} disabled={isLoading("payment")}>
-                                    {isLoading("payment") ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4 mr-1" />}
-                                    Publish
-                                </Button>
-                            </>
+                            <Button size="sm" onClick={() => onRequestPayment(job.id)} disabled={isLoading("payment")}>
+                                {isLoading("payment") ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4 mr-1" />}
+                                Publish
+                            </Button>
                         )}
                         {job.status === "draft" && pendingPaymentId && (
                             <Button variant="outline" size="sm" onClick={() => router.push("/employer/payments")}>

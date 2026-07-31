@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { JobGenieLogo } from '@/components/brand/JobGenieLogo';
 
 export function AuthToolbar() {
     return (
@@ -11,17 +11,11 @@ export function AuthToolbar() {
                 href="/"
                 className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
             >
-                <Image
-                    src="/logo.jpg"
-                    alt="JobGenie"
-                    width={112}
-                    height={42}
-                    className="h-8 w-auto rounded-md sm:h-9"
+                <JobGenieLogo
                     priority
+                    imageClassName="h-10 w-auto sm:h-11"
+                    sizes="(min-width: 640px) 44px, 40px"
                 />
-                <span className="hidden text-[15px] font-semibold tracking-tight text-foreground sm:inline">
-                    JobGenie
-                </span>
             </Link>
             <div className="flex items-center gap-1 sm:gap-3">
                 <Link

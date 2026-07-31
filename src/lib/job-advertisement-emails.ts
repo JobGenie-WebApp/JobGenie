@@ -69,7 +69,7 @@ Great news! Your payment has been verified and your job advertisement <strong>"$
 </p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${jobUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
+<a href="${jobUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
 View Job Advertisement
 </a>
 </div>
@@ -165,7 +165,7 @@ Your job advertisement <strong>"${jobTitle}"</strong> has expired and is no long
 </p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${extendUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
+<a href="${extendUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
 Extend Advertisement
 </a>
 </div>
@@ -216,7 +216,7 @@ We'll notify you once the employer reviews your application.
 </p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${applicationsUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
+<a href="${applicationsUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
 View My Applications
 </a>
 </div>
@@ -262,7 +262,7 @@ function getNewApplicationTemplate({ employerName, jobTitle, candidateName, appl
 <strong>${candidateName}</strong> has applied for your job advertisement <strong>"${jobTitle}"</strong>.
 </p>
 <div style="text-align:center;margin:32px 0;">
-<a href="${applicationUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
+<a href="${applicationUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
 Review Application
 </a>
 </div>
@@ -315,7 +315,7 @@ ${reason ? `<div style="background-color:#f9fafb;border-left:4px solid #9ca3af;b
 Don't be discouraged — there are plenty of other opportunities waiting for you on JobGenie.
 </p>
 <div style="text-align:center;margin:32px 0;">
-<a href="${jobsUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
+<a href="${jobsUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">
 Browse More Jobs
 </a>
 </div>

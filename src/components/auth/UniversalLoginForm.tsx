@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Eye, EyeOff, LogIn } from "lucide-react";
+import { Loader2, Eye, EyeOff, LockKeyhole, LogIn, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { universalLogin, type ActionState } from "@/app/actions/universal-auth";
 import { cn } from "@/lib/utils";
@@ -36,36 +37,46 @@ export function UniversalLoginForm({ returnUrl }: { returnUrl?: string }) {
     }, [state, router]);
 
     return (
-        <form action={handleSubmit} className="space-y-4">
+        <form action={handleSubmit} className="space-y-5">
             {returnUrl && <input type="hidden" name="returnUrl" value={returnUrl} />}
 
-            {/* Email */}
-            <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-semibold text-foreground">
                     Email Address
                 </label>
-                <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                    disabled={isPending}
-                    autoComplete="email"
-                    className={cn(
-                        "w-full rounded-xl border border-border bg-muted/40 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60",
-                        "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 focus:bg-background",
-                        "disabled:opacity-50 transition-all",
-                    )}
-                />
+                <div className="group relative">
+                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" aria-hidden="true" />
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="name@company.com"
+                        required
+                        disabled={isPending}
+                        autoComplete="email"
+                        className={cn(
+                            "h-12 w-full rounded-xl border border-border bg-background/70 pl-11 pr-4 text-base text-foreground shadow-sm placeholder:text-muted-foreground/60 sm:text-sm",
+                            "outline-none transition-[border-color,box-shadow,background-color] duration-200 focus:border-primary/60 focus:bg-background focus:ring-4 focus:ring-primary/10",
+                            "disabled:cursor-not-allowed disabled:opacity-50",
+                        )}
+                    />
+                </div>
             </div>
 
-            {/* Password */}
-            <div className="space-y-1.5">
-                <label htmlFor="password" className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Password
-                </label>
+            <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                    <label htmlFor="password" className="block text-sm font-semibold text-foreground">
+                        Password
+                    </label>
+                    <Link
+                        href="/forgot-password"
+                        className="inline-flex min-h-11 items-center rounded px-1 text-xs font-semibold text-primary outline-none transition-opacity hover:opacity-75 focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                        Forgot password?
+                    </Link>
+                </div>
                 <div className="relative">
+                    <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                     <input
                         id="password"
                         name="password"
@@ -75,17 +86,17 @@ export function UniversalLoginForm({ returnUrl }: { returnUrl?: string }) {
                         disabled={isPending}
                         autoComplete="current-password"
                         className={cn(
-                            "w-full rounded-xl border border-border bg-muted/40 px-4 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground/60",
-                            "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 focus:bg-background",
-                            "disabled:opacity-50 transition-all",
+                            "h-12 w-full rounded-xl border border-border bg-background/70 pl-11 pr-12 text-base text-foreground shadow-sm placeholder:text-muted-foreground/60 sm:text-sm",
+                            "outline-none transition-[border-color,box-shadow,background-color] duration-200 focus:border-primary/60 focus:bg-background focus:ring-4 focus:ring-primary/10",
+                            "disabled:cursor-not-allowed disabled:opacity-50",
                         )}
                     />
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        tabIndex={-1}
                         disabled={isPending}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground transition-colors"
+                        className="absolute right-0.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -97,11 +108,10 @@ export function UniversalLoginForm({ returnUrl }: { returnUrl?: string }) {
                 type="submit"
                 disabled={isPending}
                 className={cn(
-                    "relative w-full rounded-xl py-2.5 px-4 text-sm font-semibold transition-all",
-                    "bg-primary text-primary-foreground hover:brightness-110 active:scale-[0.99]",
-                    "shadow-lg shadow-primary/20",
-                    "disabled:opacity-60 disabled:cursor-not-allowed",
-                    "flex items-center justify-center gap-2",
+                    "flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground",
+                    "shadow-lg shadow-primary/20 transition-[filter,transform,box-shadow] duration-200 hover:brightness-105 hover:shadow-xl hover:shadow-primary/20 active:scale-[0.99]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                    "disabled:cursor-not-allowed disabled:opacity-60",
                 )}
             >
                 {isPending ? (
