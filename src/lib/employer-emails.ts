@@ -62,7 +62,7 @@ function getEmployerApprovalEmailTemplate(
                             
                             <!-- Login Button -->
                             <div style="text-align: center; margin: 32px 0;">
-                                <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);">
+                                <a href="${loginUrl}" style="display: inline-block; background: #16a34a; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);">
                                     Access Employer Dashboard
                                 </a>
                             </div>
@@ -176,7 +176,7 @@ function getEmployerRejectionEmailTemplate(
                             
                             <!-- Login Button -->
                             <div style="text-align: center; margin: 32px 0;">
-                                <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);">
+                                <a href="${loginUrl}" style="display: inline-block; background: #d97706; color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);">
                                     Update Company Profile
                                 </a>
                             </div>

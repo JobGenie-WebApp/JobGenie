@@ -84,6 +84,11 @@ export const companyRegistrationSchema = z.object({
         .string()
         .min(1, "Please select an industry"),
 
+    industryId: z.coerce
+        .number()
+        .int("Please select a valid industry")
+        .positive("Please select a valid industry"),
+
     businessRegisteredAddress: z
         .string()
         .min(2, "Business address must be at least 2 characters")
@@ -133,7 +138,8 @@ export const employerProfileSchema = z
             .min(8, "Password must be at least 8 characters")
             .regex(/[a-z]/, "Password must contain at least one lowercase letter")
             .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-            .regex(/[0-9]/, "Password must contain at least one number"),
+            .regex(/[0-9]/, "Password must contain at least one number")
+            .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
 
         confirmPassword: z
             .string()
@@ -156,6 +162,9 @@ export type EmployerProfileData = z.infer<typeof employerProfileSchema>;
 export const employerRegistrationSchema = z.object({
     company: companyRegistrationSchema,
     employer: employerProfileSchema,
+    acceptPolicies: z
+        .boolean()
+        .refine((accepted) => accepted, "You must agree to the Terms & Conditions and Privacy Policy"),
 });
 
 export type EmployerRegistrationData = z.infer<typeof employerRegistrationSchema>;

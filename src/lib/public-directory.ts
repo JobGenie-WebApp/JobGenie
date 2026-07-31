@@ -6,16 +6,8 @@ export type PublicJob = {
   id: string;
   job_title: string;
   location: string | null;
-  industry: string | null;
-  job_type: string;
-  deadline: string | null;
-  salary_min: number | null;
-  salary_max: number | null;
-  salary_currency: string | null;
-  experience_level: string | null;
-  positions_available: number | null;
   advertisement_link: string | null;
-  published_at: string | null;
+  created_at: string;
   company: {
     company_name: string;
     logo_url: string | null;
@@ -27,13 +19,9 @@ export type PublicCompany = {
   id: string;
   company_name: string;
   industry: string;
-  bio: string | null;
-  description: string | null;
   logo_url: string | null;
   website: string | null;
   headoffice_location: string | null;
-  company_size: string | null;
-  specialities: string[];
 };
 
 export type PublicCandidate = {
@@ -43,12 +31,7 @@ export type PublicCandidate = {
   current_position: string;
   industry: string;
   country: string | null;
-  years_of_experience: number | null;
-  experience_level: string | null;
-  availability_status: string | null;
-  professional_summary: string | null;
   profile_image_url: string | null;
-  expected_positions: string[];
 };
 
 export type PublicDirectoryResult<T> = {
@@ -95,9 +78,7 @@ export async function getPublicJobs(params: {
     let query = admin
       .from('jobs')
       .select(`
-        id, job_title, location, industry, job_type, deadline,
-        salary_min, salary_max, salary_currency, experience_level,
-        positions_available, advertisement_link, published_at,
+        id, job_title, location, advertisement_link, created_at,
         company:companies!inner(
           company_name, logo_url, headoffice_location
         )
@@ -136,8 +117,7 @@ export async function getPublicCompanies(params: {
     let query = admin
       .from('companies')
       .select(`
-        id, company_name, industry, bio, description, logo_url,
-        website, headoffice_location, company_size, specialities
+        id, company_name, industry, logo_url, website, headoffice_location
       `, { count: 'exact' })
       .eq('approval_status', 'approved')
       .eq('profile_completed', true)
@@ -172,8 +152,7 @@ export async function getPublicCandidates(params: {
       .from('candidates')
       .select(`
         id, first_name, last_name, current_position, industry, country,
-        years_of_experience, experience_level, availability_status,
-        professional_summary, profile_image_url, expected_positions
+        profile_image_url
       `, { count: 'exact' })
       .eq('approval_status', 'approved')
       .eq('profile_completed', true);

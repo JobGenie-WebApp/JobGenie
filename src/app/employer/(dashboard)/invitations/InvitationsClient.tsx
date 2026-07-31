@@ -119,6 +119,7 @@ interface Invitation {
     reschedule_request_reason?: string | null;
     job_offers?: { id: string; status: string } | { id: string; status: string }[] | null;
     interview_rounds?: {
+        id: string;
         round_number: number;
         round_label: string | null;
         status: string;

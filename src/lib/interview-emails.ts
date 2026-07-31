@@ -1,6 +1,27 @@
 import { resend, EMAIL_JOBS_FROM } from "./resend";
 import { getBaseUrl } from "./email";
-import { formatUTCDate, formatUTCTime } from "./date-utils";
+import { formatTimestamp, formatUTCDate, formatUTCTime } from "./date-utils";
+
+export interface AssessmentInvitationDetails {
+    deadline?: string | null;
+    startAt?: string | null;
+    endAt?: string | null;
+    deliveryMode: "online" | "physical";
+    assessmentLink?: string | null;
+    attachmentName?: string | null;
+    address?: string | null;
+    mapLink?: string | null;
+}
+
+function escapeHtml(value: string): string {
+    return value.replace(/[&<>'"]/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+    })[character] || character);
+}
 
 /**
  * Send interview invitation email to candidate
@@ -12,7 +33,8 @@ export async function sendInterviewInvitationEmail(
     jobDesignation: string,
     timeSlots: Array<{ date: string; time: string }>,
     invitationId: string,
-    recipientTimezone?: string
+    recipientTimezone?: string,
+    assessmentDetails?: AssessmentInvitationDetails,
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const baseUrl = getBaseUrl();
@@ -26,6 +48,8 @@ export async function sendInterviewInvitationEmail(
             console.log(`Candidate: ${candidateName}`);
             console.log(`Company: ${companyName}`);
             console.log(`Position: ${jobDesignation}`);
+            if (assessmentDetails?.deadline) console.log(`Assessment deadline: ${assessmentDetails.deadline}`);
+            if (assessmentDetails?.startAt) console.log(`Assessment starts: ${assessmentDetails.startAt}`);
             console.log(`Invitation URL: ${invitationUrl}`);
             console.log(`====================================\n`);
             return { success: true };
@@ -34,6 +58,9 @@ export async function sendInterviewInvitationEmail(
         // Create deep link with login redirect
         const invitationDetailUrl = `${baseUrl}/candidate/invitations/${invitationId}`;
         const loginRedirectUrl = `${baseUrl}/login?returnUrl=${encodeURIComponent(invitationDetailUrl)}`;
+        const safeCandidateName = escapeHtml(candidateName);
+        const safeCompanyName = escapeHtml(companyName);
+        const safeJobDesignation = escapeHtml(jobDesignation);
 
         const timeSlotsHTML = timeSlots.map((slot, idx) => `
             <div style="display:flex;align-items:center;gap:8px;padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:8px;">
@@ -41,6 +68,21 @@ export async function sendInterviewInvitationEmail(
                 <span style="color:#1f2937;">${formatUTCDate(slot.date, "EEEE, MMMM d, yyyy", recipientTimezone)} at ${formatUTCTime(slot.date, slot.time, "HH:mm", recipientTimezone)}</span>
             </div>
         `).join('');
+
+        const assessmentDetailsHTML = assessmentDetails ? `
+            <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:16px 20px;margin:24px 0;">
+                <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#166534;">📝 Assessment Details</p>
+                ${assessmentDetails.deliveryMode === "online" && assessmentDetails.deadline ? `<p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Deadline:</strong> ${formatTimestamp(assessmentDetails.deadline, "EEEE, MMMM d, yyyy 'at' h:mm a", recipientTimezone)}</p>` : ""}
+                ${assessmentDetails.deliveryMode === "physical" && assessmentDetails.startAt ? `<p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Starts:</strong> ${formatTimestamp(assessmentDetails.startAt, "EEEE, MMMM d, yyyy 'at' h:mm a", recipientTimezone)}</p>` : ""}
+                ${assessmentDetails.deliveryMode === "physical" && assessmentDetails.endAt ? `<p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Ends:</strong> ${formatTimestamp(assessmentDetails.endAt, "EEEE, MMMM d, yyyy 'at' h:mm a", recipientTimezone)}</p>` : ""}
+                <p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Delivery:</strong> ${assessmentDetails.deliveryMode === "online" ? "Online" : "Physical / in person"}</p>
+                ${assessmentDetails.assessmentLink ? `<p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Assessment link:</strong> <a href="${escapeHtml(assessmentDetails.assessmentLink)}" style="color:#15803d;">Open assessment</a></p>` : ""}
+                ${assessmentDetails.attachmentName ? `<p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Attachment:</strong> ${escapeHtml(assessmentDetails.attachmentName)} (sign in to download)</p>` : ""}
+                ${assessmentDetails.deliveryMode === "online" ? `<p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Submission:</strong> Upload a ZIP/PDF file, add project links, or submit both from JobGenie.</p>` : ""}
+                ${assessmentDetails.deliveryMode === "physical" && assessmentDetails.address ? `<p style="margin:0 0 8px;font-size:14px;color:#166534;"><strong>Address:</strong> ${escapeHtml(assessmentDetails.address)}</p>` : ""}
+                ${assessmentDetails.deliveryMode === "physical" && assessmentDetails.mapLink ? `<p style="margin:0;font-size:14px;color:#166534;"><a href="${escapeHtml(assessmentDetails.mapLink)}" style="color:#15803d;">Open location map</a></p>` : ""}
+            </div>
+        ` : "";
 
         const html = `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f8f9fa;">
@@ -54,18 +96,22 @@ export async function sendInterviewInvitationEmail(
 <tr><td style="padding:40px;">
 <div style="text-align:center;margin-bottom:24px;">
 <div style="display:inline-block;background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border-radius:50%;width:80px;height:80px;line-height:80px;">
-<span style="font-size:40px;">📧</span>
+<span style="font-size:40px;">${assessmentDetails ? "📝" : "📧"}</span>
 </div></div>
-<h2 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#1f2937;text-align:center;">Interview Invitation</h2>
-<p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;">Hi <strong>${candidateName}</strong>,</p>
-<p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;">Great news! <strong>${companyName}</strong> is interested in interviewing you for the <strong>${jobDesignation}</strong> position.</p>
+<h2 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#1f2937;text-align:center;">${assessmentDetails ? "Assessment Round" : "Interview Invitation"}</h2>
+<p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;">Hi <strong>${safeCandidateName}</strong>,</p>
+<p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4b5563;">${assessmentDetails
+    ? `<strong>${safeCompanyName}</strong> has scheduled an assessment for the <strong>${safeJobDesignation}</strong> hiring process.`
+    : `Great news! <strong>${safeCompanyName}</strong> is interested in interviewing you for the <strong>${safeJobDesignation}</strong> position.`}</p>
+${assessmentDetails ? assessmentDetailsHTML : `
 <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:16px 20px;margin:24px 0;">
 <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#166534;">📅 Proposed Time Slots:</p>
 ${timeSlotsHTML}
 </div>
-<p style="margin:24px 0;font-size:16px;line-height:1.6;color:#4b5563;">Please review the invitation and select your preferred time slot.</p>
+`}
+<p style="margin:24px 0;font-size:16px;line-height:1.6;color:#4b5563;">${assessmentDetails ? (assessmentDetails.deliveryMode === "online" ? "Please review the instructions and submit your work before the deadline." : "Please arrive at the assessment venue before the scheduled start time.") : "Please review the invitation and select your preferred time slot."}</p>
 <div style="text-align:center;margin:32px 0;">
-<a href="${loginRedirectUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitation</a>
+<a href="${loginRedirectUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">${assessmentDetails ? "View Assessment" : "View Invitation"}</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -78,7 +124,9 @@ ${timeSlotsHTML}
         const { error } = await resend.emails.send({
             from: `JobGenie <${EMAIL_JOBS_FROM}>`,
             to: candidateEmail,
-            subject: `Interview Invitation from ${companyName} - JobGenie`,
+            subject: assessmentDetails
+                ? `Assessment from ${companyName} - JobGenie`
+                : `Interview Invitation from ${companyName} - JobGenie`,
             html,
         });
 
@@ -162,7 +210,7 @@ ${locationHTML}
 <p style="margin:0;font-size:14px;color:#1e40af;"><strong>💡 Tip:</strong> Add this interview to your calendar and prepare your questions in advance. Good luck!</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${loginRedirectUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Details</a>
+<a href="${loginRedirectUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Details</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -269,7 +317,7 @@ ${roundLine}
 ${locationHTML}
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${loginRedirectUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View invitation</a>
+<a href="${loginRedirectUrl}" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View invitation</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -354,7 +402,7 @@ export async function sendCandidateCancellationEmail(
 <p style="margin:0;font-size:15px;color:#78350f;line-height:1.6;">${cancellationReason}</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${baseUrl}/employer/invitations" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
+<a href="${baseUrl}/employer/invitations" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -442,7 +490,7 @@ export async function sendEmployerCancellationEmail(
 <p style="margin:0;font-size:14px;color:#1e40af;"><strong>💙 We're Here for You:</strong> Don't be discouraged! Keep exploring other opportunities on JobGenie.</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${baseUrl}/candidate/invitations" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
+<a href="${baseUrl}/candidate/invitations" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -548,7 +596,7 @@ ${notesHTML}
 <p style="margin:0;font-size:14px;color:#166534;"><strong>💡 Tip:</strong> Please review the updated details and prepare accordingly. Good luck!</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${loginRedirectUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
+<a href="${loginRedirectUrl}" style="display:inline-block;background: #2563eb;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -654,7 +702,7 @@ ${notesHTML}
 <p style="margin:0;font-size:14px;color:#166534;"><strong>💼 Note:</strong> The candidate has been notified about the updated schedule.</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${loginRedirectUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
+<a href="${loginRedirectUrl}" style="display:inline-block;background: #2563eb;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -745,7 +793,7 @@ export async function sendCandidateRoundCancellationEmail(
 <p style="margin:0;font-size:14px;color:#1e40af;"><strong>💡 Next Steps:</strong> Our MIS team may contact both parties to arrange a new interview date.</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${baseUrl}/employer/invitations" style="display:inline-block;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
+<a href="${baseUrl}/employer/invitations" style="display:inline-block;background: #2563eb;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -836,7 +884,7 @@ export async function sendEmployerRoundCancellationEmail(
 <p style="margin:0;font-size:14px;color:#1e40af;"><strong>💙 We're Here for You:</strong> Our MIS team may contact both parties to arrange a new interview date. Keep exploring other opportunities on JobGenie.</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${baseUrl}/candidate/invitations" style="display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
+<a href="${baseUrl}/candidate/invitations" style="display:inline-block;background: #16a34a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Invitations</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -944,7 +992,7 @@ ${notesHTML}
 <p style="margin:0;font-size:14px;color:#166534;"><strong>💡 Tip:</strong> Please review the updated details and prepare accordingly. Good luck!</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${loginRedirectUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
+<a href="${loginRedirectUrl}" style="display:inline-block;background: #2563eb;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -1051,7 +1099,7 @@ ${notesHTML}
 <p style="margin:0;font-size:14px;color:#166534;"><strong>💼 Note:</strong> The candidate has been notified about the updated schedule.</p>
 </div>
 <div style="text-align:center;margin:32px 0;">
-<a href="${loginRedirectUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
+<a href="${loginRedirectUrl}" style="display:inline-block;background: #2563eb;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;">View Interview Details</a>
 </div>
 </td></tr>
 <tr><td style="padding:24px 40px;background-color:#f9fafb;border-radius:0 0 16px 16px;text-align:center;">
@@ -1080,4 +1128,3 @@ ${notesHTML}
         return { success: false, error: "Failed to send reschedule notification" };
     }
 }
-

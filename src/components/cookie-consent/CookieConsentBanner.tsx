@@ -64,7 +64,6 @@ export function CookieConsentBanner() {
                 Necessary Only
               </Button>
               <Button
-                variant="gradient"
                 size="sm"
                 onClick={acceptAll}
                 className="sm:min-w-[110px]"

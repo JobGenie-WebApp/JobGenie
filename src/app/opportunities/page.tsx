@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowUpRight, BriefcaseBusiness, Clock3, MapPin, WalletCards } from 'lucide-react';
+import { ArrowUpRight, BriefcaseBusiness, CalendarDays, MapPin } from 'lucide-react';
 import {
   DirectoryPagination,
   DirectorySearch,
@@ -24,13 +24,12 @@ function label(value: string | null) {
   return value ? value.replaceAll('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase()) : 'Not specified';
 }
 
-function salary(min: number | null, max: number | null, currency: string | null) {
-  if (min === null && max === null) return 'Salary on application';
-  const formatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-  const range = min !== null && max !== null
-    ? `${formatter.format(min)} - ${formatter.format(max)}`
-    : formatter.format(min ?? max ?? 0);
-  return `${currency ?? 'LKR'} ${range}`;
+function createdDate(value: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value));
 }
 
 function externalJobHref(value: string | null) {
@@ -87,45 +86,43 @@ export default async function OpportunitiesPage({
               description="Try another job title or remove the job-type filter."
             />
           ) : (
-            <div className="grid gap-px overflow-hidden border-x border-b border-[var(--jg-line)] bg-[var(--jg-line)] md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 py-4 sm:grid-cols-2 lg:grid-cols-4">
               {jobs.items.map((job) => {
                 const companyName = job.company?.company_name ?? 'Verified employer';
                 const initials = companyName.split(' ').slice(0, 2).map((word) => word[0]).join('').toUpperCase();
                 const externalHref = externalJobHref(job.advertisement_link);
                 const href = externalHref || '/candidate/signup';
                 return (
-                  <article className="flex min-h-[330px] flex-col bg-white p-6 dark:bg-[#0a1510] md:p-8" key={job.id}>
-                    <div className="flex items-start justify-between gap-4">
-                      <Avatar className="h-12 w-12 rounded-lg border border-[var(--jg-line)] bg-[#f1f7f3] dark:bg-white/5">
-                        {job.company?.logo_url && <AvatarImage alt={`${companyName} logo`} className="object-contain p-1.5" src={job.company.logo_url} />}
-                        <AvatarFallback className="rounded-lg bg-transparent text-xs font-extrabold text-[var(--jg-green)]">{initials}</AvatarFallback>
-                      </Avatar>
-                      <span className="rounded-md bg-green-500/10 px-2.5 py-1.5 text-xs font-bold text-[var(--jg-green)]">{label(job.job_type)}</span>
-                    </div>
-                    <div className="mt-7">
-                      <p className="text-sm font-bold text-[var(--jg-green)]">{companyName}</p>
-                      <h2 className="mt-2 text-2xl font-bold leading-8 text-[var(--jg-ink)]">{job.job_title}</h2>
-                    </div>
-                    <div className="mt-5 grid gap-3 text-sm text-[var(--jg-muted)] sm:grid-cols-2">
-                      <span className="flex items-center gap-2"><MapPin size={15} /> {job.location || job.company?.headoffice_location || 'Location flexible'}</span>
-                      <span className="flex items-center gap-2"><BriefcaseBusiness size={15} /> {job.industry || 'General'}</span>
-                      <span className="flex items-center gap-2"><WalletCards size={15} /> {salary(job.salary_min, job.salary_max, job.salary_currency)}</span>
-                      <span className="flex items-center gap-2"><Clock3 size={15} /> {job.experience_level ? label(job.experience_level) : 'All experience levels'}</span>
-                    </div>
-                    <div className="mt-auto flex items-end justify-between gap-4 border-t border-[var(--jg-line)] pt-6">
-                      <p className="text-xs text-[var(--jg-muted)]">
-                        {job.positions_available ?? 1} {(job.positions_available ?? 1) === 1 ? 'position' : 'positions'}
-                      </p>
-                      <Link
-                        className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[var(--jg-ink)] px-4 text-sm font-bold text-white transition hover:bg-[var(--jg-green)] dark:text-[#07130c]"
-                        href={href}
-                        rel={externalHref ? 'noreferrer' : undefined}
-                        target={externalHref ? '_blank' : undefined}
-                      >
-                        View opportunity <ArrowUpRight size={16} />
-                      </Link>
-                    </div>
-                  </article>
+                  <Link
+                    aria-label={`View ${job.job_title} at ${companyName}`}
+                    className="group rounded-xl border border-[var(--jg-line)] bg-white outline-none transition hover:-translate-y-0.5 hover:border-green-600/35 hover:shadow-md focus-visible:ring-2 focus-visible:ring-[var(--jg-green)] focus-visible:ring-offset-2 dark:bg-[#0a1510]"
+                    href={href}
+                    key={job.id}
+                    rel={externalHref ? 'noreferrer' : undefined}
+                    target={externalHref ? '_blank' : undefined}
+                  >
+                    <article className="flex min-h-[176px] h-full flex-col p-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar className="h-10 w-10 shrink-0 rounded-lg border border-[var(--jg-line)] bg-[#f1f7f3] dark:bg-white/5">
+                          {job.company?.logo_url && <AvatarImage alt={`${companyName} logo`} className="object-contain p-1" src={job.company.logo_url} />}
+                          <AvatarFallback className="rounded-lg bg-transparent text-[11px] font-extrabold text-[var(--jg-green)]">{initials}</AvatarFallback>
+                        </Avatar>
+                        <p className="min-w-0 flex-1 truncate text-xs font-bold text-[var(--jg-green)]">{companyName}</p>
+                        <ArrowUpRight className="shrink-0 text-[var(--jg-muted)] transition group-hover:text-[var(--jg-green)]" size={15} aria-hidden="true" />
+                      </div>
+                      <h2 className="mt-3 line-clamp-2 text-base font-bold leading-5 text-[var(--jg-ink)]">{job.job_title}</h2>
+                      <div className="mt-auto grid gap-1.5 border-t border-[var(--jg-line)] pt-3 text-xs text-[var(--jg-muted)]">
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <MapPin className="shrink-0" size={13} aria-hidden="true" />
+                          <span className="truncate">{job.location || job.company?.headoffice_location || 'Location flexible'}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <CalendarDays className="shrink-0" size={13} aria-hidden="true" />
+                          Created {createdDate(job.created_at)}
+                        </span>
+                      </div>
+                    </article>
+                  </Link>
                 );
               })}
             </div>

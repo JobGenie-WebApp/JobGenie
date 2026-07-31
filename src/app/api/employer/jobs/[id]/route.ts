@@ -6,6 +6,8 @@ import { jobUpdateSchema } from "@/lib/validations/job-schema";
 
 type Params = { params: Promise<{ id: string }> };
 
+const EDITABLE_JOB_STATUSES = new Set(["draft", "published", "paused", "expired"]);
+
 async function getEmployerAndJob(userId: string, jobId: string) {
     const admin = createAdminClient();
     const { data: employer } = await admin
@@ -85,7 +87,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
     }
 }
 
-// PATCH /api/employer/jobs/[id] — update (only allowed in draft status)
+// PATCH /api/employer/jobs/[id] — update employer-owned job content.
+// A paid job's active period is immutable here; extensions use the payment flow.
 export async function PATCH(request: NextRequest, { params }: Params) {
     try {
         const supabase = await createClient();
@@ -96,7 +99,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         const { employer, job, admin } = await getEmployerAndJob(user.id, id);
         if (!employer) return NextResponse.json({ error: "Employer not found" }, { status: 404 });
         if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
-        if (job.status !== "draft") return NextResponse.json({ error: "Only draft jobs can be edited" }, { status: 400 });
+        if (!EDITABLE_JOB_STATUSES.has(job.status)) {
+            return NextResponse.json({ error: "This job can no longer be edited" }, { status: 400 });
+        }
 
         const body = await request.json();
         const parsed = jobUpdateSchema.safeParse(body);
@@ -105,7 +110,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         }
 
         const d = parsed.data;
-        const { error } = await admin.from("jobs").update({
+        const updates = {
             ...(d.job_title !== undefined && { job_title: d.job_title }),
             ...(d.location !== undefined && { location: d.location }),
             ...(d.industry !== undefined && { industry: d.industry }),
@@ -117,14 +122,23 @@ export async function PATCH(request: NextRequest, { params }: Params) {
             ...(d.salary_currency !== undefined && { salary_currency: d.salary_currency }),
             ...(d.experience_level !== undefined && { experience_level: d.experience_level }),
             ...(d.positions_available !== undefined && { positions_available: d.positions_available }),
-            ...(d.validity_days !== undefined && { validity_days: d.validity_days }),
-            ...(d.custom_start_date !== undefined && { custom_start_date: d.custom_start_date }),
-            ...(d.custom_end_date !== undefined && { custom_end_date: d.custom_end_date }),
             ...(d.advertisement_link !== undefined && { advertisement_link: d.advertisement_link }),
-        }).eq("id", id);
+            ...(job.status === "draft" && d.validity_days !== undefined && { validity_days: d.validity_days }),
+            ...(job.status === "draft" && d.custom_start_date !== undefined && { custom_start_date: d.custom_start_date }),
+            ...(job.status === "draft" && d.custom_end_date !== undefined && { custom_end_date: d.custom_end_date }),
+            updated_at: new Date().toISOString(),
+        };
+
+        const { data: updatedJob, error } = await admin
+            .from("jobs")
+            .update(updates)
+            .eq("id", id)
+            .eq("company_id", employer.company_id)
+            .select("id, status, updated_at")
+            .single();
 
         if (error) throw error;
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, job: updatedJob });
     } catch (error) {
         await logError({ source: "api/employer/jobs/[id]:PATCH", errorType: "APIError", message: error instanceof Error ? error.message : String(error) });
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

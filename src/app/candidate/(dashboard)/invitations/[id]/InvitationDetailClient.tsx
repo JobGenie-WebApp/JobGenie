@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
     Calendar, Clock, Building2, MapPin, Loader2, User, Phone, Globe,
     Check, Mail, Video, MapPinned, Copy, ExternalLink, X, AlertCircle,
     CheckCircle2, TrendingUp, Award, XCircle, MessageSquare, PartyPopper,
-    CalendarClock, Send, Ban, RotateCcw, CalendarPlus, Lock,
+    CalendarClock, Send, Ban, RotateCcw, CalendarPlus, Lock, ClipboardCheck, FileText, Download, Link2, UploadCloud,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatUTCTime, formatUTCDate, formatTimestamp, formatCountdown } from "@/lib/date-utils";
@@ -51,6 +51,15 @@ interface InterviewRound {
     meeting_link: string | null;
     interview_address: string | null;
     map_link: string | null;
+    assessment_delivery_mode: "online" | "physical" | null;
+    assessment_deadline: string | null;
+    assessment_start_at: string | null;
+    assessment_end_at: string | null;
+    assessment_link: string | null;
+    assessment_attachment_name: string | null;
+    assessment_submission_file_name: string | null;
+    assessment_submission_links: string[] | null;
+    assessment_submitted_at: string | null;
     confirmed_at: string | null;
     sent_at: string;
     viewed_at: string | null;
@@ -214,7 +223,14 @@ function buildRoadmap(
             } else if (r.outcome === "offer") {
                 steps.push({ key: `round-${r.id}`, label, sublabel: "Offer issued", status: "completed", Icon: Award });
             } else if (r.status === "confirmed" || r.confirmed_at) {
-                steps.push({ key: `round-${r.id}`, label, sublabel: "Scheduled", status: "current", Icon: CheckCircle2, isDefaultActive: !foundActive });
+                steps.push({
+                    key: `round-${r.id}`,
+                    label,
+                    sublabel: r.interview_mode === "assessment" ? "Assessment scheduled" : "Scheduled",
+                    status: "current",
+                    Icon: r.interview_mode === "assessment" ? ClipboardCheck : CheckCircle2,
+                    isDefaultActive: !foundActive,
+                });
                 foundActive = true;
             } else if (r.status === "accepted") {
                 steps.push({ key: `round-${r.id}`, label, sublabel: "Awaiting confirmation", status: "warning", Icon: Clock, isDefaultActive: !foundActive });
@@ -454,7 +470,7 @@ function InterviewScheduleCard({
                         </Button>
                     </div>
                     {!isPast && (
-                        <Button asChild className="w-full h-11 text-sm bg-[linear-gradient(135deg,var(--primary),var(--accent))] shadow-md shadow-primary/20 hover:shadow-primary/30">
+                        <Button asChild className="h-11 w-full text-sm">
                             <a href={meetingLink} target="_blank" rel="noopener noreferrer"><Video className="h-4 w-4 mr-2" />Join meeting</a>
                         </Button>
                     )}
@@ -490,6 +506,227 @@ function InterviewScheduleCard({
                     <a href={gcalUrl} target="_blank" rel="noopener noreferrer"><CalendarPlus className="h-4 w-4 mr-2" />Add to calendar</a>
                 </Button>
             )}
+        </div>
+    );
+}
+
+function AssessmentSubmissionForm({ round, isPast, onSubmitted }: { round: InterviewRound; isPast: boolean; onSubmitted: () => void }) {
+    const [linksText, setLinksText] = useState("");
+    const [file, setFile] = useState<File | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        setLinksText((round.assessment_submission_links ?? []).join("\n"));
+        setFile(null);
+    }, [round.id, round.assessment_submission_links]);
+
+    const submit = async () => {
+        const links = [...new Set(linksText.split("\n").map(link => link.trim()).filter(Boolean))];
+        if (links.length > 5) {
+            toast.error("You can submit up to 5 links");
+            return;
+        }
+        if (links.some(link => {
+            try {
+                const url = new URL(link);
+                return url.protocol !== "http:" && url.protocol !== "https:";
+            } catch {
+                return true;
+            }
+        })) {
+            toast.error("Enter valid links starting with http:// or https://");
+            return;
+        }
+        if (file && file.size > 10 * 1024 * 1024) {
+            toast.error("Submission file must be 10 MB or smaller");
+            return;
+        }
+        if (!file && links.length === 0 && !round.assessment_submission_file_name) {
+            toast.error("Upload a ZIP/PDF file or add at least one link");
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const formData = new FormData();
+            if (file) formData.append("file", file);
+            formData.append("links", JSON.stringify(links));
+            const response = await fetch(`/api/candidate/interview-rounds/${round.id}/assessment-submission`, {
+                method: "POST",
+                body: formData,
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Failed to submit assessment");
+            toast.success(result.message || "Assessment submitted successfully");
+            setFile(null);
+            onSubmitted();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to submit assessment");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const hasSubmission = !!round.assessment_submitted_at;
+    return (
+        <div className="space-y-4 rounded-xl border border-primary/20 bg-background/80 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                    <p className="text-sm font-semibold">Submit your work</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Upload one ZIP/PDF (max 10 MB), add links, or provide both.</p>
+                </div>
+                {hasSubmission && (
+                    <Badge variant="secondary" className="gap-1 text-xs">
+                        <CheckCircle2 className="h-3 w-3" />Submitted {formatTimestamp(round.assessment_submitted_at!, "MMM d, h:mm a")}
+                    </Badge>
+                )}
+            </div>
+
+            {hasSubmission && (round.assessment_submission_file_name || (round.assessment_submission_links?.length ?? 0) > 0) && (
+                <div className="space-y-2 rounded-lg bg-muted/40 p-3">
+                    <p className="text-xs font-medium text-muted-foreground">Current submission</p>
+                    {round.assessment_submission_file_name && (
+                        <Button variant="outline" size="sm" className="h-8 max-w-full text-xs" asChild>
+                            <a href={`/api/candidate/interview-rounds/${round.id}/assessment-submission`}>
+                                <Download className="mr-1.5 h-3.5 w-3.5 shrink-0" /><span className="truncate">{round.assessment_submission_file_name}</span>
+                            </a>
+                        </Button>
+                    )}
+                    {(round.assessment_submission_links ?? []).map(link => (
+                        <a key={link} href={link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 break-all text-xs text-primary hover:underline">
+                            <Link2 className="h-3.5 w-3.5 shrink-0" />{link}
+                        </a>
+                    ))}
+                </div>
+            )}
+
+            {!isPast ? (
+                <>
+                    <div className="space-y-2">
+                        <Label htmlFor={`assessment-links-${round.id}`}>Source or project links <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                        <Textarea
+                            id={`assessment-links-${round.id}`}
+                            value={linksText}
+                            onChange={event => setLinksText(event.target.value)}
+                            placeholder={"One URL per line (GitHub, Drive, deployed app…)"}
+                            rows={3}
+                        />
+                        <p className="text-xs text-muted-foreground">Up to 5 links. Existing links are replaced when you submit an update.</p>
+                    </div>
+                    <div className="space-y-2">
+                        <p id={`assessment-file-label-${round.id}`} className="text-sm font-medium leading-none">Source file <span className="font-normal text-muted-foreground">(optional)</span></p>
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            aria-labelledby={`assessment-file-label-${round.id}`}
+                            className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-dashed border-primary/40 bg-primary/[0.03] p-3 text-left transition-colors hover:bg-primary/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            <UploadCloud className="h-5 w-5 shrink-0 text-primary" />
+                            <span className="min-w-0 text-sm">
+                                <span className="block truncate font-medium">{file?.name || "Choose a ZIP or PDF"}</span>
+                                <span className="text-xs text-muted-foreground">Maximum 10 MB</span>
+                            </span>
+                        </button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".zip,.pdf,application/zip,application/pdf"
+                            hidden
+                            tabIndex={-1}
+                            aria-hidden="true"
+                            onChange={event => {
+                                setFile(event.target.files?.[0] ?? null);
+                                event.target.value = "";
+                            }}
+                        />
+                    </div>
+                    <Button className="w-full" onClick={submit} disabled={submitting}>
+                        {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        {hasSubmission ? "Update submission" : "Submit assessment"}
+                    </Button>
+                </>
+            ) : (
+                <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">The submission deadline has passed. Your latest submission remains available above.</p>
+            )}
+        </div>
+    );
+}
+
+function AssessmentScheduleCard({ round, isPast, onSubmitted }: { round: InterviewRound; isPast: boolean; onSubmitted: () => void }) {
+    const isPhysical = round.assessment_delivery_mode === "physical";
+    const countdownTarget = isPhysical ? round.assessment_start_at : round.assessment_deadline;
+    const countdown = countdownTarget && !isPast
+        ? formatCountdown(new Date(countdownTarget))
+        : "";
+
+    return (
+        <div className={cn("space-y-4 rounded-2xl border border-border bg-gradient-to-b from-primary/5 to-card p-5 shadow-sm", isPast && "opacity-70")}>
+            <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                        <ClipboardCheck className="h-4.5 w-4.5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold">Assessment round</p>
+                        <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">{isPhysical ? "Attend the assessment at the scheduled time." : "Complete and submit the task before the deadline."}</p>
+                    </div>
+                </div>
+                {countdown && (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                        <Clock className="h-3 w-3" />{countdown}
+                    </span>
+                )}
+            </div>
+
+            <DetailCard>
+                {!isPhysical && round.assessment_deadline && (
+                    <DetailRow icon={<CalendarClock className="h-4 w-4" />} label="Deadline" value={formatTimestamp(round.assessment_deadline, "EEEE, MMMM d, yyyy 'at' h:mm a")} />
+                )}
+                {isPhysical && round.assessment_start_at && (
+                    <DetailRow icon={<CalendarClock className="h-4 w-4" />} label="Starts" value={formatTimestamp(round.assessment_start_at, "EEEE, MMMM d, yyyy 'at' h:mm a")} />
+                )}
+                {isPhysical && round.assessment_end_at && (
+                    <DetailRow icon={<Clock className="h-4 w-4" />} label="Ends" value={formatTimestamp(round.assessment_end_at, "EEEE, MMMM d, yyyy 'at' h:mm a")} />
+                )}
+                <DetailRow
+                    icon={isPhysical ? <MapPinned className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+                    label="Delivery"
+                    value={isPhysical ? "Physical / in person" : "Online"}
+                />
+                {isPhysical && round.interview_address && (
+                    <DetailRow icon={<MapPin className="h-4 w-4" />} label="Location">
+                        <p className="text-sm font-medium text-foreground">{round.interview_address}</p>
+                        {round.map_link && (
+                            <Button variant="outline" size="sm" className="mt-2 h-8 text-xs" asChild>
+                                <a href={round.map_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1.5 h-3.5 w-3.5" />Open in Maps</a>
+                            </Button>
+                        )}
+                    </DetailRow>
+                )}
+            </DetailCard>
+
+            {(round.assessment_link || round.assessment_attachment_name) && (
+                <div className="grid gap-2 sm:grid-cols-2">
+                    {round.assessment_link && (
+                        <Button asChild className="h-10">
+                            <a href={round.assessment_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Open assessment</a>
+                        </Button>
+                    )}
+                    {round.assessment_attachment_name && (
+                        <Button variant="outline" asChild className="h-10 min-w-0">
+                            <a href={`/api/candidate/interview-rounds/${round.id}/assessment-attachment`}>
+                                <Download className="mr-2 h-4 w-4 shrink-0" />
+                                <span className="truncate">{round.assessment_attachment_name}</span>
+                            </a>
+                        </Button>
+                    )}
+                </div>
+            )}
+            {round.assessment_attachment_name && (
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><FileText className="h-3.5 w-3.5" />Attached instructions are available as a secure download.</p>
+            )}
+            {!isPhysical && <AssessmentSubmissionForm round={round} isPast={isPast} onSubmitted={onSubmitted} />}
         </div>
     );
 }
@@ -613,7 +850,7 @@ function PendingPanel({ inv, onAccept, onDecline, isSubmitting, selectedSlot, se
                         <p><span className="font-medium text-foreground">Selected:</span> {formatUTCDate(selectedSlot.date, "EEE, MMM d, yyyy")}{!selectedSlot.is_alternative && ` · ${formatUTCTime(selectedSlot.date, selectedSlot.time)}`}</p>
                     </div>
                     <div className="flex gap-2">
-                        <Button className="flex-1 h-10 bg-[linear-gradient(135deg,var(--primary),var(--accent))] shadow-md shadow-primary/20 hover:shadow-primary/30" onClick={onAccept} disabled={isSubmitting}>
+                        <Button className="h-10 flex-1" onClick={onAccept} disabled={isSubmitting}>
                             {isSubmitting ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Processing…</> : <><Check className="h-3.5 w-3.5 mr-1.5" />Confirm Selection</>}
                         </Button>
                         <Button variant="outline" className="h-10 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={onDecline} disabled={isSubmitting}>
@@ -862,7 +1099,17 @@ function RoundPanel({ round, invitationId, onRefresh, onCancelRound }: { round: 
         <div className="space-y-4">
             {outcomeStyle && <StatusBanner icon={outcomeStyle.icon} title={outcomeStyle.title} variant={outcomeStyle.banner} />}
 
-            {slot && !isPendingResponse && (
+            {round.interview_mode === "assessment" && (
+                <AssessmentScheduleCard
+                    round={round}
+                    isPast={isDone || (round.assessment_delivery_mode === "physical"
+                        ? !!round.assessment_end_at && new Date(round.assessment_end_at) < new Date()
+                        : !!round.assessment_deadline && new Date(round.assessment_deadline) < new Date())}
+                    onSubmitted={onRefresh}
+                />
+            )}
+
+            {round.interview_mode !== "assessment" && slot && !isPendingResponse && (
                 <InterviewScheduleCard
                     heading={isConfirmed ? `${round.round_label ?? `Round ${round.round_number}`} confirmed` : "Awaiting confirmation"}
                     subheading={isConfirmed ? "Your interview is scheduled — all details below." : "The employer will confirm the final details shortly."}

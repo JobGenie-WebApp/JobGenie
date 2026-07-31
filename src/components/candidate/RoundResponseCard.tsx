@@ -220,7 +220,7 @@ export function RoundResponseCard({
             {/* Actions */}
             <div className="flex gap-2 pt-1">
                 <Button
-                    className="flex-1 h-10 bg-[linear-gradient(135deg,var(--primary),var(--accent))] shadow-md shadow-primary/20 hover:shadow-primary/30"
+                    className="h-10 flex-1"
                     onClick={handleAccept}
                     disabled={!selectedSlot || isSubmitting}
                 >

@@ -70,7 +70,7 @@ export default async function AdminProfilesPage() {
                     <Badge variant="outline" className="w-fit border-primary/25 text-sm">
                         {subAdminCount} / {maxSubAdmins} sub-admins
                     </Badge>
-                    <Button asChild disabled={!canAddMore} className="gap-2" variant={canAddMore ? "gradient" : "secondary"}>
+                    <Button asChild disabled={!canAddMore} className="gap-2" variant={canAddMore ? "default" : "secondary"}>
                         <Link href="/employer/admins/add">
                             <Plus className="h-4 w-4" />
                             Add sub-admin

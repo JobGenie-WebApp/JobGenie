@@ -117,7 +117,7 @@ function GenieScene({ content }: { content: LandingContent['hero'] }) {
       <div className="jg-spark-burst" aria-hidden="true">{Array.from({ length: 22 }, (_, i) => <i key={i} style={{ '--n': i } as React.CSSProperties} />)}</div>
       <motion.div className="jg-genie" initial={{ opacity: 0, x: 45, scale: .88 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: 1, delay: .15, ease: [0.22, 1, 0.36, 1] }}>
         <Image
-          src="/genie.png"
+          src="/Genie3.png"
           alt={content.genieImageAlt}
           fill
           priority

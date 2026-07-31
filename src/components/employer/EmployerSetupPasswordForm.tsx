@@ -151,7 +151,7 @@ export function EmployerSetupPasswordForm({ token }: { token: string }) {
             </FormField>
 
             {/* Submit Button */}
-            <Button type="submit" variant="gradient" className="w-full" size="lg" disabled={isPending}>
+            <Button type="submit" className="w-full" size="lg" disabled={isPending}>
                 {isPending ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />

@@ -78,7 +78,7 @@ export default async function CandidateDashboardPage() {
                             Your profile is under review. You can browse jobs, but applications stay paused until MIS approves you — typically within 24 hours.
                         </p>
                     </div>
-                    <Button variant="gradient" size="sm" className="shrink-0" asChild>
+                    <Button size="sm" className="shrink-0" asChild>
                         <Link href="/candidate/profile">Check status</Link>
                     </Button>
                 </Card>

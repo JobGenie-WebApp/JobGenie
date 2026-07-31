@@ -96,7 +96,7 @@ export function MISLoginForm() {
             </FormField>
 
             {/* Submit Button */}
-            <Button type="submit" variant="gradient" className="w-full" size="lg" disabled={isPending}>
+            <Button type="submit" className="w-full" size="lg" disabled={isPending}>
                 {isPending ? (
                     <>
                         <Loader2 className="h-4 w-4 animate-spin" />

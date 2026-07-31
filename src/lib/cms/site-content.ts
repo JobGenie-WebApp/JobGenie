@@ -87,6 +87,12 @@ async function loadSiteContent(mode: ContentMode): Promise<SiteContent> {
         footer: applyOverrides(siteContent.footer, overrides.footer),
     };
 
+    // Migrate the original candidate-only CTA saved by older CMS seeds to the
+    // shared account-type chooser without overwriting intentional custom URLs.
+    if (merged.navigation.getStarted.href === '/candidate/signup') {
+        merged.navigation.getStarted.href = '/signup';
+    }
+
     const rows = (nav.data ?? [])
         .map((row) => resolveNavRow(row as NavRow, mode))
         .filter((row): row is NavRow => row !== null && row.is_visible);

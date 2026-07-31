@@ -162,7 +162,7 @@ export const navigationContent: SiteNavigationContent = {
     { href: '/explore-genie', id: 'explore-genie', label: 'Explore Genie' },
   ],
   signIn: { label: 'Sign In', href: '/login' },
-  getStarted: { label: 'Get Started', href: '/candidate/signup' },
+  getStarted: { label: 'Get Started', href: '/signup' },
 };
 
 export const footerContent: SiteFooterContent = {

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Upload, FileText, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,42 +28,7 @@ export function BRCertificateUpload({
     const [verificationMessage, setVerificationMessage] = useState("");
     const [isDragging, setIsDragging] = useState(false);
 
-    const handleFileChange = useCallback(
-        async (selectedFile: File) => {
-            // Validate file type
-            const validTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
-            if (!validTypes.includes(selectedFile.type)) {
-                toast.error("Invalid file type. Please upload a PDF or image file (JPG, PNG).");
-                return;
-            }
-
-            // Validate file size (max 10MB)
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            if (selectedFile.size > maxSize) {
-                toast.error("File size must be less than 10MB.");
-                return;
-            }
-
-            setFile(selectedFile);
-
-            // Generate preview for images
-            if (selectedFile.type.startsWith("image/")) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    setFilePreview(e.target?.result as string);
-                };
-                reader.readAsDataURL(selectedFile);
-            } else {
-                setFilePreview(null);
-            }
-
-            // Upload file and verify
-            await uploadAndVerify(selectedFile);
-        },
-        [companyName, businessRegistrationNo]
-    );
-
-    const uploadAndVerify = async (fileToUpload: File) => {
+    const uploadAndVerify = useCallback(async (fileToUpload: File) => {
         if (!companyName || !businessRegistrationNo) {
             toast.error("Please fill in company name and registration number first.");
             return;
@@ -141,7 +107,40 @@ export function BRCertificateUpload({
             setIsUploading(false);
             setIsVerifying(false);
         }
-    };
+    }, [businessRegistrationNo, companyName, onFileSelect, onVerificationComplete]);
+
+    const handleFileChange = useCallback(
+        async (selectedFile: File) => {
+            // Validate file type
+            const validTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+            if (!validTypes.includes(selectedFile.type)) {
+                toast.error("Invalid file type. Please upload a PDF or image file (JPG, PNG).");
+                return;
+            }
+
+            // Validate file size (max 10MB)
+            const maxSize = 10 * 1024 * 1024;
+            if (selectedFile.size > maxSize) {
+                toast.error("File size must be less than 10MB.");
+                return;
+            }
+
+            setFile(selectedFile);
+
+            if (selectedFile.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setFilePreview(e.target?.result as string);
+                };
+                reader.readAsDataURL(selectedFile);
+            } else {
+                setFilePreview(null);
+            }
+
+            await uploadAndVerify(selectedFile);
+        },
+        [uploadAndVerify]
+    );
 
     const handleDrop = useCallback(
         (e: React.DragEvent<HTMLDivElement>) => {
@@ -176,16 +175,18 @@ export function BRCertificateUpload({
         <div className="space-y-4">
             {!file ? (
                 <Card
-                    className={`border-2 border-dashed transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25"
+                    className={`rounded-2xl border-2 border-dashed bg-background/50 shadow-none transition-colors ${isDragging ? "border-primary bg-primary/5" : "border-border"
                         }`}
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                 >
-                    <CardContent className="flex flex-col items-center justify-center py-10">
-                        <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Upload Business Registration Certificate</h3>
-                        <p className="text-sm text-muted-foreground mb-4 text-center">
+                    <CardContent className="flex flex-col items-center justify-center px-5 py-9 text-center">
+                        <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                            <Upload className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <h3 className="text-base font-semibold text-foreground">Upload business registration certificate</h3>
+                        <p className="mb-5 mt-2 max-w-md text-sm leading-6 text-muted-foreground">
                             Drag and drop your BR certificate here, or click to browse
                         </p>
                         <input
@@ -202,25 +203,28 @@ export function BRCertificateUpload({
                             disabled={isUploading}
                         />
                         <label htmlFor="br-certificate">
-                            <Button variant="outline" asChild disabled={isUploading}>
+                            <Button variant="outline" asChild disabled={isUploading} className="min-h-11 px-5">
                                 <span className="cursor-pointer">Choose File</span>
                             </Button>
                         </label>
-                        <p className="text-xs text-muted-foreground mt-4">
+                        <p className="mt-4 text-xs text-muted-foreground">
                             Supported formats: PDF, JPG, PNG (Max size: 10MB)
                         </p>
                     </CardContent>
                 </Card>
             ) : (
-                <Card>
+                <Card className="rounded-2xl border-border/80 bg-background/50 shadow-none">
                     <CardContent className="py-6">
                         <div className="flex items-start gap-4">
                             <div className="flex-shrink-0">
                                 {filePreview ? (
-                                    <img
+                                    <Image
                                         src={filePreview}
                                         alt="Certificate preview"
-                                        className="w-20 h-20 object-cover rounded border"
+                                        width={80}
+                                        height={80}
+                                        unoptimized
+                                        className="h-20 w-20 rounded border object-cover"
                                     />
                                 ) : (
                                     <div className="w-20 h-20 bg-muted rounded border flex items-center justify-center">
@@ -267,9 +271,8 @@ export function BRCertificateUpload({
                                                 </div>
                                                 <Button
                                                     variant="outline"
-                                                    size="sm"
                                                     onClick={handleRetry}
-                                                    className="mt-3"
+                                                    className="mt-3 min-h-11"
                                                 >
                                                     Retry Verification
                                                 </Button>
@@ -280,7 +283,6 @@ export function BRCertificateUpload({
                             </div>
                             <Button
                                 variant="ghost"
-                                size="sm"
                                 onClick={() => {
                                     setFile(null);
                                     setFilePreview(null);
@@ -289,6 +291,7 @@ export function BRCertificateUpload({
                                     onVerificationComplete(false);
                                 }}
                                 disabled={isUploading || isVerifying}
+                                className="min-h-11"
                             >
                                 Remove
                             </Button>

@@ -74,7 +74,7 @@ export function ForgotPasswordForm() {
                 />
             </div>
 
-            <Button type="submit" variant="gradient" className="w-full" disabled={isPending}>
+            <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />

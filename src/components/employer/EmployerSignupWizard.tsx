@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CompanyInfoStep } from "./steps/CompanyInfoStep";
 import { EmployerProfileStep } from "./steps/EmployerProfileStep";
-import { registerEmployer, type ActionState } from "@/app/actions/auth";
+import { registerEmployer } from "@/app/actions/auth";
 
 const steps = [
     { id: "company", title: "Company Info", description: "Business details & BR verification" },
@@ -19,10 +19,11 @@ export function EmployerSignupWizard() {
     const [currentStep, setCurrentStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isCertificateVerified, setIsCertificateVerified] = useState(false);
+    const [acceptedPolicies, setAcceptedPolicies] = useState(false);
 
     const [companyData, setCompanyData] = useState({
         companyName: "", businessRegistrationNo: "", industry: "",
-        businessRegisteredAddress: "", brCertificateUrl: "",
+        industryId: "", businessRegisteredAddress: "", brCertificateUrl: "",
     });
     const [brCertificateFile, setBrCertificateFile] = useState<File | null>(null);
     const [employerData, setEmployerData] = useState({
@@ -32,7 +33,17 @@ export function EmployerSignupWizard() {
 
     useEffect(() => {
         const sc = localStorage.getItem("employer-company-data");
-        if (sc) { try { setCompanyData(JSON.parse(sc)); } catch {} }
+        if (sc) {
+            try {
+                const savedCompany = JSON.parse(sc);
+                setCompanyData(prev => ({
+                    ...prev,
+                    ...savedCompany,
+                    industry: savedCompany.industryId ? savedCompany.industry : "",
+                    industryId: savedCompany.industryId || "",
+                }));
+            } catch {}
+        }
         const se = localStorage.getItem("employer-profile-data");
         if (se) { try { setEmployerData(JSON.parse(se)); } catch {} }
         const ss = localStorage.getItem("employer-wizard-step");
@@ -52,6 +63,11 @@ export function EmployerSignupWizard() {
     }, [currentStep]);
 
     const handleSubmit = useCallback(async () => {
+        if (!acceptedPolicies) {
+            toast.error("Please agree to the Terms & Conditions and Privacy Policy");
+            return;
+        }
+
         setIsLoading(true);
         try {
             let uploadedCertificateUrl = "";
@@ -73,6 +89,7 @@ export function EmployerSignupWizard() {
             Object.entries(companyData).forEach(([k, v]) => formData.append(k, v));
             formData.set("brCertificateUrl", uploadedCertificateUrl);
             Object.entries(employerData).forEach(([k, v]) => formData.append(k, v));
+            formData.set("acceptPolicies", String(acceptedPolicies));
 
             const result = await registerEmployer(null, formData);
             if (result.success) {
@@ -96,12 +113,12 @@ export function EmployerSignupWizard() {
         } finally {
             setIsLoading(false);
         }
-    }, [companyData, employerData, brCertificateFile, router]);
+    }, [acceptedPolicies, companyData, employerData, brCertificateFile, router]);
 
     return (
         <div className="space-y-5">
             {/* Step indicator */}
-            <div className="rounded-2xl border border-border bg-card/60 p-5">
+            <div className="rounded-2xl border border-border/80 bg-card/95 p-4 shadow-[0_12px_40px_-30px_rgba(0,0,0,.42)] ring-1 ring-primary/[0.04] sm:p-5">
                 <div className="flex items-center gap-0">
                     {steps.map((step, i) => {
                         const done = i < currentStep;
@@ -119,7 +136,7 @@ export function EmployerSignupWizard() {
                                     </div>
                                     <div className="hidden sm:block">
                                         <p className={cn("text-xs font-semibold", active ? "text-foreground" : done ? "text-primary" : "text-muted-foreground/60")}>{step.title}</p>
-                                        <p className={cn("text-[11px]", active ? "text-muted-foreground" : "text-muted-foreground/50")}>{step.description}</p>
+                                        <p className={cn("text-xs", active ? "text-muted-foreground" : "text-muted-foreground/70")}>{step.description}</p>
                                     </div>
                                 </div>
                                 {i < steps.length - 1 && (
@@ -151,6 +168,8 @@ export function EmployerSignupWizard() {
                     onPrevious={handlePrevious}
                     onSubmit={handleSubmit}
                     isLoading={isLoading}
+                    acceptedPolicies={acceptedPolicies}
+                    onAcceptedPoliciesChange={setAcceptedPolicies}
                 />
             )}
         </div>
