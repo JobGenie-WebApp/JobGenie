@@ -8,6 +8,7 @@ import { StatCardContainer } from "@/components/shared/StatCardContainer";
 import { EmployerStatsCard } from "@/components/employer/EmployerStatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PortalSectionTitle } from "@/components/shared/PortalSectionTitle";
+import { EmployerApprovalStatusNotification } from "@/components/employer/EmployerApprovalStatusNotification";
 
 export const metadata: Metadata = {
     title: "Dashboard | JobGenie",
@@ -24,24 +25,47 @@ export default async function EmployerDashboardPage() {
     }
 
     let isPending = false;
+    let showApprovalNotification = false;
+    let approvalStatus: "approved" | "rejected" | null = null;
+    let rejectionReason: string | null = null;
+    let companyName = "Your company";
 
     const { data: employerData } = await supabase
         .from('employers')
         .select(`
             id,
             companies!inner (
-                approval_status
+                company_name,
+                approval_status,
+                approval_status_message_seen,
+                rejection_reason
             )
         `)
         .eq('user_id', user.id)
         .single();
 
     // Type assertion for nested company data
-    const company = (employerData as Record<string, unknown>)?.companies as { approval_status?: string } | null;
+    const company = (employerData as Record<string, unknown>)?.companies as {
+        company_name?: string;
+        approval_status?: string;
+        approval_status_message_seen?: boolean;
+        rejection_reason?: string | null;
+    } | null;
+
+    companyName = company?.company_name || companyName;
 
     // Check if company is pending approval
     if (company?.approval_status === 'pending') {
         isPending = true;
+    }
+
+    if (
+        company?.approval_status_message_seen === false &&
+        (company.approval_status === "approved" || company.approval_status === "rejected")
+    ) {
+        showApprovalNotification = true;
+        approvalStatus = company.approval_status;
+        rejectionReason = company.rejection_reason ?? null;
     }
 
     // TODO: Fetch real stats from database
@@ -58,6 +82,14 @@ export default async function EmployerDashboardPage() {
             pageDescription="Welcome back! Here's an overview of your recruitment activities."
         >
             <RestrictionToastListener />
+
+            {showApprovalNotification && approvalStatus && (
+                <EmployerApprovalStatusNotification
+                    approvalStatus={approvalStatus}
+                    companyName={companyName}
+                    rejectionReason={rejectionReason}
+                />
+            )}
 
             {/* Pending Status Alert */}
             {isPending && (

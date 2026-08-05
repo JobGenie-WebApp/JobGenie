@@ -1,10 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
-  ArrowRight,
   BadgeCheck,
   BarChart3,
   BriefcaseBusiness,
@@ -126,16 +124,6 @@ function GenieScene({ content }: { content: LandingContent['hero'] }) {
         />
       </motion.div>
       <div className="jg-wish-orbit" aria-hidden="true"><i /><i /><i /></div>
-      {content.wishCards.map((card, i) => (
-        <div className={`jg-wish-card ${i === 0 ? 'jg-wish-card--job' : 'jg-wish-card--talent'}`} key={i}>
-          <span>{i === 0 ? <BriefcaseBusiness size={15} /> : <UsersRound size={15} />}</span>
-          <div>
-            <small><T k={`landing.hero.wishCards.${i}.eyebrow`}>{card.eyebrow}</T></small>
-            <b><T k={`landing.hero.wishCards.${i}.title`}>{card.title}</T></b>
-            <em><T k={`landing.hero.wishCards.${i}.note`}>{card.note}</T></em>
-          </div>
-        </div>
-      ))}
       <MagicLamp active={rubbed} label={content.lampLabel} onRub={rubLamp} />
     </div>
   );
@@ -264,6 +252,11 @@ function Testimonial({ content }: { content: LandingContent['testimonial'] }) {
 }
 
 const highlightIcons = [Search, BarChart3, ShieldCheck] as const;
+const highlightImages = [
+  { src: '/11.png', width: 1080, height: 1350 },
+  { src: '/2.png', width: 1024, height: 1536 },
+  { src: '/3.png', width: 1024, height: 1536 },
+] as const;
 
 function PlatformHighlights({ content }: { content: LandingContent['highlights'] }) {
   return (
@@ -272,12 +265,42 @@ function PlatformHighlights({ content }: { content: LandingContent['highlights']
         <div className="jg-highlight-list">
           {content.map((item, index) => {
             const Icon = highlightIcons[index] ?? Sparkles;
+            const image = highlightImages[index] ?? highlightImages[0];
             return (
               <Reveal className="jg-highlight" delay={index * 0.06} key={index}>
                 <div className="jg-highlight__intro">
-                  <div className="jg-highlight__meta">
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <i><Icon size={20} /></i>
+                  <div
+                    className="jg-highlight__media"
+                    style={{ position: 'relative', overflow: 'hidden', borderRadius: 18, background: 'var(--jg-surface-soft)' }}
+                  >
+                    <Image
+                      src={image.src}
+                      alt=""
+                      width={image.width}
+                      height={image.height}
+                      sizes="(max-width: 640px) calc(100vw - 76px), (max-width: 900px) 150px, 320px"
+                      className="jg-highlight__image"
+                      style={{ display: 'block', width: '100%', height: 300, objectFit: 'contain', objectPosition: 'center' }}
+                    />
+                    <i
+                      style={{
+                        position: 'absolute',
+                        zIndex: 1,
+                        top: 12,
+                        left: 12,
+                        width: 48,
+                        height: 48,
+                        display: 'grid',
+                        placeItems: 'center',
+                        borderRadius: 12,
+                        color: 'var(--jg-green)',
+                        background: 'rgba(238,255,245,.9)',
+                        boxShadow: '0 8px 24px rgba(7,50,24,.12)',
+                        fontStyle: 'normal',
+                      }}
+                    >
+                      <Icon size={20} />
+                    </i>
                   </div>
                   <p><T k={`landing.highlights.${index}.eyebrow`}>{item.eyebrow}</T></p>
                 </div>
@@ -296,27 +319,6 @@ function PlatformHighlights({ content }: { content: LandingContent['highlights']
             );
           })}
         </div>
-      </div>
-    </section>
-  );
-}
-
-function CTA({ content }: { content: LandingContent['cta'] }) {
-  return (
-    <section className="jg-cta-wrap">
-      <div className="jg-container">
-        <Reveal className="jg-cta">
-          <MagicDust />
-          <div className="jg-cta__orb"><Sparkles size={25} /></div>
-          <span className="jg-kicker"><T k="landing.cta.kicker">{content.kicker}</T></span>
-          <h2><T k="landing.cta.title">{content.title}</T> <em><T k="landing.cta.emphasizedTitle">{content.emphasizedTitle}</T></em></h2>
-          <p><T k="landing.cta.description">{content.description}</T></p>
-          <div className="jg-cta__actions">
-            <Link href={content.primaryCta.href}><T k="landing.cta.primaryCta.label">{content.primaryCta.label}</T> <ArrowRight size={17} /></Link>
-            <Link href={content.secondaryCta.href}><T k="landing.cta.secondaryCta.label">{content.secondaryCta.label}</T></Link>
-          </div>
-          <small><ShieldCheck size={13} /> <T k="landing.cta.trustNote">{content.trustNote}</T></small>
-        </Reveal>
       </div>
     </section>
   );
@@ -347,7 +349,6 @@ export function LandingExperience({ content = landingContent }: { content?: Land
       <PlatformHighlights content={content.highlights} />
       <HowItWorks content={content.journeys} />
       <Testimonial content={content.testimonial} />
-      <CTA content={content.cta} />
     </main>
   );
 }

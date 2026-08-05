@@ -6,7 +6,7 @@ export const landingContent: LandingContent = {
     title: 'Hire the best,',
     emphasizedTitle: 'Hired by the best!',
     description:
-      'Your Career Companion, guiding you through the job market. The best teams are looking for the best talent. The best talent is looking for the best team. I’m here to grant your wish! ',
+      'The best teams are looking for the best talent. The best talent is looking for the best team. I’m here to grant your wish! ',
     trustLabel: 'Trusted by modern hiring teams',
     lampLabel: 'Rub the lamp',
     genieImageAlt: 'The JobGenie emerging from a magic lamp',
