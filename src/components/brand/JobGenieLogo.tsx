@@ -20,13 +20,13 @@ export function JobGenieLogo({
     return (
         <span className={cn("inline-flex shrink-0 items-center gap-2.5", className)}>
             <Image
-                src="/logo.jpg"
+                src="/logoco.jpg"
                 alt="JobGenie"
                 width={1024}
                 height={966}
                 priority={priority}
                 sizes={sizes}
-                className={cn("h-10 w-auto object-contain", imageClassName)}
+                className={cn("h-10 w-auto object-contain rounded-xl", imageClassName)}
             />
             <span
                 aria-hidden="true"

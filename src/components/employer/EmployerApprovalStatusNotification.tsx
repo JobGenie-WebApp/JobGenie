@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { markCompanyApprovalMessageAsSeen } from "@/app/actions/employer";
 import { Button } from "@/components/ui/button";
+import { ApprovalCelebrationVideo } from "@/components/shared/ApprovalCelebrationVideo";
 import {
     Dialog,
     DialogContent,
@@ -11,70 +13,74 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { markApprovalMessageAsSeen } from "@/app/actions/candidate";
-import { ApprovalCelebrationVideo } from "@/components/shared/ApprovalCelebrationVideo";
 
-interface ApprovalStatusNotificationProps {
+interface EmployerApprovalStatusNotificationProps {
     approvalStatus: "approved" | "rejected";
+    companyName: string;
     rejectionReason?: string | null;
 }
 
-export function ApprovalStatusNotification({
+export function EmployerApprovalStatusNotification({
     approvalStatus,
+    companyName,
     rejectionReason,
-}: ApprovalStatusNotificationProps) {
+}: EmployerApprovalStatusNotificationProps) {
     const [open, setOpen] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const isApproved = approvalStatus === "approved";
 
     const handleClose = async () => {
         setIsSubmitting(true);
 
-        const result = await markApprovalMessageAsSeen();
-
-        if (result.success) {
-            setOpen(false);
-        } else {
-            console.error("Failed to mark message as seen:", result.message);
-            // Still close the dialog even if the API call failed
-            setOpen(false);
+        const result = await markCompanyApprovalMessageAsSeen();
+        if (!result.success) {
+            console.error("Failed to mark company approval message as seen:", result.message);
         }
 
+        setOpen(false);
         setIsSubmitting(false);
     };
 
     return (
-        <Dialog open={open} onOpenChange={() => { }}>
-            <DialogContent className={isApproved ? "max-h-[90vh] overflow-y-auto border-emerald-400/30 bg-[radial-gradient(circle_at_82%_50%,#343b2b_0%,#18291c_42%,#091f14_100%)] text-white shadow-[0_32px_90px_rgba(1,18,10,0.55)] sm:max-w-[780px]" : "sm:max-w-[500px]"} showCloseButton={false} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-                <div className={isApproved ? "grid items-center gap-5 sm:grid-cols-[minmax(0,1fr)_250px]" : "space-y-4"}>
+        <Dialog open={open} onOpenChange={() => {}}>
+            <DialogContent
+                className={isApproved ? "max-h-[90vh] overflow-y-auto border-emerald-400/30 bg-[radial-gradient(circle_at_82%_50%,#343b2b_0%,#18291c_42%,#091f14_100%)] text-white shadow-[0_32px_90px_rgba(1,18,10,0.55)] sm:max-w-[800px]" : "sm:max-w-[520px]"}
+                showCloseButton={false}
+                onPointerDownOutside={(event) => event.preventDefault()}
+                onEscapeKeyDown={(event) => event.preventDefault()}
+            >
+                <div className={isApproved ? "grid items-center gap-5 sm:grid-cols-[minmax(0,1fr)_260px]" : "space-y-4"}>
                     <div className="space-y-4">
                         <DialogHeader>
                             <div className="mb-2 flex items-center gap-3">
-                                {isApproved ? (
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-300/15 ring-1 ring-emerald-300/30">
+                                <div
+                                    className={
+                                        isApproved
+                                            ? "flex h-12 w-12 items-center justify-center rounded-full bg-emerald-300/15 ring-1 ring-emerald-300/30"
+                                            : "flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20"
+                                    }
+                                >
+                                    {isApproved ? (
                                         <CheckCircle2 className="h-6 w-6 text-emerald-300" />
-                                    </div>
-                                ) : (
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                                    ) : (
                                         <XCircle className="h-6 w-6 text-red-600 dark:text-red-500" />
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                                 <DialogTitle className={isApproved ? "text-2xl text-white" : "text-2xl"}>
-                                    {isApproved ? "Profile Approved!" : "Profile Needs Improvement"}
+                                    {isApproved ? "Company Approved!" : "Company Profile Needs Improvement"}
                                 </DialogTitle>
                             </div>
                             <DialogDescription className={isApproved ? "pt-2 text-base text-emerald-50/75" : "pt-2 text-base"}>
                                 {isApproved ? (
                                     <>
-                                        🎉 <strong>Congratulations!</strong> Your profile has been approved by our MIS
-                                        administrator. Welcome to JobGenie! You can now explore job opportunities and
-                                        submit applications.
+                                        🎉 <strong>Congratulations!</strong> {companyName} has been approved by our MIS
+                                        administrator. Your team can now post jobs, explore approved talent, and use the
+                                        full JobGenie recruitment workflow.
                                     </>
                                 ) : (
                                     <>
-                                        We&apos;ve reviewed your profile and it needs some improvements before approval.
-                                        Please update your profile and resubmit it for review.
+                                        We&apos;ve reviewed {companyName}&apos;s profile and it needs some improvements
+                                        before approval. Please update the company profile and resubmit it for review.
                                     </>
                                 )}
                             </DialogDescription>
@@ -99,7 +105,7 @@ export function ApprovalStatusNotification({
                                         : ""
                                 }
                             >
-                                {isSubmitting ? "Processing..." : "OK"}
+                                {isSubmitting ? "Processing..." : isApproved ? "Start Hiring" : "OK"}
                             </Button>
                         </DialogFooter>
                     </div>
