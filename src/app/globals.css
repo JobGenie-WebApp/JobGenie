@@ -1591,6 +1591,14 @@ section, main, article, div[class*="container"] {
 /* Ensure all images and media don't overflow */
 img, video, iframe {
   max-width: 100%;
+}
+
+/* `height: auto` only makes sense for replaced elements with an intrinsic
+   aspect ratio. On an iframe it resolves to the HTML default of 150px, and
+   because this rule is unlayered it outranks Tailwind's layered `h-full`
+   utilities and even the `height="100%"` attribute — which silently capped
+   every iframe in the app (company location map, resume viewers) at 150px. */
+img, video {
   height: auto;
 }
 

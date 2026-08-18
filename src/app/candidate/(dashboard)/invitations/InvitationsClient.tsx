@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SplitPaneSkeleton } from "@/components/skeletons/PageSkeletons";
 import { Building2, Mail, ChevronRight } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -99,31 +99,7 @@ export default function InvitationsClient() {
     const selectedInv = invitations.find(i => i.id === selectedId) ?? null;
 
     if (isLoading) {
-        return (
-            <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:flex-row md:h-[calc(100vh-68px-2.5rem*2)] md:min-h-[560px]">
-                <div className="w-full md:w-80 xl:w-96 border-border md:border-r flex flex-col">
-                    <div className="px-4 pt-4 pb-3 border-b border-border space-y-3">
-                        <Skeleton className="h-5 w-28" />
-                        <Skeleton className="h-8 w-full rounded-lg" />
-                    </div>
-                    <div className="divide-y divide-border/60">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                            <div key={i} className="flex gap-2.5 items-start px-4 py-3.5">
-                                <Skeleton className="h-9 w-9 rounded-lg flex-shrink-0" />
-                                <div className="flex-1 space-y-2">
-                                    <Skeleton className="h-3.5 w-3/4" />
-                                    <Skeleton className="h-3 w-1/2" />
-                                    <Skeleton className="h-4 w-24 rounded-full" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="hidden md:flex flex-1 items-center justify-center bg-muted/10">
-                    <Skeleton className="h-40 w-2/3 rounded-2xl" />
-                </div>
-            </div>
-        );
+        return <SplitPaneSkeleton />;
     }
 
     if (invitations.length === 0) {

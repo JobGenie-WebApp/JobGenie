@@ -31,6 +31,9 @@ const nextConfig: NextConfig = {
       "font-src 'self' data:",
       // Supabase REST/Realtime (https + wss) and Vercel insights
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://va.vercel-scripts.com https://*.vercel-insights.com",
+      // The company profile embeds a Google Maps iframe; without frame-src it
+      // falls back to default-src 'self' and would break once CSP is enforced.
+      "frame-src https://maps.google.com https://www.google.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

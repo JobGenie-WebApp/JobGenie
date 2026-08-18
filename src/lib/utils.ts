@@ -85,3 +85,53 @@ export function formatPhoneNumber(phone: string | null | undefined): string {
     // Return the cleaned string if it doesn't match the expected length/format
     return cleaned;
 }
+
+/**
+ * Build a framable Google Maps URL for a company/venue location.
+ *
+ * `map_link` holds whatever the employer pasted, which has included plain
+ * website URLs — those used to be dropped straight into an iframe, so the
+ * "Location" box rendered someone's marketing site instead of a map. Google also
+ * refuses to be framed on its normal /maps UI, so a share link never works
+ * either. We therefore only ever return a maps embed: the stored link is used
+ * when it is already embeddable or carries a place/coordinates, and otherwise
+ * the map is derived from the postal address. Returns null when neither works.
+ */
+export function toMapEmbedUrl(
+    mapLink: string | null | undefined,
+    address?: string | null,
+): string | null {
+    const embed = (q: string) =>
+        `https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=15&output=embed`;
+    const link = mapLink?.trim();
+
+    // Already the /maps/embed URL Google hands out under "Embed a map".
+    if (link && /^https:\/\/(www\.)?google\.[a-z.]+\/maps\/embed/i.test(link)) return link;
+
+    if (link && /^https:\/\/([a-z0-9-]+\.)*google\.[a-z.]+\//i.test(link)) {
+        // .../@6.9271,79.8612,15z/... — coordinates are the most precise signal.
+        const coords = link.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+        if (coords) return embed(`${coords[1]},${coords[2]}`);
+
+        const place = link.match(/\/maps\/place\/([^/?#]+)/i);
+        if (place) return embed(decodeURIComponent(place[1]).replace(/\+/g, " "));
+    }
+
+    const fallback = address?.trim();
+    return fallback ? embed(fallback) : null;
+}
+
+/** The "View larger map" target: the employer's own link when it points at a
+ *  map, otherwise a Google Maps search for the address. */
+export function toMapViewUrl(
+    mapLink: string | null | undefined,
+    address?: string | null,
+): string | null {
+    const link = mapLink?.trim();
+    if (link && /^https:\/\/([a-z0-9-]+\.)*(google\.[a-z.]+|goo\.gl)\//i.test(link)) return link;
+
+    const fallback = address?.trim();
+    return fallback
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`
+        : null;
+}

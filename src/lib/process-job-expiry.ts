@@ -47,9 +47,14 @@ export async function processJobExpiry(): Promise<ExpiryResult> {
     let notifiedCount = 0;
 
     for (const job of jobs) {
-        const employerArr = job.employer as unknown as { user_id: string; first_name: string; email: string }[];
-        const employer = Array.isArray(employerArr) ? employerArr[0] : null;
-        if (!employer) continue;
+        // jobs.employer_id → employers.id is many-to-one, so PostgREST returns a
+        // single object here, not an array. The old `Array.isArray(...) ? [0] : null`
+        // therefore always produced null and every employer was skipped — nobody
+        // was ever told their ad expired.
+        type EmployerRow = { user_id: string; first_name: string; email: string };
+        const embedded = job.employer as unknown as EmployerRow | EmployerRow[] | null;
+        const employer = Array.isArray(embedded) ? embedded[0] ?? null : embedded;
+        if (!employer?.user_id) continue;
 
         const extendUrl = `${baseUrl}/employer/jobs/${job.id}`;
 

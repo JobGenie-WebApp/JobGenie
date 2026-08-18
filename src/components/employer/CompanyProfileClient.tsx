@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Globe, MapPin, Phone, FileText, Users, MapPinned, Pencil, Briefcase } from "lucide-react";
 import { CompanyProfile } from "@/app/actions/employer-profiles";
 import { CompanyInfoDialog } from "@/components/employer/dialogs/CompanyInfoDialog";
-import { formatIndustry } from "@/lib/utils";
+import { formatIndustry, toMapEmbedUrl, toMapViewUrl } from "@/lib/utils";
 
 interface CompanyProfileClientProps {
     company: CompanyProfile;
@@ -24,6 +24,12 @@ export function CompanyProfileClient({ company, isSuperAdmin }: CompanyProfileCl
     useEffect(() => {
         setIsMounted(true);
     }, []);
+
+    // Never frame map_link directly — it holds whatever was pasted, including
+    // plain website URLs. Falls back to the company's address.
+    const companyAddress = company.headoffice_location || company.business_registered_address;
+    const mapEmbedUrl = toMapEmbedUrl(company.map_link, companyAddress);
+    const mapViewUrl = toMapViewUrl(company.map_link, companyAddress);
 
     const companyInitials = company.company_name
         .split(" ")
@@ -179,26 +185,27 @@ export function CompanyProfileClient({ company, isSuperAdmin }: CompanyProfileCl
                                         )}
 
                                         {/* Map */}
-                                        {company.map_link && (
+                                        {mapEmbedUrl && (
                                             <>
                                                 <Separator />
                                                 <div>
                                                     <div className="flex items-center justify-between mb-3">
                                                         <h2 className="text-lg font-semibold">Location</h2>
-                                                        <a
-                                                            href={company.map_link}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-primary hover:underline text-sm font-medium"
-                                                        >
-                                                            View larger map
-                                                        </a>
+                                                        {mapViewUrl && (
+                                                            <a
+                                                                href={mapViewUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-primary hover:underline text-sm font-medium"
+                                                            >
+                                                                View larger map
+                                                            </a>
+                                                        )}
                                                     </div>
-                                                    <div className="w-full h-[350px] rounded-lg overflow-hidden border">
+                                                    <div className="relative w-full h-[350px] rounded-lg overflow-hidden border">
                                                         <iframe
-                                                            src={company.map_link}
-                                                            width="100%"
-                                                            height="100%"
+                                                            src={mapEmbedUrl}
+                                                            className="absolute inset-0 h-full w-full"
                                                             style={{ border: 0 }}
                                                             allowFullScreen
                                                             loading="lazy"
