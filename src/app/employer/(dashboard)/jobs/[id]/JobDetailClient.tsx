@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -171,7 +171,6 @@ function AtsBadge({
 
 export function JobDetailClient({ jobId }: { jobId: string }) {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -233,8 +232,10 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
         }
     };
 
-    // Show extend dialog if ?extend=1
-    const showExtend = searchParams.get("extend") === "1";
+    // The extend panel is driven purely by job.status — a job is only extendable
+    // once the expiry cron has marked it expired, which is also the only state
+    // handleJobAdPaymentAction will apply a paid JOB_AD_EXTEND to. (`?extend=1`
+    // used to be read here but was inert; the panel's own status check overrode it.)
 
     async function doAction(endpoint: string, method = "POST", body?: object) {
         setActionLoading(endpoint);
@@ -435,7 +436,7 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
             )}
 
             {/* Extend panel */}
-            {(job.status === "expired" || showExtend) && job.status === "expired" && (
+            {job.status === "expired" && (
                 <Card className="border-amber-200 bg-amber-50">
                     <CardContent className="p-4">
                         <p className="text-sm font-medium text-amber-800 mb-3">This advertisement has expired. Extend it to continue accepting applications.</p>

@@ -7,7 +7,7 @@ export default function EmployerPaymentsPage() {
             pageTitle="Payments"
             pageDescription="View payment requests, upload payment proofs, and track payment history"
         >
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 <PaymentsClient />
             </div>
         </EmployerLayout>

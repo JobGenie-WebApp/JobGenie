@@ -254,7 +254,7 @@ function JobDetail({
                             </Button>
                         )}
                         {job.status === "expired" && (
-                            <Button size="sm" onClick={() => router.push(`/employer/jobs/${job.id}?extend=1`)}>
+                            <Button size="sm" onClick={() => router.push(`/employer/jobs/${job.id}`)}>
                                 <RefreshCw className="h-4 w-4 mr-1" /> Extend
                             </Button>
                         )}

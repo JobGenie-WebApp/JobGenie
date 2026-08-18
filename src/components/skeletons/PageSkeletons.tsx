@@ -10,20 +10,46 @@ import { Skeleton } from "@/components/ui/skeleton";
  * existing loading behaviour.
  */
 
-function PageShell({ children }: { children: React.ReactNode }) {
+/**
+ * Mirrors the real content container in DashboardShell (`p-5 md:p-6` around a
+ * `mx-auto w-full max-w-7xl` column). Without the max-width the skeleton spanned
+ * the full viewport while the real page is centred and capped — the loading state
+ * looked like a different, broken page.
+ */
+export function PageShell({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex w-full flex-col gap-6 p-4 md:p-6 animate-in fade-in duration-300">
-            {children}
+        <div className="p-5 md:p-6">
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 animate-in fade-in duration-300">
+                {children}
+            </div>
         </div>
     );
 }
 
-/** Title + description placeholder (mirrors PortalPageHeader). */
-function TitleBlock() {
+/** Title + description placeholder (mirrors PortalPageHeader's text-2xl + mt-1). */
+export function TitleBlock() {
     return (
-        <div className="flex flex-col gap-2">
-            <Skeleton className="h-7 w-48" />
-            <Skeleton className="h-4 w-72 max-w-full" />
+        <div className="flex flex-col gap-2.5">
+            <Skeleton className="h-8 w-56 max-w-[70%]" />
+            <Skeleton className="h-4 w-80 max-w-full" />
+        </div>
+    );
+}
+
+/** One list/card row: logo tile, two text lines, status pills, trailing action. */
+function CardRow() {
+    return (
+        <div className="flex items-start gap-4 rounded-xl border border-border bg-card p-4">
+            <Skeleton className="h-11 w-11 shrink-0 rounded-lg" />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <Skeleton className="h-4 w-1/3 min-w-32" />
+                <Skeleton className="h-3 w-1/2 min-w-40" />
+                <div className="flex gap-2 pt-1">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+            </div>
+            <Skeleton className="hidden h-9 w-24 shrink-0 rounded-lg sm:block" />
         </div>
     );
 }
@@ -56,21 +82,50 @@ export function DashboardSkeleton() {
 }
 
 /* ── List: filter row + stacked cards ────────────────────────────────────── */
-export function ListSkeleton({ rows = 6 }: { rows?: number }) {
+export function ListSkeleton({ rows = 5 }: { rows?: number }) {
     return (
         <PageShell>
             <TitleBlock />
             <div className="flex flex-wrap items-center gap-2">
-                <Skeleton className="h-9 w-full max-w-xs" />
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-full max-w-xs rounded-lg" />
+                <Skeleton className="h-9 w-24 rounded-lg" />
+                <Skeleton className="h-9 w-24 rounded-lg" />
             </div>
             <div className="flex flex-col gap-3">
                 {Array.from({ length: rows }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-full rounded-xl" />
+                    <CardRow key={i} />
                 ))}
             </div>
         </PageShell>
+    );
+}
+
+/* ── Split pane: list rail + detail pane (invitations, inbox-style pages) ── */
+export function SplitPaneSkeleton({ rows = 6 }: { rows?: number }) {
+    return (
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:h-[calc(100vh-68px-2.5rem*2)] md:min-h-[560px] md:flex-row">
+            <div className="flex w-full flex-col border-border md:w-80 md:border-r xl:w-96">
+                <div className="space-y-3 border-b border-border px-4 pt-4 pb-3">
+                    <Skeleton className="h-5 w-28" />
+                    <Skeleton className="h-8 w-full rounded-lg" />
+                </div>
+                <div className="divide-y divide-border/60">
+                    {Array.from({ length: rows }).map((_, i) => (
+                        <div key={i} className="flex items-start gap-2.5 px-4 py-3.5">
+                            <Skeleton className="h-9 w-9 shrink-0 rounded-lg" />
+                            <div className="flex-1 space-y-2">
+                                <Skeleton className="h-3.5 w-3/4" />
+                                <Skeleton className="h-3 w-1/2" />
+                                <Skeleton className="h-4 w-24 rounded-full" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="hidden flex-1 items-center justify-center bg-muted/10 md:flex">
+                <Skeleton className="h-40 w-2/3 rounded-2xl" />
+            </div>
+        </div>
     );
 }
 

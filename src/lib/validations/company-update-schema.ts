@@ -60,11 +60,14 @@ export const companyUpdateSchema = z.object({
         .optional()
         .default([]),
 
+    // Must be a Google Maps link. Accepting any URL let plain website addresses
+    // through, which the profile page then rendered inside the map iframe.
     map_link: z
         .string()
-        .refine((val) => !val || val === "" || /^https?:\/\/.+/.test(val), {
-            message: "Please enter a valid map link URL (include http:// or https://)",
-        })
+        .refine(
+            (val) => !val || val === "" || /^https:\/\/([a-z0-9-]+\.)*(google\.[a-z.]+|goo\.gl)\//i.test(val),
+            { message: "Enter a Google Maps link — use Share → Embed a map and paste that URL" },
+        )
         .optional()
         .or(z.literal("")),
 });

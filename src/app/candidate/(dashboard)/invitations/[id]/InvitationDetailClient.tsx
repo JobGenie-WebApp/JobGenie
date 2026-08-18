@@ -1371,7 +1371,7 @@ export default function InvitationDetailClient({ invitationId, onMutateList }: {
                             </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                            <p className="text-[10px] uppercase tracking-wide font-medium text-muted-foreground">Your interviewer</p>
+                            <p className="text-[10px] uppercase tracking-wide font-medium text-muted-foreground">Contact Person</p>
                             <p className="text-sm font-semibold leading-tight">{invitation.employer.first_name} {invitation.employer.last_name}</p>
                             <p className="text-xs text-muted-foreground">{[invitation.employer.designation, invitation.employer.job_title, invitation.employer.department].filter(Boolean).join(" · ")}</p>
                         </div>
@@ -1379,11 +1379,6 @@ export default function InvitationDetailClient({ invitationId, onMutateList }: {
                             {invitation.employer.email && (
                                 <a href={`mailto:${invitation.employer.email}`} className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted/50 transition-colors" title={invitation.employer.email}>
                                     <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                                </a>
-                            )}
-                            {invitation.employer.phone && (
-                                <a href={`tel:${invitation.employer.phone}`} className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted/50 transition-colors" title={formatPhoneNumber(invitation.employer.phone)}>
-                                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                                 </a>
                             )}
                         </div>

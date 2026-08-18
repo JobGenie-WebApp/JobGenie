@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { resolveInvitationSlot, resolveRoundSlot, type CalendarInvitation } from '@/lib/calendar-utils';
 
 export type InvitationStatus = 'pending' | 'accepted' | 'rejected' | 'canceled' | 'confirmed' | 'completed';
 
@@ -214,18 +215,26 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
             .select('id', { count: 'exact', head: true })
             .eq('candidate_id', candidate.id),
 
-        // 8b. Fetch all interview events for the calendar
+        // 8b. Fetch all interview events for the calendar.
+        // NOTE: 'confirmed' is not a value of the InvitationStatus enum — passing it
+        // to .in() made Postgres reject the whole query (22P02) and the widget got
+        // zero events. Confirmation lives on the interview_confirmed boolean.
         supabase
             .from('job_invitations')
             .select(`
           id, job_designation, interview_mode,
           status, interview_confirmed, invitation_canceled,
-          selected_time_slot, mis_rescheduled, mis_reschedule_data,
+          selected_time_slot, confirmed_time, mis_rescheduled, mis_reschedule_data,
           given_time_slots,
-          companies ( company_name )
+          companies ( company_name ),
+          interview_rounds (
+            id, round_number, round_label, status, outcome, interview_mode,
+            selected_time_slot, given_time_slots, confirmed_time, confirmed_at,
+            round_canceled, mis_rescheduled, mis_reschedule_data
+          )
         `)
             .eq('candidate_id', candidate.id)
-            .in('status', ['accepted', 'confirmed']),
+            .eq('status', 'accepted'),
 
         // 9. Fetch application stats
         supabase
@@ -271,40 +280,50 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
     const savedJobsCount = bookmarksCount || 0;
     const underReviewApplications = (applicationStatsResult.count as number) || 0;
 
-    // Map to InterviewEvent[], priority: mis_reschedule_data > selected_time_slot > given_time_slots[0]
-    const interviewEvents: InterviewEvent[] = (interviewRaw || []).reduce<InterviewEvent[]>((acc, inv) => {
-        const companies = inv.companies as unknown as Record<string, string> | null;
-        const slot = inv.selected_time_slot as { date: string; time: string } | null;
-        const misData = inv.mis_reschedule_data as { date: string; time: string; interview_mode?: string } | null;
-        const givenSlots = inv.given_time_slots as { date: string; time: string; order?: number }[] | null;
+    // Map to InterviewEvent[]. Rounds win when present — the invitation-level slot
+    // is only round 1's date, so multi-round interviews were missing from the widget.
+    // Slot resolution is shared with /candidate/calendar so both stay in sync.
+    const interviewEvents: InterviewEvent[] = (interviewRaw || []).flatMap((raw) => {
+        const inv = raw as unknown as CalendarInvitation;
+        const companyName = (raw.companies as unknown as Record<string, string> | null)?.company_name || null;
+        const rounds = inv.interview_rounds ?? [];
+        const invCanceled = inv.invitation_canceled && !inv.mis_rescheduled;
 
-        // Priority: rescheduled → selected → first given slot
-        let finalDate = inv.mis_rescheduled && misData?.date ? misData.date : slot?.date;
-        let finalTime = inv.mis_rescheduled && misData?.time ? misData.time : slot?.time;
-        const finalMode = inv.mis_rescheduled && misData?.interview_mode ? misData.interview_mode : inv.interview_mode;
-
-        // Fallback to first given/proposed slot if neither selected nor rescheduled
-        if (!finalDate && givenSlots && givenSlots.length > 0) {
-            const sorted = [...givenSlots].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            finalDate = sorted[0].date;
-            finalTime = sorted[0].time;
+        if (rounds.length === 0) {
+            const slot = resolveInvitationSlot(inv);
+            if (!slot) return [];
+            return [{
+                id: `inv-${inv.id}`,
+                invitation_id: inv.id,
+                date: slot.date,
+                time: slot.time || '',
+                job_designation: inv.job_designation || 'Interview',
+                company_name: companyName,
+                interview_mode: (inv.mis_rescheduled && inv.mis_reschedule_data?.interview_mode) || inv.interview_mode,
+                is_confirmed: inv.interview_confirmed,
+                is_canceled: invCanceled,
+            }];
         }
 
-        if (!finalDate) return acc; // no date info at all — skip
-
-        acc.push({
-            id: inv.id as string,
-            invitation_id: inv.id as string,
-            date: finalDate,
-            time: finalTime || '',
-            job_designation: (inv.job_designation as string) || 'Interview',
-            company_name: companies?.company_name || null,
-            interview_mode: (finalMode as string) || null,
-            is_confirmed: (inv.interview_confirmed as boolean) || false,
-            is_canceled: (inv.invitation_canceled as boolean) || false,
+        return rounds.flatMap((round) => {
+            const slot = resolveRoundSlot(round);
+            if (!slot) return [];
+            const label = round.round_label || `Round ${round.round_number}`;
+            const roundCanceled = (round.round_canceled || round.status === 'canceled') && !round.mis_rescheduled;
+            return [{
+                id: `round-${round.id}`,
+                invitation_id: inv.id,
+                date: slot.date,
+                time: slot.time || '',
+                job_designation: `${inv.job_designation || 'Interview'} (${label})`,
+                company_name: companyName,
+                interview_mode: (round.mis_rescheduled && round.mis_reschedule_data?.interview_mode)
+                    || round.interview_mode || inv.interview_mode,
+                is_confirmed: round.status === 'confirmed' || round.confirmed_at !== null,
+                is_canceled: roundCanceled || invCanceled,
+            }];
         });
-        return acc;
-    }, []);
+    });
 
     // Calculate stats
     const allInvitations = invitations || [];
