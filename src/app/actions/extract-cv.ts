@@ -1,8 +1,17 @@
 "use server";
 
+import { z } from "zod";
+import { FinishReason, PartMediaResolutionLevel, ThinkingLevel } from "@google/genai";
 import { cvExtractionResultSchema, type CVExtractionResult } from "@/lib/validations/profile-schema";
 import { logError } from "@/lib/logger";
-import { generateContentWithRetry, isRetryableGeminiError } from "@/lib/gemini";
+import { generateContentWithRetry, isRetryableGeminiError, isDailyQuotaExhausted } from "@/lib/gemini";
+import { buildCvExtractionPrompt } from "@/lib/cv-extraction-prompt";
+import { createClient } from "@/lib/supabase/server";
+import { getCountryNames } from "@/lib/countries";
+import { resolveIndustryIdsForProfile } from "@/lib/job-designations-resolve";
+
+/** PDF is the only format accepted for submission, and the only one the resume storage path takes. */
+const PDF_MIME = "application/pdf";
 
 export type CVExtractionState = {
     success: boolean;
@@ -11,74 +20,36 @@ export type CVExtractionState = {
     error?: string;
 };
 
-const EXTRACTION_PROMPT = `You are an expert CV/Resume parser. Extract the following information from the provided CV/resume content and return it as a JSON object.
+/**
+ * Job titles the wizard will actually offer for this industry. Giving them to the model is what
+ * makes `currentPosition` land on a real option instead of free text the Combobox cannot select.
+ * Degrades to an empty list - extraction still works, the title is just unconstrained.
+ */
+async function designationNamesFor(industry: string): Promise<string[]> {
+    if (!industry?.trim()) return [];
+    try {
+        const supabase = await createClient();
+        const { data: industries } = await supabase.from("industries").select("industry_id, industry_name");
+        const ids = resolveIndustryIdsForProfile(industry, industries ?? []);
+        if (!ids.length) return [];
 
-IMPORTANT: 
-- Return ONLY valid JSON, no markdown formatting or code blocks
-- For dates, use format "YYYY-MM-DD" or "YYYY-MM" if day is not available
-- For work experience startDate and endDate ONLY, use "YYYY-MM" (year and month, e.g. 2024-09) so they match month-only fields; never include a day component for those two fields
-- If information is not found, omit the field or use null
-- For isCurrent in work experience, set to true if it says "Present" or "Current" in end date
+        const { data } = await supabase
+            .from("job_designations")
+            .select("designation_name")
+            .in("industry_id", ids)
+            .order("designation_name", { ascending: true });
 
-Extract this structure:
-{
-    "firstName": "string",
-    "lastName": "string", 
-    "email": "string",
-    "phone": "string",
-    "address": "string",
-    "currentPosition": "string (most recent job title)",
-    "yearsOfExperience": number,
-    "professionalSummary": "string (extract or generate from CV content, 50-200 words)",
-    "workExperiences": [
-        {
-            "jobTitle": "string",
-            "company": "string",
-            "startDate": "YYYY-MM",
-            "endDate": "YYYY-MM or null if current",
-            "description": "string",
-            "isCurrent": boolean
-        }
-    ],
-    "educations": [
-        {
-            "educationType": "academic or professional",
-            "degreeDiploma": "string (for academic qualifications like BSc, MSc, etc., use null if professional)",
-            "professionalQualification": "string (for professional qualifications like ACCA, CIMA, etc., use null if academic)",
-            "institution": "string",
-            "status": "complete or incomplete"
-        }
-    ],
-    "skills": ["string array of skills"],
-    "certificates": [
-        {
-            "certificateName": "string",
-            "issuingAuthority": "string",
-            "issueDate": "YYYY-MM-DD"
-        }
-    ],
-    "projects": [
-        {
-            "projectName": "string",
-            "description": "string",
-            "demoUrl": "string or null"
-        }
-    ],
-    "awards": [
-        {
-            "awardName": "string (award or achievement name)",
-            "offeredBy": "string (organization or institution that gave the award)",
-            "description": "string (brief description of the achievement)"
-        }
-    ]
+        return [...new Set((data ?? []).map((d) => d.designation_name).filter(Boolean))];
+    } catch (error) {
+        console.warn("Could not load job designations for CV extraction:", error);
+        return [];
+    }
 }
-
-CV Content:
-`;
 
 export async function extractCVData(
     fileBase64: string,
-    mimeType: string
+    mimeType: string,
+    industry?: string
 ): Promise<CVExtractionState> {
     try {
         if (!process.env.GEMINI_API_KEY) {
@@ -89,40 +60,81 @@ export async function extractCVData(
             };
         }
 
-        // Prepare the content based on file type
-        const parts = [];
-
-        if (mimeType === "application/pdf" || mimeType.includes("image")) {
-            // For PDF and images, use inline data
-            parts.push({
-                inlineData: {
-                    mimeType: mimeType,
-                    data: fileBase64,
-                },
-            });
-            parts.push({ text: EXTRACTION_PROMPT + "\n[File content provided above]" });
-        } else {
-            // For text-based documents, decode and include as text
-            const textContent = Buffer.from(fileBase64, "base64").toString("utf-8");
-            parts.push({ text: EXTRACTION_PROMPT + textContent });
+        // Reject anything else here too, not just in the UI - this is a server action and is
+        // reachable directly, and the resume storage path would refuse a non-PDF at submit anyway.
+        if (mimeType !== PDF_MIME) {
+            return {
+                success: false,
+                message: "Please upload your CV as a PDF.",
+                error: `Unsupported mimeType ${mimeType}`,
+            };
         }
 
-        const result = await generateContentWithRetry([{ role: "user", parts: parts as { text: string }[] }]);
-        const text = result.text || "";
+        // In parallel - both are plain reference-table reads, and neither needs the other.
+        const [designations, countries] = await Promise.all([
+            designationNamesFor(industry ?? ""),
+            getCountryNames(),
+        ]);
+        const prompt = buildCvExtractionPrompt({ designations, countries });
 
-        // Clean the response (remove markdown code blocks if present)
-        const cleanedText = text
-            .replace(/```json\n?/g, "")
-            .replace(/```\n?/g, "")
-            .trim();
+        // Prompt first, PDF second: the static instruction block is then a shared prefix across
+        // uploads, which is what implicit context caching can hit. Hand the PDF over as-is -
+        // the model reads the page layout and OCRs scanned pages.
+        //
+        // Every PDF page is tokenised as an image, and at the default resolution the small print in
+        // a dense two-column or table CV is not reliably legible - which surfaces as "the
+        // description was missing", never as an error. Ask for the highest fidelity per page.
+        const parts = [
+            { text: prompt },
+            {
+                inlineData: { mimeType, data: fileBase64 },
+                mediaResolution: { level: PartMediaResolutionLevel.MEDIA_RESOLUTION_HIGH },
+            },
+        ];
 
-        // Parse JSON
+        // A response schema is what makes the shape reliable across arbitrary CV layouts:
+        // the model cannot invent field names, wrap the JSON in fences, or return prose.
+        const startedAt = Date.now();
+        const result = await generateContentWithRetry([{ role: "user", parts }], {
+            responseMimeType: "application/json",
+            responseJsonSchema: z.toJSONSchema(cvExtractionResultSchema, { io: "output" }),
+            temperature: 0,
+            // A full CV with every bullet of every role runs long. Left unset this sits at the model
+            // default, and a cap reached mid-array is silent: constrained decoding still closes the
+            // JSON, so a half-read CV comes back looking like a clean extraction.
+            maxOutputTokens: 32768,
+            // Tying a role's bullets to a heading on the *previous* page is association work, not
+            // transcription, and it is the first thing to fail without thinking tokens. This was LOW
+            // for latency; completeness wins. Drop it back only if page-spanning CVs stay whole.
+            thinkingConfig: { thinkingLevel: ThinkingLevel.MEDIUM },
+        });
+        console.log(
+            `[extract-cv] ${Date.now() - startedAt}ms`,
+            JSON.stringify(result.usageMetadata ?? {})
+        );
+
+        // Anything other than STOP means the model was cut off - most often at the output cap, mid
+        // work-experience array. The JSON still parses, so without this a truncated CV is reported
+        // to the candidate as a success with several roles quietly missing.
+        const finishReason = result.candidates?.[0]?.finishReason;
+        if (finishReason && finishReason !== FinishReason.STOP) {
+            await logError({
+                source: "extract-cv.ts:extractCVData",
+                errorType: "CVExtractionIncomplete",
+                message: `Generation stopped with finishReason=${finishReason}`,
+            });
+            return {
+                success: false,
+                message: "Your CV could not be read all the way through. Please try again, or enter your details manually.",
+                error: `finishReason=${finishReason}`,
+            };
+        }
+
         let parsedData: unknown;
         try {
-            parsedData = JSON.parse(cleanedText);
+            parsedData = JSON.parse(result.text || "");
         } catch (parseError) {
-            console.error("JSON parse error:", parseError);
-            console.error("Raw text:", cleanedText);
+            console.error("JSON parse error:", parseError, result.text);
             return {
                 success: false,
                 message: "Failed to parse extracted data. Please try again or enter manually.",
@@ -154,11 +166,15 @@ export async function extractCVData(
         const isOverload =
             isRetryableGeminiError(error) ||
             (error instanceof Error && error.message.includes("high demand"));
+        // Retrying a spent daily quota cannot succeed, so do not invite the candidate to try again.
+        const message = isDailyQuotaExhausted(error)
+            ? "Automatic CV reading is unavailable at the moment. Please enter your details manually - it only takes a few minutes."
+            : isOverload
+              ? "The AI service is busy right now. Please wait a moment and try again, or enter your details manually."
+              : "Failed to extract CV data. Please try again or enter manually.";
         return {
             success: false,
-            message: isOverload
-                ? "The AI service is busy right now. Please wait a moment and try again, or enter your details manually."
-                : "Failed to extract CV data. Please try again or enter manually.",
+            message,
             error: error instanceof Error ? error.message : "Unknown error",
         };
     }

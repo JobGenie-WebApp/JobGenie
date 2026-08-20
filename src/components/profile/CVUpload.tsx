@@ -10,21 +10,19 @@ import { extractCVData, type CVExtractionState } from "@/app/actions/extract-cv"
 import type { CVExtractionResult } from "@/lib/validations/profile-schema";
 
 interface CVUploadProps {
+    /** Chosen in the previous step; scopes the job-title list the model may pick from. */
+    industry?: string;
     onExtracted: (data: CVExtractionResult) => void;
     onFileSelect?: (file: File | null) => void;
     onSkip: () => void;
     isLoading?: boolean;
 }
 
-const ALLOWED_TYPES = [
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
+const ALLOWED_TYPES = ["application/pdf"];
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-export function CVUpload({ onExtracted, onFileSelect, onSkip, isLoading: parentLoading }: CVUploadProps) {
+export function CVUpload({ industry, onExtracted, onFileSelect, onSkip, isLoading: parentLoading }: CVUploadProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [isExtracting, setIsExtracting] = useState(false);
@@ -33,7 +31,7 @@ export function CVUpload({ onExtracted, onFileSelect, onSkip, isLoading: parentL
 
     const validateFile = (file: File): string | null => {
         if (!ALLOWED_TYPES.includes(file.type)) {
-            return "Please upload a PDF or Word document";
+            return "Please upload your CV as a PDF";
         }
         if (file.size > MAX_FILE_SIZE) {
             return "File size must be less than 5MB";
@@ -67,7 +65,7 @@ export function CVUpload({ onExtracted, onFileSelect, onSkip, isLoading: parentL
             setUploadProgress(95);
 
             // Extract CV data
-            const result = await extractCVData(base64, selectedFile.type);
+            const result = await extractCVData(base64, selectedFile.type, industry);
 
             setUploadProgress(100);
             setExtractionResult(result);
@@ -87,7 +85,7 @@ export function CVUpload({ onExtracted, onFileSelect, onSkip, isLoading: parentL
         } finally {
             setIsExtracting(false);
         }
-    }, [onExtracted]);
+    }, [industry, onExtracted]);
 
     const handleDrop = useCallback(
         (e: React.DragEvent<HTMLDivElement>) => {
@@ -159,7 +157,7 @@ export function CVUpload({ onExtracted, onFileSelect, onSkip, isLoading: parentL
                                     Drag and drop your CV here, or click to browse
                                 </p>
                                 <p className="mb-4 text-xs text-muted-foreground">
-                                    Supported formats: PDF, DOC, DOCX (Max 5MB)
+                                    Supported format: PDF (Max 5MB)
                                 </p>
                                 <label htmlFor="cv-upload">
                                     <Button variant="outline" asChild>
@@ -172,7 +170,7 @@ export function CVUpload({ onExtracted, onFileSelect, onSkip, isLoading: parentL
                                 <input
                                     id="cv-upload"
                                     type="file"
-                                    accept=".pdf,.doc,.docx"
+                                    accept=".pdf"
                                     className="hidden"
                                     onChange={handleInputChange}
                                 />

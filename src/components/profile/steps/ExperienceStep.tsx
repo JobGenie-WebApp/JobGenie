@@ -143,7 +143,7 @@ export function ExperienceStep({ experiences, onChange, onNext, onPrevious }: Ex
                                         value={exp.employmentType}
                                         onValueChange={(value) => handleUpdate(index, "employmentType", value)}
                                     >
-                                        <SelectTrigger id={`employmentType-${index}`}>
+                                        <SelectTrigger id={`employmentType-${index}`} className="w-full">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -161,7 +161,7 @@ export function ExperienceStep({ experiences, onChange, onNext, onPrevious }: Ex
                                         value={exp.locationType}
                                         onValueChange={(value) => handleUpdate(index, "locationType", value)}
                                     >
-                                        <SelectTrigger id={`locationType-${index}`}>
+                                        <SelectTrigger id={`locationType-${index}`} className="w-full">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>

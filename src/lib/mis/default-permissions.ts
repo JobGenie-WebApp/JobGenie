@@ -70,9 +70,4 @@ export const DEFAULT_PERMISSIONS: MisPermission[] = [
   // Analytics
   { resource: "analytics", action: "view", description: "View analytics dashboard and reports" },
   { resource: "analytics", action: "export", description: "Export analytics data" },
-
-  // Site Content (CMS)
-  { resource: "content", action: "view", description: "View site content and unpublished drafts" },
-  { resource: "content", action: "edit", description: "Edit site text, navigation and pages" },
-  { resource: "content", action: "publish", description: "Publish site content changes to the live site" },
 ];

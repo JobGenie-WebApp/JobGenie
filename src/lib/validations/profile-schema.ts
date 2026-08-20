@@ -13,7 +13,6 @@ export const INDUSTRY_OPTIONS = [
 ] as const;
 
 export const IT_INDUSTRIES = ["it_software"] as const;
-export const BANKING_FINANCE_INDUSTRIES = ["banking", "finance_investment"] as const;
 
 // ============================================
 // BASE SCHEMAS
@@ -135,58 +134,6 @@ export const certificateSchema = z.object({
 export type CertificateData = z.infer<typeof certificateSchema>;
 
 // ============================================
-// FINANCE INDUSTRY - EDUCATION SCHEMAS
-// ============================================
-export const financeAcademicEducationSchema = z.object({
-    id: z.string().optional(),
-    degreeDiploma: z.string().min(1, "Degree/Diploma is required").max(200),
-    institution: z.string().min(1, "Institution is required").max(200),
-    status: z.string().min(1, "Status is required").default("incomplete"),
-});
-
-export type FinanceAcademicEducationData = z.infer<typeof financeAcademicEducationSchema>;
-
-export const financeProfessionalEducationSchema = z.object({
-    id: z.string().optional(),
-    professionalQualification: z.string().min(1, "Professional qualification is required").max(300),
-    institution: z.string().min(1, "Institution is required").max(200),
-    status: z.string().min(1, "Status is required").default("incomplete"),
-});
-
-export type FinanceProfessionalEducationData = z.infer<typeof financeProfessionalEducationSchema>;
-
-// ============================================
-// BANKING INDUSTRY - EDUCATION SCHEMAS
-// ============================================
-export const bankingAcademicEducationSchema = z.object({
-    id: z.string().optional(),
-    degreeDiploma: z.string().min(1, "Degree/Diploma is required").max(200),
-    institution: z.string().min(1, "Institution is required").max(200),
-    status: z.string().min(1, "Status is required").default("incomplete"),
-});
-
-export type BankingAcademicEducationData = z.infer<typeof bankingAcademicEducationSchema>;
-
-export const bankingProfessionalEducationSchema = z.object({
-    id: z.string().optional(),
-    professionalQualification: z.string().min(1, "Professional qualification is required").max(300),
-    institution: z.string().min(1, "Institution is required").max(200),
-    status: z.string().min(1, "Status is required").default("incomplete"),
-});
-
-export type BankingProfessionalEducationData = z.infer<typeof bankingProfessionalEducationSchema>;
-
-export const bankingSpecializedTrainingSchema = z.object({
-    id: z.string().optional(),
-    certificateName: z.string().min(1, "Certificate/Training name is required").max(300),
-    issuingAuthority: z.string().min(1, "Issuing Authority/Institution is required").max(200),
-    certificateIssueMonth: z.string().optional(),
-    status: z.string().min(1, "Status is required").default("incomplete"),
-});
-
-export type BankingSpecializedTrainingData = z.infer<typeof bankingSpecializedTrainingSchema>;
-
-// ============================================
 // BASIC INFO SCHEMA
 // ============================================
 export const basicInfoSchema = z.object({
@@ -239,13 +186,6 @@ export const completeProfileSchema = z.object({
     // IT Industry specific
     projects: z.array(projectSchema).optional(),
     certificates: z.array(certificateSchema).optional(),
-    // Finance Industry specific
-    financeAcademicEducation: z.array(financeAcademicEducationSchema).optional(),
-    financeProfessionalEducation: z.array(financeProfessionalEducationSchema).optional(),
-    // Banking Industry specific
-    bankingAcademicEducation: z.array(bankingAcademicEducationSchema).optional(),
-    bankingProfessionalEducation: z.array(bankingProfessionalEducationSchema).optional(),
-    bankingSpecializedTraining: z.array(bankingSpecializedTrainingSchema).optional(),
 });
 
 export type CompleteProfileData = z.infer<typeof completeProfileSchema>;
@@ -261,13 +201,22 @@ export const cvExtractionResultSchema = z.object({
     lastName: z.string().nullish(),
     email: z.string().nullish(),
     phone: z.string().nullish(),
+    alternativePhone: z.string().nullish(),
     address: z.string().nullish(),
+    country: z.string().nullish(),
     currentPosition: z.string().nullish(),
+    expectedPositions: z.array(z.string().nullish()).nullish(),
     yearsOfExperience: z.number().nullish(),
+    highestQualification: z.string().nullish(),
+    noticePeriod: z.string().nullish(),
+    expectedMonthlySalary: z.number().nullish(),
     professionalSummary: z.string().nullish(),
     workExperiences: z.array(z.object({
         jobTitle: z.string().nullish(),
         company: z.string().nullish(),
+        location: z.string().nullish(),
+        employmentType: z.string().nullish(),
+        locationType: z.string().nullish(),
         startDate: z.string().nullish(),
         endDate: z.string().nullish(),
         description: z.string().nullish(),
@@ -285,11 +234,16 @@ export const cvExtractionResultSchema = z.object({
         certificateName: z.string().nullish(),
         issuingAuthority: z.string().nullish(),
         issueDate: z.string().nullish(),
+        expiryDate: z.string().nullish(),
+        credentialId: z.string().nullish(),
+        credentialUrl: z.string().nullish(),
+        description: z.string().nullish(),
     })).nullish(),
     projects: z.array(z.object({
         projectName: z.string().nullish(),
         description: z.string().nullish(),
         demoUrl: z.string().nullish(),
+        isCurrent: z.boolean().nullish(),
     })).nullish(),
     awards: z.array(z.object({
         awardName: z.string().nullish(),

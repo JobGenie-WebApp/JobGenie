@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { FormSection } from "../shared/FormSection";
 import { StepNavigation } from "../shared/StepNavigation";
 import { generateProfessionalSummary } from "@/app/actions/extract-cv";
+import { cn } from "@/lib/utils";
 import { INDUSTRY_OPTIONS, IT_INDUSTRIES } from "@/lib/validations/profile-schema";
 import type {
     BasicInfoData,
@@ -18,12 +19,9 @@ import type {
     AwardData,
     ProjectData,
     CertificateData,
-    FinanceAcademicEducationData,
-    FinanceProfessionalEducationData,
-    BankingAcademicEducationData,
-    BankingProfessionalEducationData,
-    BankingSpecializedTrainingData,
 } from "@/lib/validations/profile-schema";
+
+const SUMMARY_MAX_LENGTH = 1000;
 
 interface SummaryStepProps {
     industry: string;
@@ -35,11 +33,6 @@ interface SummaryStepProps {
     awards: AwardData[];
     projects?: ProjectData[];
     certificates?: CertificateData[];
-    financeAcademicEducation?: FinanceAcademicEducationData[];
-    financeProfessionalEducation?: FinanceProfessionalEducationData[];
-    bankingAcademicEducation?: BankingAcademicEducationData[];
-    bankingProfessionalEducation?: BankingProfessionalEducationData[];
-    bankingSpecializedTraining?: BankingSpecializedTrainingData[];
     onSubmit: () => void;
     onPrevious: () => void;
     isLoading: boolean;
@@ -55,11 +48,6 @@ export function SummaryStep({
     awards,
     projects,
     certificates,
-    financeAcademicEducation,
-    financeProfessionalEducation,
-    bankingAcademicEducation,
-    bankingProfessionalEducation,
-    bankingSpecializedTraining,
     onSubmit,
     onPrevious,
     isLoading,
@@ -138,7 +126,10 @@ export function SummaryStep({
         }
     };
 
-    const canSubmit = professionalSummary.length >= 50;
+    // Matches professionalSummary in profile-schema: min 50, max 1000. Without the upper bound the
+    // candidate only found out they were over the limit when the server action rejected the submit.
+    const canSubmit = professionalSummary.length >= 50 && professionalSummary.length <= SUMMARY_MAX_LENGTH;
+    const overLimitBy = professionalSummary.length - SUMMARY_MAX_LENGTH;
 
     const validWorkExperiences = [...workExperiences]
         .filter(e => e.jobTitle || e.company)
@@ -157,15 +148,6 @@ export function SummaryStep({
             const dateB = b.issueDate ? new Date(b.issueDate).getTime() : 0;
             return dateB - dateA;
         });
-    const validFinanceAcademic = [...(financeAcademicEducation || [])].filter(e => e.degreeDiploma || e.institution).reverse();
-    const validFinanceProfessional = [...(financeProfessionalEducation || [])].filter(e => e.professionalQualification || e.institution).reverse();
-    const validBankingAcademic = [...(bankingAcademicEducation || [])].filter(e => e.degreeDiploma || e.institution).reverse();
-    const validBankingProfessional = [...(bankingProfessionalEducation || [])].filter(e => e.professionalQualification || e.institution).reverse();
-    const validBankingSpecialized = [...(bankingSpecializedTraining || [])].filter(e => e.certificateName || e.issuingAuthority).reverse();
-
-    const totalAcademicEducation = validFinanceAcademic.length + validBankingAcademic.length;
-    const totalProfessionalEducation = validFinanceProfessional.length + validBankingProfessional.length;
-
     return (
         <div className="space-y-6">
             {/* Profile Summary Card */}
@@ -236,7 +218,7 @@ export function SummaryStep({
                     )}
 
                     {/* Education Summary */}
-                    {validEducations.length > 0 && industry !== "finance_investment" && industry !== "banking" && (
+                    {validEducations.length > 0 && (
                         <div>
                             <h4 className="font-medium mb-2">Education ({validEducations.length})</h4>
                             <ul className="text-sm text-muted-foreground space-y-3">
@@ -307,57 +289,6 @@ export function SummaryStep({
                         </div>
                     )}
 
-                    {/* Academic Education */}
-                    {totalAcademicEducation > 0 && (
-                        <div>
-                            <h4 className="font-medium mb-2">
-                                Academic Education ({totalAcademicEducation})
-                            </h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                                {validFinanceAcademic.map((edu, i) => (
-                                    <li key={`fin-acad-${i}`}>• {edu.degreeDiploma} {edu.institution ? `- ${edu.institution}` : ''} {edu.status ? `(${edu.status})` : ''}</li>
-                                ))}
-                                {validBankingAcademic.map((edu, i) => (
-                                    <li key={`bank-acad-${i}`}>• {edu.degreeDiploma} {edu.institution ? `- ${edu.institution}` : ''} {edu.status ? `(${edu.status})` : ''}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {/* Professional Education */}
-                    {totalProfessionalEducation > 0 && (
-                        <div>
-                            <h4 className="font-medium mb-2">
-                                Professional Education ({totalProfessionalEducation})
-                            </h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                                {validFinanceProfessional.map((edu, i) => (
-                                    <li key={`fin-prof-${i}`}>• {edu.professionalQualification} {edu.institution ? `- ${edu.institution}` : ''} {edu.status ? `(${edu.status})` : ''}</li>
-                                ))}
-                                {validBankingProfessional.map((edu, i) => (
-                                    <li key={`bank-prof-${i}`}>• {edu.professionalQualification} {edu.institution ? `- ${edu.institution}` : ''} {edu.status ? `(${edu.status})` : ''}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {validBankingSpecialized.length > 0 && (
-                        <div>
-                            <h4 className="font-medium mb-2">Specialized Training ({validBankingSpecialized.length})</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                                {validBankingSpecialized.map((training, i) => (
-                                    <li key={i}>
-                                        <div className="font-medium text-foreground">• {training.certificateName}</div>
-                                        <div>
-                                            {training.issuingAuthority ? `Issued by ${training.issuingAuthority}` : ''}
-                                            {training.certificateIssueMonth ? ` • ${training.certificateIssueMonth}` : ''}
-                                            {training.status ? ` • ${training.status}` : ''}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
                 </CardContent>
             </Card>
 
@@ -392,15 +323,38 @@ export function SummaryStep({
                                 )}
                             </Button>
                         </div>
-                        <Textarea
-                            id="professionalSummary"
-                            value={professionalSummary}
-                            onChange={(e) => onSummaryChange(e.target.value)}
-                            placeholder="Write a compelling professional summary (minimum 50 characters)..."
-                            rows={5}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            {professionalSummary.length}/1000 characters (minimum 50)
+                        {/* A <textarea> cannot colour part of its own value, so the text is mirrored
+                            into the div behind it and the textarea itself renders transparent. Both
+                            sit in the same grid cell, which keeps them the same size as it grows. */}
+                        <div className="grid">
+                            <div
+                                aria-hidden
+                                className="pointer-events-none col-start-1 row-start-1 rounded-md border border-transparent px-3 py-2 text-base break-words whitespace-pre-wrap md:text-sm"
+                            >
+                                {professionalSummary.slice(0, SUMMARY_MAX_LENGTH)}
+                                <span className="bg-destructive/15 text-destructive">
+                                    {professionalSummary.slice(SUMMARY_MAX_LENGTH)}
+                                </span>
+                                {/* stops the mirror collapsing below the textarea on a trailing newline */}
+                                {"\u200b"}
+                            </div>
+                            <Textarea
+                                id="professionalSummary"
+                                value={professionalSummary}
+                                onChange={(e) => onSummaryChange(e.target.value)}
+                                placeholder="Write a compelling professional summary (minimum 50 characters)..."
+                                rows={5}
+                                aria-invalid={overLimitBy > 0}
+                                aria-describedby="professionalSummaryCount"
+                                className="col-start-1 row-start-1 bg-transparent text-transparent caret-foreground selection:bg-primary/30 dark:bg-transparent"
+                            />
+                        </div>
+                        <p
+                            id="professionalSummaryCount"
+                            className={cn("text-xs", overLimitBy > 0 ? "text-destructive" : "text-muted-foreground")}
+                        >
+                            {professionalSummary.length}/{SUMMARY_MAX_LENGTH} characters (minimum 50)
+                            {overLimitBy > 0 && ` \u2014 ${overLimitBy} over the limit, please shorten it`}
                         </p>
                         {generationError && (
                             <p className="text-sm text-destructive">{generationError}</p>

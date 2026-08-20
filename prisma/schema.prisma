@@ -125,13 +125,6 @@ model Candidate {
   projects         Project[] // IT industry
   certificates     Certificate[] // IT industry
 
-  // Industry-specific education
-  finance_academic_education     FinanceAcademicEducation[]
-  finance_professional_education FinanceProfessionalEducation[]
-  banking_academic_education     BankingAcademicEducation[]
-  banking_professional_education BankingProfessionalEducation[]
-  banking_specialized_training   BankingSpecializedTraining[]
-
   // Universal - works across all industries
   industry_specializations IndustrySpecialization[]
 
@@ -302,101 +295,6 @@ model Certificate {
   @@index([issue_date])
   @@index([expiry_date])
   @@map("certificates")
-}
-
-// ============================================
-// FINANCE INDUSTRY - EDUCATION
-// ============================================
-
-model FinanceAcademicEducation {
-  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  candidate_id String @db.Uuid
-
-  degree_diploma String @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Accounting and Finance
-  institution    String @db.VarChar(200)
-  status         String @default("incomplete") @db.VarChar(100)
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-
-  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
-
-  @@index([candidate_id])
-  @@map("finance_academic_education")
-}
-
-model FinanceProfessionalEducation {
-  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  candidate_id String @db.Uuid
-
-  professional_qualification String @db.VarChar(300) // Professional Qualifications/Professional Programs/Specialized programs
-  institution                String @db.VarChar(200)
-  status                     String @default("incomplete") @db.VarChar(100)
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-
-  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
-
-  @@index([candidate_id])
-  @@map("finance_professional_education")
-}
-
-// ============================================
-// BANKING INDUSTRY - EDUCATION
-// ============================================
-
-model BankingAcademicEducation {
-  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  candidate_id String @db.Uuid
-
-  degree_diploma String @db.VarChar(200) // Degree/Diploma/Postgraduate Diploma – Banking and Finance
-  institution    String @db.VarChar(200)
-  status         String @default("incomplete") @db.VarChar(100)
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-
-  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
-
-  @@index([candidate_id])
-  @@map("banking_academic_education")
-}
-
-model BankingProfessionalEducation {
-  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  candidate_id String @db.Uuid
-
-  professional_qualification String @db.VarChar(300) // Professional Banking Programs/Specialist diplomas/International Professional Qualifications
-  institution                String @db.VarChar(200)
-  status                     String @default("incomplete") @db.VarChar(100)
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-
-  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
-
-  @@index([candidate_id])
-  @@map("banking_professional_education")
-}
-
-model BankingSpecializedTraining {
-  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  candidate_id String @db.Uuid
-
-  certificate_name        String    @db.VarChar(300) // Certificate Name/Training program name
-  issuing_authority       String    @db.VarChar(200) // Issuing Authority/Institution
-  certificate_issue_month DateTime? @db.Date // Certificate Issue Month/training completion month
-  status                  String    @default("incomplete") @db.VarChar(100)
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-
-  candidate Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
-
-  @@index([candidate_id])
-  @@index([certificate_issue_month])
-  @@map("banking_specialized_training")
 }
 
 // ============================================
@@ -805,29 +703,29 @@ model InterviewRound {
   round_label   String? @db.VarChar(100) // e.g. "Technical Interview", "Culture Fit", "Final Round"
 
   // ---- Scheduling ----
-  status              RoundStatus    @default(pending) // pending|viewed|accepted|declined|expired|confirmed|completed|canceled
-  given_time_slots    Json // Array of time slot objects
-  alternative_dates   Json? // Array of alternative date objects
-  selected_time_slot  Json? // Candidate's selected time slot
-  interview_mode      InterviewMode?
-  interview_confirmed Boolean        @default(false)
-  confirmed_time      Json? // Confirmed time for alternative dates
-  meeting_link        String?        @db.Text
-  interview_address   String?        @db.Text
-  map_link            String?        @db.Text
-  confirmed_at        DateTime?      @db.Timestamptz(6)
-  assessment_delivery_mode AssessmentDeliveryMode?
-  assessment_deadline      DateTime? @db.Timestamptz(6)
-  assessment_link          String?   @db.Text
-  assessment_attachment_path String? @db.Text
-  assessment_attachment_name String? @db.VarChar(255)
-  assessment_start_at       DateTime? @db.Timestamptz(6)
-  assessment_end_at         DateTime? @db.Timestamptz(6)
-  assessment_submission_file_path String? @db.Text
-  assessment_submission_file_name String? @db.VarChar(255)
-  assessment_submission_file_type String? @db.VarChar(100)
-  assessment_submission_links Json?
-  assessment_submitted_at   DateTime? @db.Timestamptz(6)
+  status                          RoundStatus             @default(pending) // pending|viewed|accepted|declined|expired|confirmed|completed|canceled
+  given_time_slots                Json // Array of time slot objects
+  alternative_dates               Json? // Array of alternative date objects
+  selected_time_slot              Json? // Candidate's selected time slot
+  interview_mode                  InterviewMode?
+  interview_confirmed             Boolean                 @default(false)
+  confirmed_time                  Json? // Confirmed time for alternative dates
+  meeting_link                    String?                 @db.Text
+  interview_address               String?                 @db.Text
+  map_link                        String?                 @db.Text
+  confirmed_at                    DateTime?               @db.Timestamptz(6)
+  assessment_delivery_mode        AssessmentDeliveryMode?
+  assessment_deadline             DateTime?               @db.Timestamptz(6)
+  assessment_link                 String?                 @db.Text
+  assessment_attachment_path      String?                 @db.Text
+  assessment_attachment_name      String?                 @db.VarChar(255)
+  assessment_start_at             DateTime?               @db.Timestamptz(6)
+  assessment_end_at               DateTime?               @db.Timestamptz(6)
+  assessment_submission_file_path String?                 @db.Text
+  assessment_submission_file_name String?                 @db.VarChar(255)
+  assessment_submission_file_type String?                 @db.VarChar(100)
+  assessment_submission_links     Json?
+  assessment_submitted_at         DateTime?               @db.Timestamptz(6)
 
   // ---- Cancellation ----
   round_canceled      Boolean     @default(false)
@@ -1425,69 +1323,22 @@ model JobComplianceFlag {
   @@map("job_compliance_flags")
 }
 
-// ---------------------------------------------------------------------------
-// CMS — editable site content
-//
-// The constants in src/content/site.ts are the fallback layer; rows here are
-// overrides merged on top by dot-path. A missing or empty row means the
-// constant wins, which is why no content field below is required.
-// ---------------------------------------------------------------------------
+// ============================================
+// REFERENCE DATA
+// ============================================
 
-/// Every editable string on the public site.
-model CmsText {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scope       String   @db.VarChar(64) // 'landing' | 'navigation' | 'footer'
-  path        String   @db.VarChar(191) // 'hero.title', 'highlights.0.points.2'
-  value       String?  @db.Text // published
-  draft_value String?  @db.Text // pending; null = no pending change
-  updated_by  String?  @db.Uuid
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+// ISO 3166-1 countries. Seeded from mledoze/countries (ODbL 1.0).
+// Flag images are not stored: derive from code -> https://flagcdn.com/w320/{lower(code)}.png
+model Country {
+  code         String  @id @db.Char(2) // alpha-2
+  code3        String  @unique @db.Char(3) // alpha-3
+  numeric      String  @db.Char(3) // ccn3
+  name         String  @db.VarChar(100)
+  flag_emoji   String  @db.VarChar(8)
+  calling_code String? @db.VarChar(8)
+  region       String? @db.VarChar(50)
+  subregion    String? @db.VarChar(60)
 
-  @@unique([scope, path])
-  @@index([scope])
-  @@map("cms_texts")
-}
-
-/// Header links, footer columns and their links, footer social links.
-model CmsNavItem {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  location       String   @db.VarChar(32) // 'header' | 'footer' | 'footer_social'
-  parent_id      String?  @db.Uuid // footer column -> its links
-  label          String?  @db.VarChar(191)
-  href           String?  @db.VarChar(500)
-  sort_order     Int      @default(0)
-  is_visible     Boolean  @default(true)
-  draft          Json? // pending { label?, href?, sort_order?, is_visible? }
-  pending_delete Boolean  @default(false) // removed in draft, still public
-  is_new         Boolean  @default(false) // added in draft, not yet public
-  updated_by     String?  @db.Uuid
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-
-  parent   CmsNavItem?  @relation("CmsNavItemChildren", fields: [parent_id], references: [id], onDelete: Cascade)
-  children CmsNavItem[] @relation("CmsNavItemChildren")
-
-  @@index([location, sort_order])
-  @@index([parent_id])
-  @@map("cms_nav_items")
-}
-
-/// Standalone markdown pages: terms, privacy, pricing, docs, gdpr, pdpa, ...
-model CmsPage {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug            String   @unique @db.VarChar(120)
-  title           String?  @db.VarChar(200)
-  body            String?  @db.Text // published markdown
-  draft_title     String?  @db.VarChar(200)
-  draft_body      String?  @db.Text
-  seo_description String?  @db.Text
-  is_published    Boolean  @default(false)
-  sort_order      Int      @default(0)
-  updated_by      String?  @db.Uuid
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-
-  @@index([is_published])
-  @@map("cms_pages")
+  @@index([name])
+  @@map("countries")
 }

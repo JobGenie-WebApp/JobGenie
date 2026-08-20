@@ -20,6 +20,7 @@ interface BasicInfoStepProps {
     onPrevious: () => void;
     onImageSelect: (file: File | null) => void;
     industry?: string; // Selected industry from previous step
+    countries: string[]; // From the `countries` table, loaded server-side by the page
 }
 
 const EXPERIENCE_LEVELS = [
@@ -54,11 +55,6 @@ const EMPLOYMENT_TYPES = [
     { value: "freelance", label: "Freelance" },
 ];
 
-const COUNTRIES = [
-    "Sri Lanka", "United States", "United Kingdom", "Canada",
-    "Australia", "India", "Singapore", "United Arab Emirates", "Germany", "Other",
-];
-
 const QUALIFICATION_OPTIONS = [
     { value: "bachelors_degree", label: "Bachelor's Degree" },
     { value: "masters_degree", label: "Master's Degree" },
@@ -88,7 +84,7 @@ function FormField({
     );
 }
 
-export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelect, industry }: BasicInfoStepProps) {
+export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelect, industry, countries }: BasicInfoStepProps) {
     const canLoadDesignations = Boolean(industry);
 
     // Job titles match the industry chosen on the previous step (resolved server-side from `industries`)
@@ -247,21 +243,15 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                     </FormField>
 
                     <FormField label="Country" id="country" error={errors.country}>
-                        <Select
+                        <Combobox
+                            id="country"
+                            options={countries.map((country) => ({ value: country, label: country }))}
                             value={data.country}
                             onValueChange={(value) => updateField("country", value)}
-                        >
-                            <SelectTrigger id="country">
-                                <SelectValue placeholder="Select country" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {COUNTRIES.map((country) => (
-                                    <SelectItem key={country} value={country}>
-                                        {country}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            placeholder="Select country"
+                            searchPlaceholder="Search countries..."
+                            emptyMessage="No country found."
+                        />
                     </FormField>
                 </div>
             </FormSection>
@@ -340,7 +330,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                 value={data.experienceLevel}
                                 onValueChange={(value) => updateField("experienceLevel", value as BasicInfoData["experienceLevel"])}
                             >
-                                <SelectTrigger id="experienceLevel">
+                                <SelectTrigger id="experienceLevel" className="w-full">
                                     <SelectValue placeholder="Select level" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -359,7 +349,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                             value={data.highestQualification}
                             onValueChange={(value) => updateField("highestQualification", value as BasicInfoData["highestQualification"])}
                         >
-                            <SelectTrigger id="highestQualification">
+                            <SelectTrigger id="highestQualification" className="w-full">
                                 <SelectValue placeholder="Select highest qualification" />
                             </SelectTrigger>
                             <SelectContent>
@@ -385,7 +375,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                 value={data.availabilityStatus}
                                 onValueChange={(value) => updateField("availabilityStatus", value as BasicInfoData["availabilityStatus"])}
                             >
-                                <SelectTrigger id="availabilityStatus">
+                                <SelectTrigger id="availabilityStatus" className="w-full">
                                     <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -402,7 +392,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                 value={data.noticePeriod}
                                 onValueChange={(value) => updateField("noticePeriod", value)}
                             >
-                                <SelectTrigger id="noticePeriod">
+                                <SelectTrigger id="noticePeriod" className="w-full">
                                     <SelectValue placeholder="Select period" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -422,7 +412,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                 value={data.employmentType}
                                 onValueChange={(value) => updateField("employmentType", value as BasicInfoData["employmentType"])}
                             >
-                                <SelectTrigger id="employmentType">
+                                <SelectTrigger id="employmentType" className="w-full">
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>

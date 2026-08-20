@@ -106,7 +106,7 @@ export function EducationStep({ educations, onChange, onNext, onPrevious }: Educ
                                         value={edu.educationType}
                                         onValueChange={(value) => handleUpdate(index, "educationType", value)}
                                     >
-                                        <SelectTrigger id={`educationType-${index}`}>
+                                        <SelectTrigger id={`educationType-${index}`} className="w-full">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>

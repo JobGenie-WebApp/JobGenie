@@ -3,13 +3,13 @@ import type { LandingContent, SiteContent, SiteFooterContent, SiteNavigationCont
 export const landingContent: LandingContent = {
   hero: {
     kicker: '',
-    title: 'Hire the best,',
-    emphasizedTitle: 'Hired by the best!',
+    title: 'Hire the best',
+    emphasizedTitle: 'Hired by the best',
     description:
       'The best teams are looking for the best talent. The best talent is looking for the best team. I’m here to grant your wish! ',
     trustLabel: 'Trusted by modern hiring teams',
     lampLabel: 'Rub the lamp',
-    genieImageAlt: 'The JobGenie emerging from a magic lamp',
+    genieImageAlt: 'The JobGenie presenting hiring opportunities',
     wishCards: [
       { eyebrow: 'SKILLS MATCH', title: 'Product Designer', note: '94% match' },
       { eyebrow: 'TOP TALENT PICKED', title: 'Screening passed', note: 'Ready to interview' },
@@ -98,7 +98,7 @@ export const landingContent: LandingContent = {
         number: '03',
         title: 'Interview and Job Offer',
         text: 'Share interview schedules with top talent, compare team feedback, and view candidate scores. Hire the right talent, right away.',
-        icon: 'zap',
+        icon: 'check',
       },
     ],
   },
@@ -207,9 +207,9 @@ export const footerContent: SiteFooterContent = {
     { label: 'LinkedIn', href: '#' },
     { label: 'GitHub', href: '#' },
   ],
-  legalLine: 'JobGenie Technologies Ltd. All rights reserved.',
-  versionLabel: 'TALENT OS v1.0',
-  statusLabel: 'All systems operational',
+  legalLine: 'FutureFit PVT LTD. All rights reserved.',
+  versionLabel: '',
+  statusLabel: '',
 };
 
 export const siteContent: SiteContent = {
