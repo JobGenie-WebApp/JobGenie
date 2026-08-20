@@ -1,6 +1,6 @@
 import { SiteHome } from '@/components/landing/SiteHome';
-import { getSiteContent } from '@/lib/cms/site-content';
+import { siteContent } from '@/content/site';
 
-export default async function Home() {
-  return <SiteHome content={await getSiteContent()} />;
+export default function Home() {
+  return <SiteHome content={siteContent} />;
 }

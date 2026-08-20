@@ -55,6 +55,7 @@ export function IndustryStep({
                     </CardHeader>
                     <CardContent>
                         <CVUpload
+                            industry={industry}
                             onExtracted={onCVExtracted}
                             onFileSelect={onFileSelect}
                             onSkip={onSkipCV}

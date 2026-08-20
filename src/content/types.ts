@@ -1,8 +1,6 @@
 export type CTA = {
   label: string;
   href: string;
-  /** Row id in `cms_nav_items` when this link came from the CMS. */
-  cmsId?: string;
 };
 
 export type SiteBrand = {
@@ -102,8 +100,6 @@ export type SiteNavigationContent = {
     href: string;
     id: string;
     label: string;
-    /** Row id in `cms_nav_items` when this link came from the CMS. */
-    cmsId?: string;
   }[];
   signIn: CTA;
   getStarted: CTA;
@@ -114,8 +110,6 @@ export type SiteFooterContent = {
   columns: {
     title: string;
     links: CTA[];
-    /** Row id in `cms_nav_items` when this column came from the CMS. */
-    cmsId?: string;
   }[];
   socialLinks: CTA[];
   legalLine: string;

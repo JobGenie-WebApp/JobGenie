@@ -4,7 +4,6 @@ import Link from 'next/link';
 
 import { footerContent, navigationContent } from '@/content/site';
 import type { SiteBrand, SiteFooterContent } from '@/content/types';
-import { T, navKey } from '@/components/cms/T';
 
 export function Footer({
     content = footerContent,
@@ -31,18 +30,18 @@ export function Footer({
                                 <svg width={'clamp(12px, 3vw, 13px)'} height={'clamp(12px, 3vw, 13px)'} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
                             </div>
                             <span style={{ fontWeight: 700, fontSize: 'clamp(14px, 3.5vw, 15px)', letterSpacing: '-0.02em', color: 'var(--lp-text)' }}>
-                                <T k="navigation.brand.prefix">{brand.prefix}</T>
+                                {brand.prefix}
                                 <span style={{ color: 'var(--c-green)' }}>
-                                    <T k="navigation.brand.suffix">{brand.suffix}</T>
+                                    {brand.suffix}
                                 </span>
                             </span>
                         </div>
                         <p style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-33)', lineHeight: 1.72, maxWidth: '100%', marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                            <T k="footer.brandDescription">{content.brandDescription}</T>
+                            {content.brandDescription}
                         </p>
                         <div style={{ display: 'flex', gap: 'clamp(6px, 2vw, 8px)', flexWrap: 'wrap' }}>
                             {content.socialLinks.map((s, i) => (
-                                <Link key={s.cmsId ?? i} href={s.href}
+                                <Link key={i} href={s.href}
                                     className="touch-manipulation"
                                     style={{ width: 'clamp(30px, 8vw, 32px)', height: 'clamp(30px, 8vw, 32px)', minWidth: 30, minHeight: 30, borderRadius: 8, background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', color: 'var(--lp-text-28)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 160ms' }}
                                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--c-green-40)'; (e.currentTarget as HTMLElement).style.background = 'var(--lp-surface-hover)'; (e.currentTarget as HTMLElement).style.color = 'var(--lp-text)'; }}
@@ -56,17 +55,17 @@ export function Footer({
 
                     {/* Link columns */}
                     {content.columns.map((col, colIndex) => (
-                        <div key={col.cmsId ?? colIndex}>
-                            <div style={{ fontSize: 'clamp(12px, 2.3vw, 10px)', fontWeight: 700, color: 'var(--lp-text-22)', letterSpacing: '0.12em', marginBottom: 'clamp(10px, 3vw, 14px)', textTransform: 'uppercase' }}>
-                                <T k={navKey(col.cmsId, 'label') ?? `footer.columns.${colIndex}.title`}>{col.title}</T>
+                        <div key={colIndex}>
+                            <div style={{ fontSize: 'clamp(10px, 2.3vw, 12px)', fontWeight: 700, color: 'var(--lp-text-22)', letterSpacing: '0.12em', marginBottom: 'clamp(10px, 3vw, 14px)', textTransform: 'uppercase' }}>
+                                {col.title}
                             </div>
                             {col.links.map((l, linkIndex) => (
-                                <div key={l.cmsId ?? linkIndex} style={{ marginBottom: 'clamp(7px, 2vw, 9px)' }}>
+                                <div key={linkIndex} style={{ marginBottom: 'clamp(7px, 2vw, 9px)' }}>
                                     <Link href={l.href}
                                         style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-33)', transition: 'color 150ms', textDecoration: 'none', display: 'block' }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--c-green)'; }}
                                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-28)'; }}>
-                                        <T k={navKey(l.cmsId, 'label') ?? `footer.columns.${colIndex}.links.${linkIndex}.label`}>{l.label}</T>
+                                        {l.label}
                                     </Link>
                                 </div>
                             ))}
@@ -77,13 +76,13 @@ export function Footer({
                 {/* Bottom bar */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style={{ borderTop: '1px solid var(--lp-border-2)', paddingTop: 'clamp(18px, 5vw, 22px)' }}>
                     <span style={{ fontSize: 'clamp(11px, 2.8vw, 12px)', color: 'var(--lp-text-16)', lineHeight: 1.5 }}>
-                        © {year} <T k="footer.legalLine">{content.legalLine}</T>
+                        © {year} {content.legalLine}
                     </span>
                     <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 xs:gap-4">
-                        <span style={{ fontSize: 'clamp(9px, 2.3vw, 10px)', color: 'var(--lp-text-12)', letterSpacing: '0.08em', fontFamily: 'monospace', whiteSpace: 'nowrap' }}><T k="footer.versionLabel">{content.versionLabel}</T></span>
+                        <span style={{ fontSize: 'clamp(9px, 2.3vw, 10px)', color: 'var(--lp-text-12)', letterSpacing: '0.08em', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{content.versionLabel}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(4px, 1.2vw, 5px)' }}>
                             <div className="anim-pulse-green" style={{ width: 'clamp(5px, 1.5vw, 6px)', height: 'clamp(5px, 1.5vw, 6px)', minWidth: 5, minHeight: 5, borderRadius: '50%', background: 'var(--c-green)' }} />
-                            <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--lp-text-22)', fontWeight: 500, whiteSpace: 'nowrap' }}><T k="footer.statusLabel">{content.statusLabel}</T></span>
+                            <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--lp-text-22)', fontWeight: 500, whiteSpace: 'nowrap' }}>{content.statusLabel}</span>
                         </div>
                     </div>
                 </div>

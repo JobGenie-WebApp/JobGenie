@@ -48,42 +48,6 @@ export interface Certificate {
     description: string | null;
 }
 
-export interface FinanceAcademicEducation {
-    id: string;
-    degree_diploma: string;
-    institution: string;
-    status: string;
-}
-
-export interface FinanceProfessionalEducation {
-    id: string;
-    professional_qualification: string;
-    institution: string;
-    status: string;
-}
-
-export interface BankingAcademicEducation {
-    id: string;
-    degree_diploma: string;
-    institution: string;
-    status: string;
-}
-
-export interface BankingProfessionalEducation {
-    id: string;
-    professional_qualification: string;
-    institution: string;
-    status: string;
-}
-
-export interface BankingSpecializedTraining {
-    id: string;
-    certificate_name: string;
-    issuing_authority: string;
-    certificate_issue_month: string | null;
-    status: string;
-}
-
 export interface IndustrySpecialization {
     id: string;
     industry: string;
@@ -129,11 +93,6 @@ export interface CandidateProfile {
     awards: Award[];
     projects: Project[];
     certificates: Certificate[];
-    finance_academic_education: FinanceAcademicEducation[];
-    finance_professional_education: FinanceProfessionalEducation[];
-    banking_academic_education: BankingAcademicEducation[];
-    banking_professional_education: BankingProfessionalEducation[];
-    banking_specialized_training: BankingSpecializedTraining[];
     industry_specializations: IndustrySpecialization[];
 }
 

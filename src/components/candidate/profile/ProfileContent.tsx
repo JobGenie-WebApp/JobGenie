@@ -120,15 +120,7 @@ export function ProfileContent() {
             <ExperienceSection experiences={profile.work_experiences || []} />
 
             {/* Education Section */}
-            <EducationSection
-                educations={profile.educations || []}
-                financeAcademic={profile.finance_academic_education || []}
-                financeProfessional={profile.finance_professional_education || []}
-                bankingAcademic={profile.banking_academic_education || []}
-                bankingProfessional={profile.banking_professional_education || []}
-                bankingTraining={profile.banking_specialized_training || []}
-                industry={profile.industry}
-            />
+            <EducationSection educations={profile.educations || []} />
 
             {/* Projects Section - IT Industry Only */}
             {profile.industry && IT_INDUSTRIES.includes(profile.industry as typeof IT_INDUSTRIES[number]) && (

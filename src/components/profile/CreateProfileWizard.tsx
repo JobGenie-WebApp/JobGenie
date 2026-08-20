@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +12,14 @@ import { ExperienceStep } from "./steps/ExperienceStep";
 import { EducationStep } from "./steps/EducationStep";
 import { AwardsStep } from "./steps/AwardsStep";
 import { ProjectsStep } from "./steps/ProjectsStep";
-import { FinanceEducationStep } from "./steps/FinanceEducationStep";
-import { BankingEducationStep } from "./steps/BankingEducationStep";
 import { SummaryStep } from "./steps/SummaryStep";
 import { completeFullProfile, completeFullProfileWithCV } from "@/app/actions/profile";
-import { IT_INDUSTRIES, BANKING_FINANCE_INDUSTRIES } from "@/lib/validations/profile-schema";
+import {
+    ACADEMIC_EDUCATION_STATUSES,
+    IT_INDUSTRIES,
+    PROFESSIONAL_EDUCATION_STATUSES,
+} from "@/lib/validations/profile-schema";
+import { CV_FIXED_VALUES } from "@/lib/cv-extraction-prompt";
 import type {
     CompleteProfileData,
     WorkExperienceData,
@@ -24,15 +27,20 @@ import type {
     AwardData,
     ProjectData,
     CertificateData,
-    FinanceAcademicEducationData,
-    FinanceProfessionalEducationData,
-    BankingAcademicEducationData,
-    BankingProfessionalEducationData,
-    BankingSpecializedTrainingData,
     CVExtractionResult,
     BasicInfoData,
 } from "@/lib/validations/profile-schema";
 import { CertificatesStep } from "./steps";
+import {
+    cvExtractedDateToMonthValue,
+    experienceLevelFromYears,
+    latestJobTitle,
+    matchFromList,
+    normalizeLkPhone,
+    pickOption,
+    toIsoDate,
+    totalYearsOfExperience,
+} from "@/lib/cv-derive";
 
 interface CreateProfileWizardProps {
     userId: string;
@@ -45,13 +53,8 @@ interface CreateProfileWizardProps {
         country?: string;
         industry?: string;
     };
-}
-
-/** Gemini may return YYYY-MM-DD; <input type="month"> only accepts YYYY-MM. */
-function cvExtractedDateToMonthValue(value: string | null | undefined): string {
-    if (!value) return "";
-    const m = String(value).trim().match(/^(\d{4})-(\d{2})(?:-\d{2})?/);
-    return m ? `${m[1]}-${m[2]}` : "";
+    /** Country names from the `countries` table, loaded by the page (server-side). */
+    countries: string[];
 }
 
 type Step = {
@@ -60,7 +63,7 @@ type Step = {
     visible: boolean;
 };
 
-export function CreateProfileWizard({ userId, initialData }: CreateProfileWizardProps) {
+export function CreateProfileWizard({ userId, initialData, countries }: CreateProfileWizardProps) {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
@@ -94,29 +97,16 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
     const [awards, setAwards] = useState<AwardData[]>([]);
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [certificates, setCertificates] = useState<CertificateData[]>([]);
-    // Finance education
-    const [financeAcademicEducation, setFinanceAcademicEducation] = useState<FinanceAcademicEducationData[]>([]);
-    const [financeProfessionalEducation, setFinanceProfessionalEducation] = useState<FinanceProfessionalEducationData[]>([]);
-
-    // Banking education  
-    const [bankingAcademicEducation, setBankingAcademicEducation] = useState<BankingAcademicEducationData[]>([]);
-    const [bankingProfessionalEducation, setBankingProfessionalEducation] = useState<BankingProfessionalEducationData[]>([]);
-    const [bankingSpecializedTraining, setBankingSpecializedTraining] = useState<BankingSpecializedTrainingData[]>([]);
 
     // Determine visible steps based on industry
     const isITIndustry = IT_INDUSTRIES.includes(industry as typeof IT_INDUSTRIES[number]);
-    const isFinanceIndustry = industry === "finance_investment";
-    const isBankingIndustry = industry === "banking";
 
     const steps: Step[] = [
         { id: "industry", title: "Industry & CV", visible: true },
         { id: "basic", title: "Basic Info", visible: true },
         { id: "experience", title: "Experience", visible: true },
-        // Standard education only for IT and other industries (not Finance/Banking)
-        { id: "education", title: "Education", visible: !isFinanceIndustry && !isBankingIndustry },
-        // Industry-specific education replaces standard education
-        { id: "financeEducation", title: "Education", visible: isFinanceIndustry },
-        { id: "bankingEducation", title: "Education", visible: isBankingIndustry },
+        // One education step for every industry - academic and professional qualifications.
+        { id: "education", title: "Education", visible: true },
         { id: "projects", title: "Projects", visible: isITIndustry },
         { id: "certificates", title: "Certificates", visible: isITIndustry },
         { id: "awards", title: "Awards", visible: true },
@@ -126,14 +116,67 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
     const totalSteps = steps.length;
     const progress = Math.round(((currentStep + 1) / totalSteps) * 100);
 
+    // Years of experience is a total of the whole work history, but the CV extraction below only
+    // ever set it once - so every role the candidate added, corrected or re-dated afterwards went
+    // uncounted. Re-derive it whenever the history changes, and leave a typed-in value alone when
+    // there is nothing dated to derive from.
+    useEffect(() => {
+        const years = totalYearsOfExperience(workExperiences);
+        if (!years) return;
+        setBasicInfo((prev) =>
+            prev.yearsOfExperience === years
+                ? prev
+                : { ...prev, yearsOfExperience: years, experienceLevel: experienceLevelFromYears(years) }
+        );
+    }, [workExperiences]);
+
     const handleCVExtracted = useCallback((data: CVExtractionResult) => {
         setCvUploaded(true);
 
-        // Populate form fields from extracted data (excluding name and email as they come from registration)
-        if (data.phone) setBasicInfo((prev) => ({ ...prev, phone: data.phone! }));
-        if (data.address) setBasicInfo((prev) => ({ ...prev, address: data.address! }));
-        if (data.currentPosition) setBasicInfo((prev) => ({ ...prev, currentPosition: data.currentPosition! }));
-        if (data.yearsOfExperience) setBasicInfo((prev) => ({ ...prev, yearsOfExperience: data.yearsOfExperience! }));
+        // Name and email stay as registered; everything else the CV can supply is filled in here.
+        // Each value is normalised or checked against the wizard's own options first, so what lands
+        // in state is something the field can actually hold - a phone the schema accepts, a country
+        // and job title that exist in their lists, an enum the select can show.
+        const extractedExps = data.workExperiences ?? [];
+        const currentPosition = data.currentPosition || latestJobTitle(extractedExps);
+        // Derived, and we know today's date where the model does not - so ours wins.
+        const yearsOfExperience = totalYearsOfExperience(extractedExps) || data.yearsOfExperience || 0;
+        const phone = normalizeLkPhone(data.phone);
+        const alternativePhone = normalizeLkPhone(data.alternativePhone);
+        const country = matchFromList(data.country, countries);
+        const expectedPositions = (data.expectedPositions ?? [])
+            .map((p) => (p || "").trim())
+            .filter(Boolean)
+            .slice(0, 3);
+
+        setBasicInfo((prev) => ({
+            ...prev,
+            ...(phone && { phone }),
+            ...(alternativePhone && { alternativePhone }),
+            ...(data.address && { address: data.address }),
+            ...(country && { country }),
+            ...(currentPosition && { currentPosition }),
+            ...(yearsOfExperience && {
+                yearsOfExperience,
+                experienceLevel: experienceLevelFromYears(yearsOfExperience),
+            }),
+            ...(data.highestQualification && {
+                highestQualification: pickOption(
+                    data.highestQualification,
+                    CV_FIXED_VALUES.highestQualification,
+                    "bachelors_degree"
+                ) as BasicInfoData["highestQualification"],
+            }),
+            ...(data.noticePeriod && {
+                noticePeriod: pickOption(data.noticePeriod, CV_FIXED_VALUES.noticePeriod, "immediate"),
+            }),
+            ...(data.expectedMonthlySalary && { expectedMonthlySalary: data.expectedMonthlySalary }),
+            // expectedPositions is a required field the CV never states outright, so an empty
+            // list here would block submission until the candidate noticed it themselves.
+            ...(expectedPositions.length
+                ? { expectedPositions }
+                : currentPosition && { expectedPositions: [currentPosition] }),
+        }));
         if (data.professionalSummary) setProfessionalSummary(data.professionalSummary);
 
         // Work experiences
@@ -142,8 +185,9 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
                 data.workExperiences.map((exp) => ({
                     jobTitle: exp.jobTitle || "",
                     company: exp.company || "",
-                    employmentType: "full_time" as const,
-                    locationType: "onsite" as const,
+                    employmentType: pickOption(exp.employmentType, CV_FIXED_VALUES.employmentType, "full_time"),
+                    location: exp.location || "",
+                    locationType: pickOption(exp.locationType, CV_FIXED_VALUES.locationType, "onsite"),
                     startDate: cvExtractedDateToMonthValue(exp.startDate),
                     endDate: exp.endDate ? cvExtractedDateToMonthValue(exp.endDate) || null : null,
                     description: exp.description || "",
@@ -152,52 +196,27 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
             );
         }
 
-        // Educations - Map to standard educations AND industry-specific states
+        // Educations - academic and professional, same list for every industry
         if (data.educations?.length) {
-            const academicEdus: FinanceAcademicEducationData[] = [];
-            const professionalEdus: FinanceProfessionalEducationData[] = [];
-            const standardEdus: EducationData[] = [];
+            setEducations(
+                data.educations.map((edu) => {
+                    const type = edu.educationType?.toLowerCase() === "professional" ? "professional" as const : "academic" as const;
+                    // Statuses differ per type, and the academic list carries the degree class -
+                    // check the model's answer against the list the Select will actually render.
+                    const status = type === "professional"
+                        ? pickOption(edu.status, PROFESSIONAL_EDUCATION_STATUSES.map((o) => o.value), "completed")
+                        : pickOption(edu.status, ACADEMIC_EDUCATION_STATUSES.map((o) => o.value), "general");
 
-            data.educations.forEach((edu) => {
-                const status = (edu.status?.toLowerCase() === "complete" || edu.status?.toLowerCase() === "completed")
-                    ? "general" as const
-                    : "incomplete" as const;
-
-                const type = (edu.educationType?.toLowerCase() === "professional") ? "professional" as const : "academic" as const;
-
-                // For standard education list (used by IT/Other)
-                standardEdus.push({
-                    educationType: type,
-                    degreeDiploma: type === "professional" ? (edu.professionalQualification || edu.degreeDiploma || "") : (edu.degreeDiploma || ""),
-                    institution: edu.institution || "",
-                    status
-                });
-
-                if (type === "academic") {
-                    academicEdus.push({
-                        degreeDiploma: edu.degreeDiploma || "",
+                    return {
+                        educationType: type,
+                        degreeDiploma: type === "professional"
+                            ? (edu.professionalQualification || edu.degreeDiploma || "")
+                            : (edu.degreeDiploma || edu.professionalQualification || ""),
                         institution: edu.institution || "",
-                        status
-                    });
-                } else {
-                    professionalEdus.push({
-                        professionalQualification: edu.professionalQualification || edu.degreeDiploma || "",
-                        institution: edu.institution || "",
-                        status
-                    });
-                }
-            });
-
-            // Standard education (IT and other industries)
-            setEducations(standardEdus);
-
-            // Finance industry
-            setFinanceAcademicEducation(academicEdus);
-            setFinanceProfessionalEducation(professionalEdus);
-
-            // Banking industry
-            setBankingAcademicEducation(academicEdus);
-            setBankingProfessionalEducation(professionalEdus);
+                        status,
+                    };
+                })
+            );
         }
 
         // Certificates (for IT)
@@ -206,7 +225,11 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
                 data.certificates.map((cert) => ({
                     certificateName: cert.certificateName || "",
                     issuingAuthority: cert.issuingAuthority || "",
-                    issueDate: cert.issueDate || "",
+                    issueDate: toIsoDate(cert.issueDate),
+                    expiryDate: toIsoDate(cert.expiryDate),
+                    credentialId: cert.credentialId || "",
+                    credentialUrl: cert.credentialUrl || "",
+                    description: cert.description || "",
                 }))
             );
         }
@@ -218,7 +241,7 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
                     projectName: proj.projectName || "",
                     description: proj.description || "",
                     demoUrl: proj.demoUrl || "",
-                    isCurrent: false,
+                    isCurrent: proj.isCurrent || false,
                 }))
             );
         }
@@ -236,7 +259,7 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
 
         // Move to next step
         setCurrentStep(1);
-    }, []);
+    }, [countries]);
 
     const handleNext = useCallback(() => {
         if (currentStep < totalSteps - 1) {
@@ -257,49 +280,41 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
         setError(null);
 
         try {
-            // Strip out any incomplete education rows before submission (safety net)
-            // They must have BOTH institution and degree/qualification
-            const cleanedEducations = educations.filter(
-                (edu) => edu.institution.trim() !== "" && edu.degreeDiploma.trim() !== ""
-            );
+            // Education rows need BOTH institution and qualification to save. Fully blank rows are
+            // dropped silently, but a half-filled row means a CV-extracted qualification is about to
+            // vanish without the candidate ever being told - surface those instead of deleting them.
+            const incompleteSections: string[] = [];
+            const keepComplete = <T,>(rows: T[], section: string, required: (row: T) => string[]) =>
+                rows.filter((row) => {
+                    const values = required(row).map((v) => (v || "").trim());
+                    if (values.every((v) => v === "")) return false;
+                    if (values.some((v) => v === "")) {
+                        incompleteSections.push(section);
+                        return false;
+                    }
+                    return true;
+                });
 
-            const cleanedFinanceAcademic = financeAcademicEducation.filter(
-                (edu) => edu.institution.trim() !== "" && edu.degreeDiploma.trim() !== ""
-            );
+            const cleanedEducations = keepComplete(educations, "Education",
+                (e) => [e.institution, e.degreeDiploma]);
 
-            const cleanedFinanceProf = financeProfessionalEducation.filter(
-                (edu) => edu.institution.trim() !== "" && edu.professionalQualification.trim() !== ""
-            );
-
-            const cleanedBankingAcademic = bankingAcademicEducation.filter(
-                (edu) => edu.institution.trim() !== "" && edu.degreeDiploma.trim() !== ""
-            );
-
-            const cleanedBankingProf = bankingProfessionalEducation.filter(
-                (edu) => edu.institution.trim() !== "" && edu.professionalQualification.trim() !== ""
-            );
-
-            const cleanedBankingSpecial = bankingSpecializedTraining.filter(
-                (edu) => edu.issuingAuthority.trim() !== "" && edu.certificateName.trim() !== ""
-            );
-
-            // If not IT/Other industry, standard educations shouldn't be submitted
-            const finalEducations = (isFinanceIndustry || isBankingIndustry) ? [] : cleanedEducations;
+            if (incompleteSections.length > 0) {
+                const sections = [...new Set(incompleteSections)].join(", ");
+                const message = `Some ${sections} entries are missing a qualification name or an institution. Please complete or remove them before submitting.`;
+                setError(message);
+                toast.error(message);
+                return;
+            }
 
             const profileData: CompleteProfileData = {
                 industry: industry as CompleteProfileData["industry"],
                 basicInfo,
                 professionalSummary,
                 workExperiences,
-                educations: finalEducations,
+                educations: cleanedEducations,
                 awards,
                 projects: isITIndustry ? projects : undefined,
                 certificates: isITIndustry ? certificates : undefined,
-                financeAcademicEducation: isFinanceIndustry ? cleanedFinanceAcademic : undefined,
-                financeProfessionalEducation: isFinanceIndustry ? cleanedFinanceProf : undefined,
-                bankingAcademicEducation: isBankingIndustry ? cleanedBankingAcademic : undefined,
-                bankingProfessionalEducation: isBankingIndustry ? cleanedBankingProf : undefined,
-                bankingSpecializedTraining: isBankingIndustry ? cleanedBankingSpecial : undefined,
             };
 
             const formData = new FormData();
@@ -351,10 +366,7 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
         }
     }, [
         userId, industry, basicInfo, professionalSummary, workExperiences,
-        educations, awards, projects, certificates, financeAcademicEducation,
-        financeProfessionalEducation, bankingAcademicEducation, bankingProfessionalEducation,
-        bankingSpecializedTraining, isITIndustry, isFinanceIndustry, isBankingIndustry,
-        bankingSpecializedTraining, isITIndustry, isFinanceIndustry, isBankingIndustry,
+        educations, awards, projects, certificates, isITIndustry,
         cvFile, profileImageFile, router
     ]);
 
@@ -376,6 +388,7 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
             case "basic":
                 return (
                     <BasicInfoStep
+                        countries={countries}
                         data={basicInfo}
                         onChange={setBasicInfo}
                         onImageSelect={setProfileImageFile}
@@ -429,30 +442,6 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
                         onPrevious={handlePrevious}
                     />
                 );
-            case "financeEducation":
-                return (
-                    <FinanceEducationStep
-                        academicEducation={financeAcademicEducation}
-                        professionalEducation={financeProfessionalEducation}
-                        onAcademicChange={setFinanceAcademicEducation}
-                        onProfessionalChange={setFinanceProfessionalEducation}
-                        onNext={handleNext}
-                        onPrevious={handlePrevious}
-                    />
-                );
-            case "bankingEducation":
-                return (
-                    <BankingEducationStep
-                        academicEducation={bankingAcademicEducation}
-                        professionalEducation={bankingProfessionalEducation}
-                        specializedTraining={bankingSpecializedTraining}
-                        onAcademicChange={setBankingAcademicEducation}
-                        onProfessionalChange={setBankingProfessionalEducation}
-                        onSpecializedChange={setBankingSpecializedTraining}
-                        onNext={handleNext}
-                        onPrevious={handlePrevious}
-                    />
-                );
             case "summary":
                 return (
                     <SummaryStep
@@ -465,11 +454,6 @@ export function CreateProfileWizard({ userId, initialData }: CreateProfileWizard
                         awards={awards}
                         projects={isITIndustry ? projects : undefined}
                         certificates={isITIndustry ? certificates : undefined}
-                        financeAcademicEducation={isFinanceIndustry ? financeAcademicEducation : undefined}
-                        financeProfessionalEducation={isFinanceIndustry ? financeProfessionalEducation : undefined}
-                        bankingAcademicEducation={isBankingIndustry ? bankingAcademicEducation : undefined}
-                        bankingProfessionalEducation={isBankingIndustry ? bankingProfessionalEducation : undefined}
-                        bankingSpecializedTraining={isBankingIndustry ? bankingSpecializedTraining : undefined}
                         onSubmit={handleSubmit}
                         onPrevious={handlePrevious}
                         isLoading={isLoading}

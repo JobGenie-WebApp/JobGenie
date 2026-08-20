@@ -13,6 +13,8 @@ export interface ComboboxOption {
 }
 
 interface ComboboxProps {
+    /** Matches the htmlFor of the field's <Label>, so clicking the label focuses the trigger. */
+    id?: string
     options: ComboboxOption[]
     value?: string
     onValueChange: (value: string) => void
@@ -24,6 +26,7 @@ interface ComboboxProps {
 }
 
 export function Combobox({
+    id,
     options,
     value,
     onValueChange,
@@ -57,6 +60,7 @@ export function Combobox({
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
+                    id={id}
                     type="button"
                     variant="outline"
                     role="combobox"

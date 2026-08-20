@@ -3,15 +3,14 @@ import type { LucideIcon } from 'lucide-react';
 import { ArrowLeft, ArrowRight, Search, Sparkles } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
-import { getSiteContent } from '@/lib/cms/site-content';
+import { siteContent } from '@/content/site';
 
-export async function PublicPageShell({ children }: { children: React.ReactNode }) {
-  const content = await getSiteContent();
+export function PublicPageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="landing-page jobgenie-home min-h-screen">
-      <Header navigation={content.navigation} />
+      <Header navigation={siteContent.navigation} />
       <main className="min-h-[70vh] overflow-hidden">{children}</main>
-      <Footer brand={content.navigation.brand} content={content.footer} />
+      <Footer brand={siteContent.navigation.brand} content={siteContent.footer} />
     </div>
   );
 }

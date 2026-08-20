@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AuthShell } from "@/components/layout/AuthShell";
 
 interface CreateProfileLayoutProps {
     children: React.ReactNode;
@@ -31,10 +32,18 @@ export default async function CreateProfileLayout({ children }: CreateProfileLay
     await checkAuth();
 
     return (
-        <div className="min-h-screen bg-muted/30">
-            <div className="mx-auto max-w-4xl px-4 py-8">
-                {children}
-            </div>
-        </div>
+        <AuthShell
+            sideHeadline="Build a profile that opens the right doors."
+            sideDescription="Turn your experience, education, and goals into one verified profile employers can trust."
+            bullets={[
+                "One profile for every opportunity",
+                "CV-assisted setup that saves time",
+                "Clear progress from application to offer",
+            ]}
+            formWidth="2xl"
+            bare
+        >
+            {children}
+        </AuthShell>
     );
 }

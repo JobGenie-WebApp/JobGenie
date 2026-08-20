@@ -91,37 +91,6 @@ export async function GET() {
                     credential_url,
                     description
                 ),
-                finance_academic_education (
-                    id,
-                    degree_diploma,
-                    institution,
-                    status
-                ),
-                finance_professional_education (
-                    id,
-                    professional_qualification,
-                    institution,
-                    status
-                ),
-                banking_academic_education (
-                    id,
-                    degree_diploma,
-                    institution,
-                    status
-                ),
-                banking_professional_education (
-                    id,
-                    professional_qualification,
-                    institution,
-                    status
-                ),
-                banking_specialized_training (
-                    id,
-                    certificate_name,
-                    issuing_authority,
-                    certificate_issue_month,
-                    status
-                ),
                 industry_specializations (
                     id,
                     industry,

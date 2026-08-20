@@ -1,8 +1,7 @@
-import { ArrowLeft, UserCircle } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { UserCircle } from "lucide-react";
 import { CreateProfileWizard } from "@/components/profile/CreateProfileWizard";
 import { createClient } from "@/lib/supabase/server";
+import { getCountryNames } from "@/lib/countries";
 import { redirect } from "next/navigation";
 
 async function getCandidateData() {
@@ -31,29 +30,24 @@ async function getCandidateData() {
 }
 
 export default async function CreateProfilePage() {
-    const { userId, candidate } = await getCandidateData();
+    const [{ userId, candidate }, countries] = await Promise.all([getCandidateData(), getCountryNames()]);
 
     return (
-        <div className="space-y-6">
-            {/* Back to Home */}
-            <div>
-                <Button variant="ghost" size="sm" asChild>
-                    <Link href="/" className="gap-2">
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Home
-                    </Link>
-                </Button>
-            </div>
-
+        <div className="mx-auto w-full max-w-4xl space-y-5">
             {/* Header */}
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-                    <div className="inline-flex items-center justify-center rounded-2xl bg-primary/10 p-3 text-primary self-start sm:p-4">
-                        <UserCircle className="h-8 w-8 sm:h-10 sm:w-10" />
+            <div className="rounded-2xl border border-border/80 bg-card/95 p-5 shadow-[0_12px_40px_-30px_rgba(0,0,0,.45)] ring-1 ring-primary/[0.04] backdrop-blur-xl sm:p-6">
+                <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                        <UserCircle className="h-6 w-6" aria-hidden="true" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold sm:text-2xl">Complete Your Profile</h1>
-                        <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                            Candidate onboarding
+                        </p>
+                        <h1 className="mt-1.5 text-2xl font-bold tracking-[-0.035em] text-foreground">
+                            Complete your profile
+                        </h1>
+                        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
                             Welcome{candidate?.first_name ? `, ${candidate.first_name}` : ""}!
                             Fill in your details to access your dashboard.
                         </p>
@@ -64,6 +58,7 @@ export default async function CreateProfilePage() {
             {/* Profile Wizard */}
             <CreateProfileWizard
                 userId={userId}
+                countries={countries}
                 initialData={{
                     firstName: candidate?.first_name || "",
                     lastName: candidate?.last_name || "",

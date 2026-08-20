@@ -8,7 +8,6 @@ import { JobGenieLogo } from '@/components/brand/JobGenieLogo';
 import { useLandingSectionSpy } from '@/hooks/useLandingSectionSpy';
 import { navigationContent } from '@/content/site';
 import type { SiteNavigationContent } from '@/content/types';
-import { T, navKey } from '@/components/cms/T';
 import { cn } from '@/lib/utils';
 
 export function Header({
@@ -66,8 +65,6 @@ export function Header({
                 <JobGenieLogo
                     priority
                     imageClassName="h-11 w-auto sm:h-12"
-                    wordmarkClassName="text-[var(--lp-text)]"
-                    sizes="(min-width: 640px) 48px, 44px"
                 />
             </Link>
 
@@ -83,7 +80,7 @@ export function Header({
                             aria-current={isActive ? (l.href.startsWith('#') ? 'location' : 'page') : undefined}
                         >
                             <span className="lp-header-nav-link__label">
-                                <T k={navKey(l.cmsId, 'label')}>{l.label}</T>
+                                {l.label}
                             </span>
                         </Link>
                     );
@@ -98,17 +95,17 @@ export function Header({
                     <>
                         <Link href={navigation.signIn.href}
                             className="hidden xl:inline-block"
-                            style={{ padding: '7px 16px', borderRadius: 7, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-45)', fontSize: 13, fontWeight: 500, textDecoration: 'none', transition: 'all 160ms', whiteSpace: 'nowrap' }}
+                            style={{ padding: '7px 16px', borderRadius: 7, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-45)', fontSize: 'clamp(12px, 0.9vw, 13px)', fontWeight: 500, textDecoration: 'none', transition: 'all 160ms', whiteSpace: 'nowrap' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--c-green-40)'; (e.currentTarget as HTMLElement).style.background = 'var(--lp-surface)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-45)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--lp-border)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                            <T k="navigation.signIn.label">{navigation.signIn.label}</T>
+                            {navigation.signIn.label}
                         </Link>
                         <Link href={navigation.getStarted.href}
                             className="hidden xl:inline-block"
-                            style={{ padding: '8px 18px', borderRadius: 7, background: 'var(--c-green)', color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 22px var(--c-green-30)', transition: 'all 160ms', whiteSpace: 'nowrap' }}
+                            style={{ padding: '8px 18px', borderRadius: 7, background: 'var(--c-green)', color: '#fff', fontSize: 'clamp(12px, 0.9vw, 13px)', fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 22px var(--c-green-30)', transition: 'all 160ms', whiteSpace: 'nowrap' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 36px var(--c-green-60)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 22px var(--c-green-30)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}>
-                            <T k="navigation.getStarted.label">{navigation.getStarted.label}</T> →
+                            {navigation.getStarted.label} →
                         </Link>
                     </>
                 )}
@@ -153,7 +150,7 @@ export function Header({
                                     className={cn('lp-header-nav-link-mobile touch-manipulation', isActive && 'is-active')}
                                     aria-current={isActive ? (l.href.startsWith('#') ? 'location' : 'page') : undefined}
                                 >
-                                    <T k={navKey(l.cmsId, 'label')}>{l.label}</T>
+                                    {l.label}
                                 </Link>
                             );
                         })}
@@ -163,12 +160,12 @@ export function Header({
                             <Link href={navigation.signIn.href} onClick={() => setMobileOpen(false)}
                                 className="flex-1 text-center touch-manipulation"
                                 style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-60)', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 500, textDecoration: 'none' }}>
-                                <T k="navigation.signIn.label">{navigation.signIn.label}</T>
+                                {navigation.signIn.label}
                             </Link>
                             <Link href={navigation.getStarted.href} onClick={() => setMobileOpen(false)}
                                 className="flex-1 text-center touch-manipulation"
                                 style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--c-green)', color: '#fff', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 700, textDecoration: 'none', boxShadow: '0 0 20px var(--c-green-30)' }}>
-                                <T k="navigation.getStarted.label">{navigation.getStarted.label}</T>
+                                {navigation.getStarted.label}
                             </Link>
                         </div>
                     )}
