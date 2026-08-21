@@ -4,7 +4,7 @@ import { PublicPageHero, PublicPageShell } from '@/components/public/PublicPageS
 import { LegalNotice, LegalSection, legalBody } from '@/components/public/LegalPage';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | JobGenie',
+  title: 'Terms & Conditions | JobGenie',
   description: 'The terms that govern your use of the JobGenie platform.',
 };
 
@@ -12,47 +12,57 @@ export default function TermsPage() {
   return (
     <PublicPageShell>
       <PublicPageHero
-        description="The rules that govern how candidates and employers use the JobGenie platform."
+        description="The rules for using JobGenie as a job seeker or employer."
         eyebrow="LEGAL"
         icon={ScrollText}
-        title="Terms of Service"
+        title="Terms & Conditions"
       />
       <div className="jg-container py-14">
         <div className={legalBody}>
           <LegalNotice />
 
-          <LegalSection title="Using JobGenie">
+          <LegalSection title="1. Who Can Use This Site">
             <p>
-              You need an account to apply for roles or post them. You are responsible for the accuracy of
-              what you publish and for keeping your login credentials secure.
+              Our platform is designed to connect job seekers with career opportunities. To create a candidate
+              profile, you must be of legal working age under Sri Lankan law. If you represent a company, it
+              should have a workforce of at least 50 employees.
             </p>
           </LegalSection>
 
-          <LegalSection title="Candidate accounts">
+          <LegalSection title="2. Accuracy of Your Information">
             <p>
-              Your profile and CV must describe you truthfully. You control which employers can progress your
-              application, and you can withdraw an application at any time.
+              We count on you to keep your information authentic. All information you provide must be true,
+              accurate, and up to date.
             </p>
           </LegalSection>
 
-          <LegalSection title="Employer accounts">
+          <LegalSection title="3. No Guarantee of Placement">
             <p>
-              Company profiles are verified before jobs go live. Listings must describe a genuine vacancy, and
-              candidate data accessed through the platform may only be used for that hiring process.
+              Joining our candidate pool or submitting an application makes your profile available for relevant
+              roles, but it does not guarantee an interview, job placement, or job offer.
             </p>
           </LegalSection>
 
-          <LegalSection title="Acceptable use">
+          <LegalSection title="4. Employer Rules">
             <p>
-              No fraudulent listings, scraping, impersonation, or attempts to interfere with the platform. We
-              may suspend accounts that break these terms.
+              We protect our candidates&apos; privacy. Employers and recruiters may only use applicant details to
+              evaluate candidates for job roles. Using candidate data for marketing or any other unrelated
+              purpose is strictly forbidden.
             </p>
           </LegalSection>
 
-          <LegalSection title="Changes">
+          <LegalSection title="5. Content and Ownership">
             <p>
-              We may update these terms as the service evolves. Continued use after an update means you accept
-              the revised terms.
+              You retain full ownership of your resume and portfolio materials. By uploading them, you give us
+              permission to store, process, and present your profile to relevant hiring teams for recruitment
+              purposes.
+            </p>
+          </LegalSection>
+
+          <LegalSection title="6. Updates to These Terms">
+            <p>
+              We may occasionally update these terms or our privacy practices to reflect improvements to the
+              platform. Continued use of JobGenie after an update means you accept the revised terms.
             </p>
           </LegalSection>
         </div>

@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <PublicPageShell>
       <PublicPageHero
-        description="How we collect, use, store and protect the personal data you share with JobGenie."
+        description="How JobGenie handles and protects candidate and company information."
         eyebrow="LEGAL"
         icon={ShieldCheck}
         title="Privacy Policy"
@@ -21,47 +21,42 @@ export default function PrivacyPage() {
         <div className={legalBody}>
           <LegalNotice />
 
-          <LegalSection title="Who we are">
+          <LegalSection title="1. Information We Collect">
             <p>
-              JobGenie is a recruitment platform operated by FutureFit PVT LTD. We connect candidates with
-              employers, which means we process personal data for both groups.
+              We collect the information you choose to share with us when you create a company or candidate
+              profile. This includes your contact details, resume or CV, work history, educational background,
+              portfolio links, and career preferences.
             </p>
           </LegalSection>
 
-          <LegalSection title="What we collect">
+          <LegalSection title="2. How We Use Your Information">
             <p>
-              Account details you give us when you sign up, the contents of any CV or company profile you
-              upload, the applications and invitations you send or receive, and technical data such as
-              cookies and session information needed to keep you signed in.
+              Your details are used strictly for recruitment purposes. We use your profile to:
+            </p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>Match your skills with current and future job openings.</li>
+              <li>Share your application with relevant hiring teams and employers.</li>
+              <li>Contact you about job opportunities, application updates, or other relevant alerts.</li>
+            </ul>
+          </LegalSection>
+
+          <LegalSection title="3. Who Sees Your Profile">
+            <p>
+              Your privacy is important to us. Your profile and resume are only visible to authorised hiring
+              managers and recruiters evaluating talent. We guarantee that your personal data will not be sold
+              or shared with third parties for commercial purposes.
             </p>
           </LegalSection>
 
-          <LegalSection title="How we use it">
+          <LegalSection title="4. Your Rights and Control Over Your Data">
             <p>
-              To operate your account, match candidates to roles, let employers review applications, send
-              service notifications, and to keep the platform secure and free of fraudulent profiles.
+              You are always in control of your information. At any time, you can:
             </p>
-          </LegalSection>
-
-          <LegalSection title="Your rights">
-            <p>
-              You can request access to your data, ask us to correct or delete it, or withdraw consent where
-              processing relies on it. Cookie preferences can be changed at any time from our{' '}
-              <a className="font-semibold text-[var(--jg-green)] hover:underline" href="/cookie-policy">
-                Cookie Policy
-              </a>{' '}
-              page.
-            </p>
-          </LegalSection>
-
-          <LegalSection title="Contact">
-            <p>
-              For any privacy question or to exercise the rights above, reach us through our{' '}
-              <a className="font-semibold text-[var(--jg-green)] hover:underline" href="/contact">
-                contact page
-              </a>
-              .
-            </p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>Access or request a copy of the details we hold about you.</li>
+              <li>Update or correct your resume, experience, or contact information.</li>
+              <li>Request deletion of your profile and personal data from our system.</li>
+            </ul>
           </LegalSection>
         </div>
       </div>

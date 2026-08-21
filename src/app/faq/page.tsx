@@ -20,18 +20,23 @@ const faqs = [
     description: 'Everything candidates need to know about privacy, profiles, applications and updates.',
     items: [
       {
-        question: 'How often will I hear from you after I create a profile?',
+        question: 'Will my current employer know that I have created a profile on JobGenie?',
         answer:
-          'Once your profile is created, you will receive a confirmation mail. You will be notified when a role matches your skills and preferences.',
+          'No. We respect your privacy, and your data is kept strictly confidential. Your profile information is only accessible to the internal talent acquisition team.',
       },
       {
-        question: 'Could I have a profile even if I am not looking out for any opportunities at the moment?',
+        question: 'How often will I hear from you after I create a profile?',
         answer:
-          'Yes, you could maintain a profile until you are ready. Until then, you can update your profile from time to time.',
+          'Once your profile is created, you will receive a confirmation email. We will also notify you when a role matches your skills and preferences.',
+      },
+      {
+        question: 'Can I create a profile even if I am not looking for opportunities at the moment?',
+        answer:
+          'Yes. You can maintain your profile until you are ready and update it whenever your experience or preferences change.',
       },
       {
         question: 'Do I have to pay?',
-        answer: 'No, you do not have to pay to create or use a Job Genie profile.',
+        answer: 'No. Creating and using a JobGenie profile is free for job seekers.',
       },
       {
         question: 'Can I apply for more than one job posting at a time?',
@@ -56,7 +61,7 @@ const faqs = [
       },
       {
         question: 'How do you ensure candidate information is up to date?',
-        answer: 'Candidates can update their profiles at regular intervals to remain relevant.',
+        answer: 'Candidates can update their profiles regularly to keep their information accurate and relevant.',
       },
       {
         question: 'How are candidates screened before being added to the talent pool?',
@@ -64,9 +69,9 @@ const faqs = [
           'Profiles undergo an initial review of key skills, experience levels and career preferences to ensure high quality and accuracy before being routed to hiring teams.',
       },
       {
-        question: 'Can employers browse the Talent Pool?',
+        question: 'Does my company need a paid account to post jobs on JobGenie?',
         answer:
-          'Employers can review approved public candidate profiles and sign up to begin a proper hiring workflow inside JobGenie.',
+          'No. Your company can post jobs on JobGenie without making a payment.',
       },
     ],
   },
