@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   BadgeCheck,
@@ -8,6 +9,7 @@ import {
   ChevronRight,
   CircleCheckBig,
   FileCheck2,
+  Rocket,
   Search,
   Sparkles,
   Star,
@@ -125,17 +127,34 @@ function HowItWorks({ content }: { content: LandingContent['journeys'] }) {
             return (
               <div className="jg-step" key={index}>
                 <div className="jg-step__number">
-                  <span>{step.number}</span>
                   <StepIcon size={22} />
                 </div>
                 <div>
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
                 </div>
-                {index < 2 && <ChevronRight className="jg-step__arrow" size={20} />}
+                <div className="jg-step__arrow" aria-hidden="true">
+                  {[0, 1, 2].map((arrow) => <ChevronRight key={arrow} size={24} />)}
+                </div>
               </div>
             );
           })}
+          <div className="jg-step jg-step--cta">
+            <div className="jg-step__number">
+              <Rocket size={22} />
+            </div>
+            <div>
+              <h3>Ready to get started?</h3>
+              <p>Create your account and take the next step in your journey.</p>
+            </div>
+            <Link
+              href={mode === 'candidate' ? '/signup?role=candidate' : '/signup?role=company'}
+              className="jg-button is-primary"
+              aria-label={`Get started as ${mode === 'candidate' ? 'a candidate' : 'an employer'}`}
+            >
+              Get Started
+            </Link>
+          </div>
         </motion.div>
       </div>
     </section>

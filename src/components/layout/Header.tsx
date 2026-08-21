@@ -65,6 +65,7 @@ export function Header({
                 <JobGenieLogo
                     priority
                     imageClassName="h-11 w-auto sm:h-12"
+                    wordmarkClassName="!hidden"
                 />
             </Link>
 
@@ -95,7 +96,7 @@ export function Header({
                     <>
                         <Link href={navigation.signIn.href}
                             className="hidden xl:inline-block"
-                            style={{ padding: '7px 16px', borderRadius: 7, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-45)', fontSize: 'clamp(12px, 0.9vw, 13px)', fontWeight: 500, textDecoration: 'none', transition: 'all 160ms', whiteSpace: 'nowrap' }}
+                            style={{ padding: '7px 16px', borderRadius: 7, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-45)', fontSize: 'clamp(12px, 0.9vw, 13px)', fontWeight: 550, textDecoration: 'none', transition: 'all 160ms', whiteSpace: 'nowrap' }}
                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--c-green-40)'; (e.currentTarget as HTMLElement).style.background = 'var(--lp-surface)'; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-45)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--lp-border)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                             {navigation.signIn.label}
@@ -159,7 +160,7 @@ export function Header({
                         <div className="flex flex-col sm:flex-row gap-2.5 pt-3" style={{ borderTop: '1px solid var(--lp-border)' }}>
                             <Link href={navigation.signIn.href} onClick={() => setMobileOpen(false)}
                                 className="flex-1 text-center touch-manipulation"
-                                style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-60)', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 500, textDecoration: 'none' }}>
+                                style={{ padding: 'clamp(11px, 3vw, 13px)', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, border: '1px solid var(--lp-border)', background: 'transparent', color: 'var(--lp-text-60)', fontSize: 'clamp(13px, 3.5vw, 14px)', fontWeight: 550, textDecoration: 'none' }}>
                                 {navigation.signIn.label}
                             </Link>
                             <Link href={navigation.getStarted.href} onClick={() => setMobileOpen(false)}

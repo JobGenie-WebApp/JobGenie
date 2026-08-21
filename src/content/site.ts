@@ -153,15 +153,16 @@ export const landingContent: LandingContent = {
 };
 
 export const navigationContent: SiteNavigationContent = {
-  brand: { prefix: 'Job', suffix: 'Genie' },
+  brand: { prefix: '', suffix: '' },
   links: [
+    { href: '/', id: 'home', label: 'Home' },
     { href: '/about-us', id: 'about-us', label: 'About Us' },
     { href: '/opportunities', id: 'opportunities', label: 'Our Opportunities' },
     { href: '/top-employers', id: 'top-employers', label: 'Our Top Employers' },
     { href: '/talent-pool', id: 'talent-pool', label: 'Our Talent Pool' },
     { href: '/explore-genie', id: 'explore-genie', label: 'Explore Genie' },
   ],
-  signIn: { label: 'Sign In', href: '/login' },
+  signIn: { label: "Let's Sign In", href: '/login' },
   getStarted: { label: 'Get Started', href: '/signup' },
 };
 
@@ -195,7 +196,7 @@ export const footerContent: SiteFooterContent = {
       title: 'Legal',
       links: [
         { label: 'Privacy Policy', href: '/privacy' },
-        { label: 'Terms of Service', href: '/terms' },
+        { label: 'Terms & Conditions', href: '/terms' },
         { label: 'Cookie Policy', href: '/cookie-policy' },
         { label: 'GDPR', href: '/gdpr' },
         { label: 'PDPA', href: '/pdpa' },

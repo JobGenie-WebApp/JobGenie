@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { JobGenieLogo } from '@/components/brand/JobGenieLogo';
 import { footerContent, navigationContent } from '@/content/site';
 import type { SiteBrand, SiteFooterContent } from '@/content/types';
 
@@ -25,19 +26,20 @@ export function Footer({
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 xs:gap-8 lg:gap-10 mb-10 sm:mb-12">
                     {/* Brand */}
                     <div className="col-span-2 sm:col-span-3 lg:col-span-1">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 'clamp(12px, 3vw, 16px)' }}>
-                            <div style={{ width: 'clamp(26px, 6vw, 28px)', height: 'clamp(26px, 6vw, 28px)', borderRadius: 7, background: 'var(--c-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 14px var(--c-green-30)' }}>
-                                <svg width={'clamp(12px, 3vw, 13px)'} height={'clamp(12px, 3vw, 13px)'} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-                            </div>
-                            <span style={{ fontWeight: 700, fontSize: 'clamp(14px, 3.5vw, 15px)', letterSpacing: '-0.02em', color: 'var(--lp-text)' }}>
-                                {brand.prefix}
-                                <span style={{ color: 'var(--c-green)' }}>
-                                    {brand.suffix}
-                                </span>
-                            </span>
-                        </div>
-                        <p style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-33)', lineHeight: 1.72, maxWidth: '100%', marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                            {content.brandDescription}
+                        <Link
+                            href="/"
+                            aria-label={`${brand.prefix}${brand.suffix} home`}
+                            className="mb-4 inline-flex rounded-xl outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[var(--jg-green)]"
+                        >
+                            <JobGenieLogo
+                                imageClassName="h-12"
+                                wordmarkClassName="!hidden"
+                                sizes="48px"
+                            />
+                        </Link>
+                        <p className="mb-5 text-lg font-bold leading-tight tracking-[-0.025em]">
+                            <span className="block text-[var(--jg-ink)]">Hire the best</span>
+                            <span className="block text-[var(--jg-green)]">Hired by the best</span>
                         </p>
                         <div style={{ display: 'flex', gap: 'clamp(6px, 2vw, 8px)', flexWrap: 'wrap' }}>
                             {content.socialLinks.map((s, i) => (
@@ -64,7 +66,7 @@ export function Footer({
                                     <Link href={l.href}
                                         style={{ fontSize: 'clamp(12px, 3vw, 13px)', color: 'var(--lp-text-33)', transition: 'color 150ms', textDecoration: 'none', display: 'block' }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--c-green)'; }}
-                                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-28)'; }}>
+                                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--lp-text-33)'; }}>
                                         {l.label}
                                     </Link>
                                 </div>
