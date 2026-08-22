@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
+import { signPiiUrls } from "@/lib/storage";
 
 export async function GET() {
     try {
@@ -123,7 +124,7 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
-            data: candidate
+            data: await signPiiUrls(candidate)
         });
     } catch (error) {
         console.error("API error:", error);

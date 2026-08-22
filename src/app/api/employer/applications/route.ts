@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { signPiiUrls } from "@/lib/storage";
 import { logError } from "@/lib/logger";
 
 // GET /api/employer/applications?jobId=&status=
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
             normalized = normalized.filter((app) => app.job_invitation == null);
         }
 
-        return NextResponse.json({ success: true, data: normalized, jobs: jobs ?? [] });
+        return NextResponse.json({ success: true, data: await signPiiUrls(normalized), jobs: jobs ?? [] });
     } catch (error) {
         console.error("API error:", error);
         await logError({ source: "api/employer/applications:GET", errorType: "APIError", message: error instanceof Error ? error.message : String(error) });

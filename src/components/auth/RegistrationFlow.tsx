@@ -8,7 +8,6 @@ import {
     Building2,
     Check,
     ShieldCheck,
-    Sparkles,
     UserRound,
 } from "lucide-react";
 import { CandidateSignupForm } from "@/components/auth/CandidateSignupForm";
@@ -29,46 +28,46 @@ type RoleOption = {
 const roleOptions: RoleOption[] = [
     {
         value: "candidate",
-        title: "Continue as a candidate",
-        description: "Create your profile and find your next opportunity.",
-        detail: "I want to find jobs",
+        title: "Are you a job seeker?",
+        description: "Create your profile and find your next opportunity!",
+        detail: "Explore career opportunities",
         icon: UserRound,
     },
     {
         value: "company",
-        title: "Continue as a company",
-        description: "Register your organization and start hiring talent.",
-        detail: "I want to hire talent",
+        title: "Are you an employer?",
+        description: "Register your company and find the best talent!",
+        detail: "Recruit qualified candidates",
         icon: Building2,
     },
 ];
 
 const shellContent = {
     undecided: {
-        headline: "Your next step starts here.",
-        description: "Choose how you want to use JobGenie. You can join as a candidate looking for opportunities or as a company building a team.",
+        headline: "Choose the account that fits your goals.",
+        description: "Register as a candidate to explore career opportunities, or as a company to connect with qualified talent.",
         bullets: [
-            "A dedicated experience for each account type",
-            "Verified profiles and organizations",
-            "Clear, transparent hiring journeys",
+            "A tailored experience for each account type",
+            "Verified candidate and company profiles",
+            "A clear and transparent recruitment process",
         ],
     },
     candidate: {
-        headline: "Your career graph, one verified profile.",
-        description: "Show intent-rich credentials, track every application in one timeline, and get matched to roles that fit how you work.",
+        headline: "Build a profile that supports your career.",
+        description: "Present your experience and qualifications, track applications, and discover roles aligned with your skills and preferences.",
         bullets: [
-            "Credential-backed identity & résumé graph",
-            "Transparent stages from screen to offer",
-            "Calendar-aware scheduling with employers",
+            "A verified professional profile",
+            "Clear application progress from review to offer",
+            "Coordinated interview scheduling with employers",
         ],
     },
     company: {
-        headline: "Evidence-led hiring for serious teams.",
-        description: "Verify your organization, upload BR credentials, and onboard recruiters into one audit-friendly workspace.",
+        headline: "Build your team with greater confidence.",
+        description: "Verify your organization, manage recruiters, and review qualified candidates through one structured workspace.",
         bullets: [
-            "Business registry & document verification",
-            "Pipeline analytics leadership actually reads",
-            "Structured interviews & feedback in context",
+            "Business registration and document verification",
+            "Clear recruitment pipeline insights",
+            "Structured interviews and centralized feedback",
         ],
     },
 };
@@ -162,8 +161,8 @@ function AccountTypeHeader({
         <section className="rounded-2xl border border-border/80 bg-card/95 p-4 shadow-[0_12px_40px_-30px_rgba(0,0,0,.45)] ring-1 ring-primary/[0.04] backdrop-blur-xl sm:p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                    <p className="text-sm font-semibold text-foreground">Choose your account type</p>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">You can switch before submitting your registration.</p>
+                    <p className="text-sm font-semibold text-foreground">Account type</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">Select the option that reflects how you will use the platform.</p>
                 </div>
             </div>
             <RoleSelector value={role} onChange={onChange} compact />
@@ -189,12 +188,12 @@ function RegistrationHeader({
                     {candidate ? "Candidate account" : "Company account"}
                 </p>
                 <h1 className="mt-1.5 text-2xl font-bold tracking-[-0.035em] text-foreground">
-                    {candidate ? "Create your profile" : "Register your organization"}
+                    {candidate ? "Create Your Profile" : "Register Your Company"}
                 </h1>
                 <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
                     {candidate
-                        ? "Join verified job seekers on JobGenie — free to get started."
-                        : "Complete company details, then your admin profile. We'll guide you through both steps."}
+                        ? "Create a verified profile to present your experience and access relevant career opportunities."
+                        : "Provide your organization and administrator details to create a verified company account."}
                 </p>
             </div>
         </header>
@@ -222,18 +221,14 @@ export function RegistrationFlow({ initialRole }: { initialRole: RegistrationRol
                 <div className="mx-auto w-full max-w-3xl">
                     <div className="rounded-[1.75rem] border border-border/80 bg-card/95 p-6 shadow-[0_24px_80px_-42px_rgba(0,0,0,.5)] ring-1 ring-primary/[0.05] backdrop-blur-xl sm:p-9">
                         <div className="mx-auto max-w-xl text-center">
-                            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.07] px-3 py-1.5 text-xs font-semibold text-primary">
-                                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                                Start your JobGenie journey
-                            </div>
-                            <div className="mx-auto mt-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-lg shadow-primary/10">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-lg shadow-primary/10">
                                 <BriefcaseBusiness className="h-6 w-6" aria-hidden="true" />
                             </div>
                             <h1 className="mt-5 text-2xl font-bold tracking-[-0.04em] text-foreground sm:text-3xl">
-                                How would you like to continue?
+                                Choose your account type
                             </h1>
                             <p className="mt-3 text-[15px] leading-6 text-muted-foreground">
-                                Select the workspace that matches your goal. We&apos;ll show the right registration form next.
+                                Select the option that best reflects how you plan to use the platform.
                             </p>
                         </div>
 
@@ -243,7 +238,7 @@ export function RegistrationFlow({ initialRole }: { initialRole: RegistrationRol
 
                         <div className="mx-auto mt-7 flex max-w-md items-center justify-center gap-2 rounded-xl border border-border/70 bg-background/50 px-4 py-3 text-center text-xs leading-5 text-muted-foreground">
                             <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                            Your registration is protected and reviewed for platform trust.
+                            Your information is handled securely and reviewed to maintain platform integrity.
                         </div>
 
                         <p className="mt-6 text-center text-sm text-muted-foreground">

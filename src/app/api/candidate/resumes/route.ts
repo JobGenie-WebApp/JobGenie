@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { signPiiUrls } from "@/lib/storage";
 import { StorageService } from "@/lib/storage";
 import { logError } from "@/lib/logger";
 
@@ -26,7 +27,7 @@ export async function GET() {
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-        return NextResponse.json({ success: true, resumes: resumes ?? [] });
+        return NextResponse.json({ success: true, resumes: await signPiiUrls(resumes ?? []) });
     } catch (e) {
         await logError({ source: "api/candidate/resumes:GET", errorType: "APIError", message: e instanceof Error ? e.message : String(e) });
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { signPiiUrls } from "@/lib/storage";
 import { logError } from "@/lib/logger";
 import { jobUpdateSchema } from "@/lib/validations/job-schema";
 
@@ -80,7 +81,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
         if (error || !job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
-        return NextResponse.json({ job });
+        return NextResponse.json({ job: await signPiiUrls(job) });
     } catch (error) {
         await logError({ source: "api/employer/jobs/[id]:GET", errorType: "APIError", message: error instanceof Error ? error.message : String(error) });
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
