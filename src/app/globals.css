@@ -695,12 +695,6 @@
   color: var(--sidebar-foreground);
 }
 
-.profile-cover-placeholder {
-  background:
-    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 42%),
-    linear-gradient(135deg, var(--muted), var(--card));
-}
-
 /* Landing hero: float preview card on the compositor (avoid JS animation loops) */
 @keyframes landing-hero-float {
   0%,

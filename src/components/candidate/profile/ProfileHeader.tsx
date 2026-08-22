@@ -82,23 +82,17 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
     return (
         <>
             <Card className="group relative overflow-hidden pt-0">
-                {/* Cover Image — shows the candidate's cover photo, or a restrained tonal placeholder */}
-                <div className="relative h-36 w-full overflow-hidden sm:h-44">
-                    {profile.cover_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={profile.cover_image_url}
-                            alt="Profile cover"
-                            className="h-full w-full object-cover"
-                        />
-                    ) : (
-                        <div className="profile-cover-placeholder h-full w-full" />
-                    )}
+                {/* Cover Image — candidate uploads override the branded default */}
+                <div className="relative aspect-[15/3.5] w-full overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={profile.cover_image_url || "/default-candidate-cover.jpg"}
+                        alt="Profile cover"
+                        className="h-full w-full object-cover"
+                    />
 
                     {/* Subtle gradient so overlaid controls stay readable */}
-                    {profile.cover_image_url ? (
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                    ) : null}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
                     {/* Hidden file input for cover upload */}
                     <input
@@ -110,29 +104,43 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                     />
 
                     {/* Change cover control — bottom-right, with recommended size hint */}
-                    <div className="absolute bottom-3 right-3 flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1.5 transition-opacity sm:bottom-3 sm:right-3 sm:gap-2 md:opacity-0 md:group-hover:opacity-100">
+                        <Button
+                            variant="outline"
+                            size="icon-sm"
+                            className="bg-background/75 shadow-none backdrop-blur-sm sm:hidden"
+                            onClick={() => setDialogOpen(true)}
+                            aria-label="Edit profile"
+                            title="Edit profile"
+                        >
+                            <Pencil className="h-4 w-4" />
+                        </Button>
                         <span className="hidden rounded-md border border-border/60 bg-background/75 px-2 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-sm sm:inline">
                             Recommended: 1500 × 400px · max 5MB
                         </span>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-9 gap-2 bg-background/75 shadow-none backdrop-blur-sm"
+                            className="size-8 gap-0 bg-background/75 p-0 shadow-none backdrop-blur-sm sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
                             disabled={uploadingCover}
                             onClick={() => coverInputRef.current?.click()}
+                            aria-label={uploadingCover ? "Uploading cover" : (profile.cover_image_url ? "Change cover" : "Add cover")}
+                            title={profile.cover_image_url ? "Change cover" : "Add cover"}
                         >
                             {uploadingCover ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                                 <Camera className="h-4 w-4" />
                             )}
-                            {uploadingCover ? "Uploading..." : (profile.cover_image_url ? "Change cover" : "Add cover")}
+                            <span className="hidden sm:inline">
+                                {uploadingCover ? "Uploading..." : (profile.cover_image_url ? "Change cover" : "Add cover")}
+                            </span>
                         </Button>
                     </div>
                 </div>
 
-                {/* Edit Button - visible on hover on desktop, always visible on mobile */}
-                <div className="absolute top-2 right-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                {/* Separate edit control for larger covers; mobile uses the compact group above */}
+                <div className="absolute top-2 right-2 hidden transition-opacity sm:block md:opacity-0 md:group-hover:opacity-100">
                     <Button
                         variant="outline"
                         size="icon"
