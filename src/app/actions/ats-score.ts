@@ -3,6 +3,7 @@
 import { generateContentWithRetry, isRetryableGeminiError } from "@/lib/gemini";
 import { atsScoreResultSchema, type AtsScoreResult } from "@/lib/validations/ats-schema";
 import { logError } from "@/lib/logger";
+import { signStorageUrl } from "@/lib/storage";
 
 export type AtsScoreState = {
     success: boolean;
@@ -199,7 +200,10 @@ export async function buildAtsUpdate(params: {
         if (!params.resumeUrl) return failed("No résumé available to score");
         if (!params.jobDescription?.trim()) return failed("Job description is empty");
 
-        const file = await fetchResumeAsBase64(params.resumeUrl);
+        // Résumé lives in a private bucket now — mint a short-lived signed URL to fetch it.
+        const signedResumeUrl = await signStorageUrl(params.resumeUrl, 300);
+        if (!signedResumeUrl) return failed("Could not access résumé file");
+        const file = await fetchResumeAsBase64(signedResumeUrl);
         if (!file) return failed("Could not read résumé file (unsupported type or fetch failed)");
 
         const result = await computeAtsScore({

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
+import { signPiiUrls } from "@/lib/storage";
 
 export async function GET(
     request: Request,
@@ -45,7 +46,7 @@ export async function GET(
             .eq("is_super_admin", true)
             .single();
 
-        return NextResponse.json({ ...company, admin });
+        return NextResponse.json(await signPiiUrls({ ...company, admin }));
 
     } catch (error) {
         console.error("Error fetching company details:", error);

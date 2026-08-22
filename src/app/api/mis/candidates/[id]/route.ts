@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
+import { signPiiUrls } from "@/lib/storage";
 
 export async function GET(
     request: Request,
@@ -87,7 +88,7 @@ export async function GET(
             return NextResponse.json({ error: "Failed to fetch candidate" }, { status: 500 });
         }
 
-        return NextResponse.json(candidate);
+        return NextResponse.json(await signPiiUrls(candidate));
     } catch (error) {
         console.error("API error:", error);
         await logError({ source: "api/mis/candidates/[id]:GET", errorType: "APIError", message: error instanceof Error ? error.message : String(error) });

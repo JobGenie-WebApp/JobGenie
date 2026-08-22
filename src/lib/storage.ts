@@ -145,7 +145,7 @@ export async function uploadFile(
 
     if (!bucketExists) {
         const { error: createError } = await supabase.storage.createBucket(bucket, {
-            public: true, // Make public to allow resume_url access
+            public: false, // Private: PII buckets are read via signed URLs (see signStorageUrl)
             fileSizeLimit: 5242880, // 5MB limit
             allowedMimeTypes: allowedMimeTypes,
         });
@@ -193,6 +193,94 @@ export async function deleteFile(bucket: string, filePath: string) {
         console.error("Storage delete error:", error);
         // We log but don't throw, as this is often used in cleanup/rollback
     }
+}
+
+// ---------------------------------------------------------------------------
+// Signed-URL access for private PII buckets.
+//
+// resume / resume_copy / br-certificates were flipped from public to private.
+// The DB still stores the old public URL strings (e.g. ".../object/public/
+// resume/<id>/file.pdf") — we keep those as-is (they encode bucket+path) and
+// mint a short-lived signed URL at read time instead. Public image buckets and
+// the already-private payment-proofs bucket are left untouched.
+// ---------------------------------------------------------------------------
+const PRIVATE_PII_BUCKETS = new Set(["resume", "resume_copy", "br-certificates"]);
+const PUBLIC_URL_MARKER = "/storage/v1/object/public/";
+
+/**
+ * Return {bucket, path} only when `value` is a stored public URL for one of the
+ * private PII buckets; null for everything else (images, payment-proof paths,
+ * signed URLs, empty values). Pure — unit-tested in storage.test.ts.
+ */
+export function privatePiiTarget(value: string | null | undefined): { bucket: string; path: string } | null {
+    if (!value) return null;
+    const i = value.indexOf(PUBLIC_URL_MARKER);
+    if (i === -1) return null;
+    const rel = value.slice(i + PUBLIC_URL_MARKER.length).split(/[?#]/)[0];
+    const slash = rel.indexOf("/");
+    if (slash === -1) return null;
+    const bucket = rel.slice(0, slash);
+    if (!PRIVATE_PII_BUCKETS.has(bucket)) return null;
+    return { bucket, path: decodeURIComponent(rel.slice(slash + 1)) };
+}
+
+/**
+ * Turn a stored public URL for a private PII bucket into a fresh signed URL.
+ * Returns the input unchanged for anything that isn't a private-PII-bucket URL
+ * (images, payment proofs, empty/null values), so it's safe to call anywhere.
+ */
+export async function signStorageUrl(
+    stored: string | null | undefined,
+    ttlSeconds = 3600,
+): Promise<string | null | undefined> {
+    if (!stored) return stored;
+    const parsed = privatePiiTarget(stored);
+    if (!parsed) return stored;
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.storage
+        .from(parsed.bucket)
+        .createSignedUrl(parsed.path, ttlSeconds);
+    if (error || !data) {
+        console.error(`signStorageUrl failed for ${parsed.bucket}/${parsed.path}:`, error);
+        return null;
+    }
+    return data.signedUrl;
+}
+
+/**
+ * Deep-walk an API response payload and replace every private-PII-bucket public
+ * URL with a signed URL, in place. Only strings that are public URLs for the
+ * private buckets are touched — everything else is left alone. Mutates and
+ * returns the same object.
+ * ponytail: signs each URL with its own request; batch via createSignedUrls per
+ * bucket if a single response ever carries many resumes and latency shows up.
+ */
+export async function signPiiUrls<T>(data: T, ttlSeconds = 3600): Promise<T> {
+    const jobs: Promise<void>[] = [];
+    const seen = new Set<object>();
+    const walk = (node: unknown) => {
+        if (!node || typeof node !== "object") return;
+        if (seen.has(node as object)) return;
+        seen.add(node as object);
+        const obj = node as Record<string, unknown>;
+        for (const key of Object.keys(obj)) {
+            const val = obj[key];
+            if (typeof val === "string") {
+                if (privatePiiTarget(val)) {
+                    jobs.push(
+                        signStorageUrl(val, ttlSeconds).then((signed) => {
+                            obj[key] = signed ?? null;
+                        }),
+                    );
+                }
+            } else if (val && typeof val === "object") {
+                walk(val);
+            }
+        }
+    };
+    walk(data);
+    await Promise.all(jobs);
+    return data;
 }
 
 export const StorageService = {

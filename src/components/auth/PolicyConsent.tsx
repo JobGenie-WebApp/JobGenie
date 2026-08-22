@@ -41,7 +41,7 @@ export function PolicyConsent({
                     className="mt-0.5 size-5 rounded-md"
                 />
                 <label htmlFor={id} className="cursor-pointer text-sm leading-5 text-muted-foreground">
-                    I agree to the{" "}
+                    I have read and agreed to the{" "}
                     <Link
                         href="/terms"
                         target="_blank"
@@ -50,7 +50,7 @@ export function PolicyConsent({
                     >
                         Terms &amp; Conditions
                     </Link>{" "}
-                    and{" "}
+                    and consent to having my profile stored for future job opportunities in accordance with the{" "}
                     <Link
                         href="/privacy"
                         target="_blank"

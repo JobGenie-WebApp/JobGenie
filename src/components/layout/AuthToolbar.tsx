@@ -14,6 +14,7 @@ export function AuthToolbar() {
                 <JobGenieLogo
                     priority
                     imageClassName="h-10 w-auto sm:h-11"
+                    wordmarkClassName="!hidden"
                     sizes="(min-width: 640px) 44px, 40px"
                 />
             </Link>

@@ -46,7 +46,7 @@ function Brand() {
             <JobGenieLogo
                 priority
                 imageClassName="h-12 w-auto"
-                wordmarkClassName="lg:text-white"
+                wordmarkClassName="!hidden"
             />
         </Link>
     );

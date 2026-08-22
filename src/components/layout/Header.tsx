@@ -70,7 +70,7 @@ export function Header({
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden xl:flex flex-1 justify-center gap-0.5">
+            <nav className="absolute left-1/2 hidden -translate-x-1/2 gap-0.5 xl:flex">
                 {navLinks.map((l) => {
                     const isActive = isLinkActive(l.href, l.id);
                     return (
@@ -89,7 +89,7 @@ export function Header({
             </nav>
 
             {/* Right actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-auto xl:ml-0">
+            <div className="ml-auto flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
                 <ThemeToggle />
 
                 {showSignIn && (

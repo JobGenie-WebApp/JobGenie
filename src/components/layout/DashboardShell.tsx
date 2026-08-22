@@ -64,7 +64,7 @@ export function DashboardShell({
                         />
                         {/* Content inset: center the content at the same max-width as normal
                             pages so split-pane pages get visible left/right side space — no border. */}
-                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 md:px-6 md:pt-5">
+                        <div className="portal-content flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 md:px-6 md:pt-5">
                             <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col overflow-hidden pb-2">
                                 <PortalPageHeader
                                     title={pageTitle}
@@ -102,7 +102,7 @@ export function DashboardShell({
                 <PageTransitionWrapper>
                     {/* Content-only container: header/sidebar stay full-width;
                         the page content is padded and centred with a max-width. */}
-                    <div className="p-5 md:p-6">
+                    <div className="portal-content min-h-[calc(100svh-4.5rem)] p-5 md:p-7 lg:p-8">
                         <div className="mx-auto w-full max-w-7xl">
                             <PortalPageHeader
                                 title={pageTitle}

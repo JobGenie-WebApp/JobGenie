@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { signPiiUrls } from "@/lib/storage";
 import { logError } from "@/lib/logger";
 
 // GET /api/candidate/applications — list own applications
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
         }));
 
         return NextResponse.json({
-            applications,
+            applications: await signPiiUrls(applications),
             pagination: {
                 page,
                 limit,
