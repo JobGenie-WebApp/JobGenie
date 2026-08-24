@@ -30,7 +30,7 @@ const roleOptions: RoleOption[] = [
         value: "candidate",
         title: "Are you a job seeker?",
         description: "Create your profile and find your next opportunity!",
-        detail: "Explore career opportunities",
+        detail: "Explore your opportunities!",
         icon: UserRound,
     },
     {
@@ -225,7 +225,7 @@ export function RegistrationFlow({ initialRole }: { initialRole: RegistrationRol
                                 <BriefcaseBusiness className="h-6 w-6" aria-hidden="true" />
                             </div>
                             <h1 className="mt-5 text-2xl font-bold tracking-[-0.04em] text-foreground sm:text-3xl">
-                                Choose your account type
+                                Pick your profile
                             </h1>
                             <p className="mt-3 text-[15px] leading-6 text-muted-foreground">
                                 Select the option that best reflects how you plan to use the platform.

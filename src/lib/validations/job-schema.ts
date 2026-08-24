@@ -26,7 +26,10 @@ export const jobApplySchema = z.object({
 });
 
 export const applicationStatusUpdateSchema = z.object({
-    status: z.enum(["pending", "reviewed", "shortlisted", "rejected", "hired", "withdrawn"]),
+    // "hired" is deliberately absent: a hire is set only by the candidate
+    // accepting an offer, which is what generates the hiring fee. Setting it
+    // here would create an unbilled hire invisible to MIS Placements.
+    status: z.enum(["pending", "reviewed", "shortlisted", "rejected", "withdrawn"]),
     notes: z.string().max(2000).optional().nullable(),
 });
 

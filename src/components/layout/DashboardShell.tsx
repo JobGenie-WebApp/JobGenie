@@ -24,7 +24,7 @@ interface DashboardShellProps {
     /** fullHeight only: wrap content in a max-width bordered card (split-pane
      *  pages). Set false for full-width bare content like the kanban board. */
     fullHeightBordered?: boolean;
-    notificationRole?: "candidate" | "employer";
+    notificationRole?: "candidate" | "employer" | "mis";
 }
 
 export function DashboardShell({

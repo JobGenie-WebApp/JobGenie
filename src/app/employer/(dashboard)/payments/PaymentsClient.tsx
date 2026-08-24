@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -35,7 +36,26 @@ interface PaymentRequest {
     due_date: string | null; status: string; bank_transfer_reference: string | null;
     created_at: string; updated_at: string;
     payment_types: { id: string; code: string; label: string } | null;
+    reference_invitation_id: string | null;
+    reference_invitation: {
+        id: string;
+        candidate: { first_name: string; last_name: string } | null;
+        job_offer: { salary_amount: number | null; salary_currency: string | null; salary_period: string | null; job_title: string } | null;
+    } | null;
     payment_proofs: PaymentProof[];
+}
+
+// A hiring fee is charged against a specific hire — show who and for what job,
+// so the employer can see what each charge is for.
+function hireContext(p: PaymentRequest): { who: string; detail: string } | null {
+    const inv = p.reference_invitation;
+    if (!inv) return null;
+    const who = inv.candidate ? `${inv.candidate.first_name} ${inv.candidate.last_name}` : "Hired candidate";
+    const offer = inv.job_offer;
+    const salary = offer?.salary_amount != null
+        ? ` · ${offer.salary_currency ?? "LKR"} ${Number(offer.salary_amount).toLocaleString()} / ${offer.salary_period ?? "monthly"}`
+        : "";
+    return { who, detail: `${offer?.job_title ?? "Placement"}${salary}` };
 }
 interface Summary {
     total_paid: number; pending_amount: number; overdue_amount: number; currency: string;
@@ -270,7 +290,17 @@ function PaymentCard({ payment, bankDetails, onUpload, onView }: {
                             <StatusBadge status={payment.status} />
                             {overdue && <Badge variant="destructive">Overdue</Badge>}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">{payment.description}</p>
+                        {(() => {
+                            const hire = hireContext(payment);
+                            return hire ? (
+                                <div className="mt-1">
+                                    <p className="text-sm font-medium">{hire.who}</p>
+                                    <p className="text-xs text-muted-foreground">{hire.detail}</p>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground mt-1">{payment.description}</p>
+                            );
+                        })()}
                     </div>
                     <div className="text-right">
                         <div className="text-2xl font-bold">{fmtAmount(Number(payment.amount), payment.currency)}</div>
@@ -355,7 +385,7 @@ function PaymentTable({ payments, onView, onUpload }: {
             <table className="w-full text-left">
                 <thead className="bg-muted/50 border-b">
                     <tr>
-                        {["Date", "Type", "Amount", "Due Date", "Status", "Proof", "Actions"].map((h) => (
+                        {["Date", "Type", "For", "Amount", "Due Date", "Status", "Proof", "Actions"].map((h) => (
                             <th key={h} className="py-2 px-3 text-xs font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                         ))}
                     </tr>
@@ -369,6 +399,17 @@ function PaymentTable({ payments, onView, onUpload }: {
                             <tr key={p.id} className="border-b hover:bg-muted/30 transition-colors">
                                 <td className="py-2 px-3 text-sm">{fmtDate(p.created_at)}</td>
                                 <td className="py-2 px-3"><Badge variant="outline" className="text-xs">{p.payment_types?.label ?? "—"}</Badge></td>
+                                <td className="py-2 px-3 text-sm">
+                                    {(() => {
+                                        const hire = hireContext(p);
+                                        return hire ? (
+                                            <>
+                                                <div>{hire.who}</div>
+                                                <div className="text-xs text-muted-foreground">{hire.detail}</div>
+                                            </>
+                                        ) : <span className="text-muted-foreground">—</span>;
+                                    })()}
+                                </td>
                                 <td className="py-2 px-3 text-sm font-medium">{fmtAmount(Number(p.amount), p.currency)}</td>
                                 <td className="py-2 px-3 text-sm">{p.due_date ? fmtDate(p.due_date) : "—"}</td>
                                 <td className="py-2 px-3"><StatusBadge status={p.status} /></td>
@@ -521,6 +562,34 @@ function UploadProofDialog({ open, payment, onClose, onUploaded }: {
 function PaymentDetailDialog({ open, payment, onClose, onUpload }: {
     open: boolean; payment: PaymentRequest; onClose: () => void; onUpload: () => void;
 }) {
+    const [showReport, setShowReport] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [reporting, setReporting] = useState(false);
+    const [reportMessage, setReportMessage] = useState("");
+
+    const submitReport = async () => {
+        if (reportReason.trim().length < 10) {
+            setReportMessage("Please provide at least 10 characters.");
+            return;
+        }
+        setReporting(true);
+        setReportMessage("");
+        try {
+            const res = await fetch(`/api/employer/payments/${payment.id}/report`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reason: reportReason.trim() }),
+            });
+            const data = await res.json();
+            if (!res.ok) { setReportMessage(data.error ?? "Report failed"); return; }
+            setReportMessage("Reported to the MIS team.");
+            setReportReason("");
+            setShowReport(false);
+        } finally {
+            setReporting(false);
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -536,6 +605,33 @@ function PaymentDetailDialog({ open, payment, onClose, onUpload }: {
                         <div className="col-span-2"><span className="text-muted-foreground">Description:</span> {payment.description}</div>
                         {payment.bank_transfer_reference && (
                             <div className="col-span-2"><span className="text-muted-foreground">Bank Ref:</span> <span className="font-mono">{payment.bank_transfer_reference}</span></div>
+                        )}
+                    </div>
+                    <Separator />
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 space-y-2">
+                        <div className="flex items-center gap-2 font-semibold text-amber-800">
+                            <AlertTriangle className="h-4 w-4" />Suspicious payment request?
+                        </div>
+                        <p className="text-xs text-amber-700">Report an unexpected amount, recipient, or request to the MIS team before paying.</p>
+                        {reportMessage && <p className="text-xs text-muted-foreground">{reportMessage}</p>}
+                        {!showReport ? (
+                            <Button variant="outline" size="sm" onClick={() => setShowReport(true)}>Report to MIS</Button>
+                        ) : (
+                            <div className="space-y-2">
+                                <Textarea
+                                    value={reportReason}
+                                    onChange={(e) => setReportReason(e.target.value)}
+                                    placeholder="Explain why this payment looks suspicious…"
+                                    rows={3}
+                                    maxLength={1000}
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => setShowReport(false)} disabled={reporting}>Cancel</Button>
+                                    <Button variant="destructive" size="sm" onClick={submitReport} disabled={reporting || reportReason.trim().length < 10}>
+                                        {reporting ? "Reporting…" : "Submit report"}
+                                    </Button>
+                                </div>
+                            </div>
                         )}
                     </div>
                     <Separator />

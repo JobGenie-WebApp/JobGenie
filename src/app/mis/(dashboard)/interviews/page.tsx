@@ -39,6 +39,22 @@ async function getInterviews() {
                 mis_rescheduled,
                 mis_rescheduled_at,
                 mis_reschedule_data,
+                pipeline_status,
+                current_round_number,
+                closed_at,
+                closed_reason,
+                offer:job_offers(
+                    id,
+                    status,
+                    job_title,
+                    salary_amount,
+                    salary_currency,
+                    salary_period,
+                    start_date,
+                    expiry_date,
+                    responded_at,
+                    created_at
+                ),
                 candidate:candidates!inner(
                     id,
                     first_name,
@@ -93,7 +109,7 @@ async function getStats(viewerTz: string) {
         // Fetch all accepted invitations (interviews)
         const { data: allInterviews, error } = await adminClient
             .from("job_invitations")
-            .select("id, interview_confirmed, invitation_canceled, canceled_by, interview_mode, sent_at, viewed_at, responded_at, industry");
+            .select("id, interview_confirmed, invitation_canceled, canceled_by, interview_mode, sent_at, viewed_at, responded_at, industry, pipeline_status");
 
         if (error) {
             console.error('Error fetching interview stats:', error);
@@ -104,11 +120,13 @@ async function getStats(viewerTz: string) {
 
         // Calculate statistics
         const totalInterviews = interviews.length;
-        const confirmedInterviews = interviews.filter(i => i.interview_confirmed && !i.invitation_canceled).length;
-        const pendingConfirmation = interviews.filter(i => !i.interview_confirmed && !i.invitation_canceled).length;
+        const confirmedInterviews = interviews.filter(i => i.pipeline_status === "active" && i.interview_confirmed && !i.invitation_canceled).length;
+        const pendingConfirmation = interviews.filter(i => i.pipeline_status === "active" && !i.interview_confirmed && !i.invitation_canceled).length;
         const cancelledInterviews = interviews.filter(i => i.invitation_canceled).length;
         const cancelledByCandidate = interviews.filter(i => i.invitation_canceled && i.canceled_by === "candidate").length;
         const cancelledByEmployer = interviews.filter(i => i.invitation_canceled && i.canceled_by === "employer").length;
+        const offeredInterviews = interviews.filter(i => i.pipeline_status === "offered").length;
+        const hiredInterviews = interviews.filter(i => i.pipeline_status === "hired").length;
 
         // Interview mode distribution
         const onlineInterviews = interviews.filter(i => i.interview_mode === "online" && !i.invitation_canceled).length;
@@ -137,6 +155,8 @@ async function getStats(viewerTz: string) {
                 cancelledInterviews,
                 monthlyInterviews,
                 avgResponseTimeHours: avgResponseTime,
+                offeredInterviews,
+                hiredInterviews,
             },
             cancellations: {
                 total: cancelledInterviews,
@@ -156,7 +176,7 @@ async function getStats(viewerTz: string) {
     }
 }
 
-export default async function InterviewsPage() {
+export default async function InterviewsPage({ searchParams }: { searchParams: Promise<{ interview?: string }> }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -170,6 +190,10 @@ export default async function InterviewsPage() {
         getInterviews(),
         getStats(viewerTz)
     ]);
+    const requestedInterviewId = (await searchParams).interview;
+    const initialSelectedInterviewId = requestedInterviewId && interviewsResult.interviews.some((interview) => interview.id === requestedInterviewId)
+        ? requestedInterviewId
+        : null;
 
     return (
         <MISLayout
@@ -180,6 +204,7 @@ export default async function InterviewsPage() {
                 initialInterviews={interviewsResult.interviews}
                 initialStats={statsResult.stats}
                 error={interviewsResult.error || statsResult.error}
+                initialSelectedInterviewId={initialSelectedInterviewId}
             />
         </MISLayout>
     );

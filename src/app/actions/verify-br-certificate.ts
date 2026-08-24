@@ -73,7 +73,7 @@ export async function verifyBRCertificate(
 
         // Call Gemini AI to extract data from certificate
         const result = await genAI.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents: [{ role: "user", parts: parts as { text: string }[] }],
         });
         const text = result.text || "";

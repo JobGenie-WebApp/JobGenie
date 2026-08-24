@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { InterviewStatsCards } from "./InterviewStatsCards";
 import { InterviewTable } from "./InterviewTable";
 import { InterviewDetailView } from "./InterviewDetailView";
@@ -13,23 +13,32 @@ interface InterviewsClientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialStats: any;
     error: string | null;
+    initialSelectedInterviewId?: string | null;
 }
 
-export function InterviewsClient({ initialInterviews, initialStats, error }: InterviewsClientProps) {
-    const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(null);
+export function InterviewsClient({ initialInterviews, initialStats, error, initialSelectedInterviewId = null }: InterviewsClientProps) {
+    const [selectedInterviewId, setSelectedInterviewId] = useState<string | null>(initialSelectedInterviewId);
     const [interviews, setInterviews] = useState(initialInterviews);
+    const [stats, setStats] = useState(initialStats);
+    const [refreshToken, setRefreshToken] = useState(0);
 
-    const refreshInterviews = async () => {
+    const refreshInterviews = useCallback(async () => {
         try {
-            const response = await fetch('/api/mis/interviews');
-            const data = await response.json();
-            if (data.success) {
-                setInterviews(data.interviews);
-            }
+            const [interviewsResponse, statsResponse] = await Promise.all([
+                fetch('/api/mis/interviews', { cache: 'no-store' }),
+                fetch('/api/mis/interviews/stats', { cache: 'no-store' }),
+            ]);
+            const [interviewsData, statsData] = await Promise.all([
+                interviewsResponse.json(),
+                statsResponse.json(),
+            ]);
+            if (interviewsData.success) setInterviews(interviewsData.interviews);
+            if (statsData.success) setStats(statsData.stats);
+            setRefreshToken((token) => token + 1);
         } catch (error) {
             console.error('Error refreshing interviews:', error);
         }
-    };
+    }, []);
 
     const handleViewDetails = (id: string) => {
         setSelectedInterviewId(id);
@@ -48,10 +57,10 @@ export function InterviewsClient({ initialInterviews, initialStats, error }: Int
                 </Alert>
             )}
 
-            {initialStats && (
+            {stats && (
                 <>
                     {/* Statistics Cards */}
-                    <InterviewStatsCards stats={initialStats} />
+                    <InterviewStatsCards stats={stats} />
 
                     {/* Interviews Table */}
                     <InterviewTable
@@ -64,6 +73,7 @@ export function InterviewsClient({ initialInterviews, initialStats, error }: Int
                         interviewId={selectedInterviewId}
                         onClose={handleCloseDetails}
                         onInterviewUpdate={refreshInterviews}
+                        refreshToken={refreshToken}
                     />
                 </>
             )}

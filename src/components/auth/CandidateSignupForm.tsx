@@ -176,7 +176,7 @@ export function CandidateSignupForm() {
 
             {/* Contact / Email row */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label={<>Contact No <span className="text-xs font-normal normal-case tracking-normal text-muted-foreground">+94XXXXXXXXX</span></>} id="contactNo" error={errors.contactNo}>
+                <Field label={<>Contact Number <span className="text-xs font-normal normal-case tracking-normal text-muted-foreground">+94XXXXXXXXX</span></>} id="contactNo" error={errors.contactNo}>
                     <input id="contactNo" name="contactNo" type="tel" maxLength={15} placeholder="+94771234567"
                         value={formData.contactNo} onChange={e => set("contactNo", e.target.value)}
                         onBlur={e => validateField("contactNo", e.target.value)}

@@ -16,7 +16,7 @@ type Params = { params: Promise<{ id: string }> };
 // POST /api/mis/jobs/[id]/compliance-pause
 // MIS pauses a published/paused job because its payment document is suspected fake.
 // Locks the job so only MIS can republish, records a compliance flag, notifies the
-// employer with the reason.
+// employer with the reason and alerts the rest of the MIS team.
 export async function POST(request: NextRequest, { params }: Params) {
     try {
         const supabase = await createClient();
@@ -92,6 +92,18 @@ export async function POST(request: NextRequest, { params }: Params) {
                 body: `Your advertisement "${job.job_title}" was paused. Reason: ${reason}. Submit a corrected document from the job page to request republication.`,
                 data: { job_id: id, compliance_flag_id: flag.id },
             });
+        }
+
+        const { data: misUsers } = await admin.from("mis_user").select("user_id");
+        const recipients = (misUsers ?? []).filter((mis) => mis.user_id !== user.id);
+        if (recipients.length) {
+            await admin.from("notifications").insert(recipients.map((mis) => ({
+                user_id: mis.user_id,
+                type: "payment_suspicious_flagged",
+                title: "Suspicious Payment Proof Flagged",
+                body: `The payment document for "${job.job_title}" was flagged for compliance review. Reason: ${reason}`,
+                data: { job_id: id, compliance_flag_id: flag.id, payment_request_id: payment_request_id ?? null },
+            })));
         }
 
         await logBusiness("job_compliance_paused", user.id, "mis", "job", id, { compliance_flag_id: flag.id, reason });

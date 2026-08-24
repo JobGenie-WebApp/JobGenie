@@ -1197,6 +1197,7 @@ model PaymentBankDetails {
 model PaymentSettings {
   id                    Int      @id @default(1)
   hiring_fee_percentage Decimal  @default(50) @db.Decimal(5, 2) // percent of offered monthly salary
+  hiring_fee_due_days   Int      @default(14) // payment terms: due_date = hire date + this many days
   updated_at            DateTime @default(now()) @updatedAt @db.Timestamptz(6)
   updated_by_user_id    String?  @db.Uuid
 
@@ -1210,7 +1211,9 @@ model PaymentRequest {
   created_by_mis_user_id  String               @db.Uuid
   payment_type_id         String               @db.Uuid
   reference_job_id        String?              @db.Uuid
-  reference_invitation_id String?              @db.Uuid
+  // Unique so a hire can only ever be billed once. NULLs are distinct in
+  // Postgres, so job-ad fees (which leave this null) are unaffected.
+  reference_invitation_id String?              @unique @db.Uuid
   amount                  Decimal              @db.Decimal(12, 2)
   currency                String               @default("LKR") @db.VarChar(10)
   description             String               @db.Text

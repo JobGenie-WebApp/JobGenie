@@ -3,7 +3,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { logBusiness, logError } from "@/lib/logger";
 
-// GET /api/mis/payment-settings — read global payment settings (hiring fee %)
+const SETTINGS_COLUMNS = "id, hiring_fee_percentage, hiring_fee_due_days, updated_at";
+
+// GET /api/mis/payment-settings — read global payment settings (hiring fee % and terms)
 export async function GET() {
     try {
         const supabase = await createClient();
@@ -15,14 +17,14 @@ export async function GET() {
         if (userData?.role !== "mis") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
         // Self-heal the single settings row if missing.
-        let { data } = await admin.from("payment_settings").select("id, hiring_fee_percentage, updated_at").eq("id", 1).maybeSingle();
+        let { data } = await admin.from("payment_settings").select(SETTINGS_COLUMNS).eq("id", 1).maybeSingle();
         if (!data) {
             const { data: created } = await admin
                 .from("payment_settings")
-                .insert({ id: 1, hiring_fee_percentage: 50 })
-                .select("id, hiring_fee_percentage, updated_at")
+                .insert({ id: 1, hiring_fee_percentage: 50, hiring_fee_due_days: 14 })
+                .select(SETTINGS_COLUMNS)
                 .single();
-            data = created ?? { id: 1, hiring_fee_percentage: 50, updated_at: new Date().toISOString() };
+            data = created ?? { id: 1, hiring_fee_percentage: 50, hiring_fee_due_days: 14, updated_at: new Date().toISOString() };
         }
 
         return NextResponse.json({ success: true, data });
@@ -32,7 +34,7 @@ export async function GET() {
     }
 }
 
-// PATCH /api/mis/payment-settings — update the hiring fee percentage
+// PATCH /api/mis/payment-settings — update the hiring fee percentage and terms
 export async function PATCH(request: NextRequest) {
     try {
         const supabase = await createClient();
@@ -49,15 +51,20 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: "hiring_fee_percentage must be between 0 and 100" }, { status: 400 });
         }
 
+        const dueDays = Number(body.hiring_fee_due_days);
+        if (!Number.isInteger(dueDays) || dueDays < 1 || dueDays > 365) {
+            return NextResponse.json({ error: "hiring_fee_due_days must be a whole number between 1 and 365" }, { status: 400 });
+        }
+
         const { data, error } = await admin
             .from("payment_settings")
-            .upsert({ id: 1, hiring_fee_percentage: pct, updated_at: new Date().toISOString(), updated_by_user_id: user.id })
-            .select("id, hiring_fee_percentage, updated_at")
+            .upsert({ id: 1, hiring_fee_percentage: pct, hiring_fee_due_days: dueDays, updated_at: new Date().toISOString(), updated_by_user_id: user.id })
+            .select(SETTINGS_COLUMNS)
             .single();
 
         if (error) throw error;
 
-        await logBusiness("payment_settings_updated", user.id, "mis", "payment_settings", "1", { hiring_fee_percentage: pct });
+        await logBusiness("payment_settings_updated", user.id, "mis", "payment_settings", "1", { hiring_fee_percentage: pct, hiring_fee_due_days: dueDays });
 
         return NextResponse.json({ success: true, data });
     } catch (error) {

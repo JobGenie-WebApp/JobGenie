@@ -3,18 +3,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { logBusiness, logError } from "@/lib/logger";
 import { hasPermission } from "@/lib/permissions";
+import { reopenComplianceFlag } from "@/lib/compliance-resolution";
 import { z } from "zod";
 
-const schema = z.object({
-    action: z.enum(["republish", "dismiss"]),
-    notes: z.string().trim().optional(),
-});
+const schema = z.discriminatedUnion("action", [
+    z.object({ action: z.literal("republish"), notes: z.string().trim().optional() }),
+    z.object({ action: z.literal("reject"), notes: z.string().trim().min(3, "A reason is required") }),
+]);
 
 type Params = { params: Promise<{ id: string }> };
 
 // POST /api/mis/jobs/[id]/compliance-resolve
-// MIS resolves an open compliance flag: "republish" puts the job live again and
-// clears the lock; "dismiss" keeps it paused and locked. Only MIS can do this.
+// MIS either republishes the job or rejects the submitted replacement document.
+// A rejection returns the same flag to "paused" so the employer can try again.
 export async function POST(request: NextRequest, { params }: Params) {
     try {
         const supabase = await createClient();
@@ -89,20 +90,15 @@ export async function POST(request: NextRequest, { params }: Params) {
                 });
             }
         } else {
-            // dismiss — keep paused & locked
-            await admin.from("job_compliance_flags").update({
-                status: "dismissed",
-                resolved_by_mis_user_id: misUser.user_id,
-                resolved_at: nowIso,
-                resolution_notes: notes ?? null,
-            }).eq("id", flag.id);
+            // Keep the flag open and the job locked, but allow another submission.
+            await admin.from("job_compliance_flags").update(reopenComplianceFlag(notes)).eq("id", flag.id);
 
             if (employer?.user_id) {
                 await admin.from("notifications").insert({
                     user_id: employer.user_id,
-                    type: "job_compliance_dismissed",
-                    title: "Document Request Declined",
-                    body: `Your republication request for "${job.job_title}" was declined.${notes ? ` Note: ${notes}` : ""} The advertisement remains paused.`,
+                    type: "job_compliance_resubmission_rejected",
+                    title: "Replacement Document Rejected",
+                    body: `The replacement document for "${job.job_title}" was rejected. Reason: ${notes}. Please submit another document.`,
                     data: { job_id: id, compliance_flag_id: flag.id },
                 });
             }

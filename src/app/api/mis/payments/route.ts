@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
-import { createPaymentRequest } from "@/lib/payments";
+import { createHiringFeeForInvitation, createPaymentRequest } from "@/lib/payments";
+import { flattenInvitationEmbed } from "@/lib/payment-embed";
 
 // GET /api/mis/payments — list all payment requests with filters
 export async function GET(request: NextRequest) {
@@ -33,13 +34,19 @@ export async function GET(request: NextRequest) {
         let query = admin
             .from("payment_requests")
             .select(`
-                id, company_id, employer_id, payment_type_id, reference_job_id, amount, currency,
+                id, company_id, employer_id, payment_type_id, reference_job_id, reference_invitation_id,
+                amount, currency,
                 description, due_date, status, payment_method, bank_transfer_reference,
                 created_at, updated_at,
                 companies(id, company_name, industry),
                 employers(id, first_name, last_name, email, designation),
                 payment_types(id, code, label),
                 reference_job:jobs!payment_requests_reference_job_id_fkey(id, job_title, status, mis_pause_locked),
+                reference_invitation:job_invitations!payment_requests_reference_invitation_id_fkey(
+                    id, job_id,
+                    candidate:candidates!job_invitations_candidate_id_fkey(first_name, last_name),
+                    job_offer:job_offers!job_offers_invitation_id_fkey(salary_amount, salary_currency, salary_period, job_title)
+                ),
                 payment_proofs(id, status, uploaded_at, file_url, file_name)
             `, { count: "exact" });
 
@@ -77,7 +84,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            data: data ?? [],
+            data: (data ?? []).map(flattenInvitationEmbed),
             pagination: { page, limit, total: count ?? 0, pages: Math.ceil((count ?? 0) / limit) },
         });
     } catch (error) {
@@ -116,6 +123,13 @@ export async function POST(request: NextRequest) {
 
         if (!company_id || !payment_type_code) {
             return NextResponse.json({ error: "company_id and payment_type_code are required" }, { status: 400 });
+        }
+
+        // Billing a hire: amount, currency, terms and wording all come from the
+        // shared helper, so the "Create fee" button never does money maths.
+        if (payment_type_code === "hiring_fee" && reference_invitation_id && amount === undefined) {
+            const id = await createHiringFeeForInvitation(reference_invitation_id, misUser.user_id);
+            return NextResponse.json({ success: true, data: { id } }, { status: 201 });
         }
 
         // Get employer user_id for notification if employer_id provided

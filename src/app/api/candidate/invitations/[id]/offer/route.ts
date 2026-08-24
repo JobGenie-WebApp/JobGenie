@@ -2,8 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { logBusiness, logError } from "@/lib/logger";
-import { createPaymentRequest, getHiringFeePercentage } from "@/lib/payments";
-import { computeHiringFee, type SalaryPeriod } from "@/lib/hiring-fee";
+import { createHiringFeeForInvitation, notifyMisHiringFeeFailed } from "@/lib/payments";
 
 // GET /api/candidate/invitations/[id]/offer
 // Fetch job offer for a specific invitation (candidate view)
@@ -165,7 +164,7 @@ export async function POST(
 
         const { data: offer, error: offerFetchError } = await supabase
             .from("job_offers")
-            .select("id, status, expiry_date, salary_amount, salary_period, job_title")
+            .select("id, status, expiry_date")
             .eq("invitation_id", invitationId)
             .maybeSingle();
 
@@ -252,57 +251,38 @@ export async function POST(
                 .eq("id", bridgedInvitation.application_id);
         }
 
-        // Auto-generate hiring fee payment request when offer is accepted
+        // Auto-generate the hiring fee once the candidate accepts. Non-blocking:
+        // a billing glitch must not un-hire the candidate — but it is made loud,
+        // or the hire goes unbilled with nobody knowing.
         if (action === "accept") {
             try {
-                const { data: invDetails } = await supabase
+                await createHiringFeeForInvitation(invitationId);
+            } catch (payErr) {
+                const reason = payErr instanceof Error ? payErr.message : String(payErr);
+                console.error("Failed to create hiring fee payment request:", payErr);
+                await logError({
+                    source: "api/candidate/invitations/offer:POST",
+                    errorType: "HiringFeeCreationFailed",
+                    message: `Invitation ${invitationId}: ${reason}`,
+                });
+                const { data: ctx } = await supabase
                     .from("job_invitations")
                     .select(`
-                        id, company_id, employer_id,
-                        employer:employers!inner(user_id)
+                        candidate:candidates!job_invitations_candidate_id_fkey(first_name, last_name),
+                        company:companies!job_invitations_company_id_fkey(company_name)
                     `)
                     .eq("id", invitationId)
-                    .single();
-
-                if (invDetails) {
-                    const empDetails = invDetails.employer as unknown as { user_id: string } | null;
-                    // Get a system MIS user to record as creator
-                    const { data: sysMis } = await supabase
-                        .from("mis_user")
-                        .select("user_id")
-                        .limit(1)
-                        .maybeSingle();
-
-                    if (sysMis) {
-                        // Hiring fee = configured percentage of the offered monthly
-                        // salary. When the offer has no usable salary amount, fall
-                        // back to the configured hiring_fee pricing (amount omitted).
-                        const hiringFeePct = await getHiringFeePercentage();
-                        const hiringFee = computeHiringFee(
-                            offer.salary_amount as number | null,
-                            offer.salary_period as SalaryPeriod | null,
-                            hiringFeePct
-                        );
-
-                        await createPaymentRequest({
-                            company_id: invDetails.company_id,
-                            employer_id: invDetails.employer_id,
-                            employer_user_id: empDetails?.user_id,
-                            payment_type_code: "hiring_fee",
-                            reference_invitation_id: invitationId,
-                            created_by_mis_user_id: sysMis.user_id,
-                            ...(hiringFee != null
-                                ? {
-                                      amount: hiringFee,
-                                      description: `Hiring fee (${hiringFeePct}% of monthly salary): ${offer.job_title}`,
-                                  }
-                                : {}),
-                        });
-                    }
-                }
-            } catch (payErr) {
-                // Non-blocking: log but don't fail the offer acceptance
-                console.error("Failed to create hiring fee payment request:", payErr);
+                    .maybeSingle();
+                const cand = Array.isArray(ctx?.candidate) ? ctx?.candidate[0] : ctx?.candidate;
+                const comp = Array.isArray(ctx?.company) ? ctx?.company[0] : ctx?.company;
+                await notifyMisHiringFeeFailed({
+                    invitation_id: invitationId,
+                    company_name: comp?.company_name ?? "A company",
+                    candidate_name: cand ? `${cand.first_name} ${cand.last_name}` : "a candidate",
+                    reason,
+                }).catch((notifyErr) =>
+                    console.error("Failed to notify MIS of hiring fee failure:", notifyErr)
+                );
             }
         }
 

@@ -1,14 +1,23 @@
 import { MISLayout } from "@/components/mis";
-import { PaymentsClient } from "./PaymentsClient";
+import { PaymentsClient, type PaymentsTabKey } from "./PaymentsClient";
 
-export default function MISPaymentsPage() {
+const TABS = new Set<PaymentsTabKey>(["payments", "placements", "compliance", "configuration"]);
+
+export default async function MISPaymentsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ tab?: string }>;
+}) {
+    const requestedTab = (await searchParams).tab as PaymentsTabKey | undefined;
+    const initialTab = requestedTab && TABS.has(requestedTab) ? requestedTab : "payments";
+
     return (
         <MISLayout
             pageTitle="Payments"
             pageDescription="Manage payment requests, review proofs, and configure bank details"
         >
             <div className="max-w-7xl mx-auto">
-                <PaymentsClient />
+                <PaymentsClient initialTab={initialTab} />
             </div>
         </MISLayout>
     );

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { formatUTCTime, formatDate } from "@/lib/date-utils";
 import { formatIndustry } from "@/lib/utils";
+import { getMisInterviewStage } from "@/lib/mis-interview-status";
 import {
     Table,
     TableCell,
@@ -37,6 +38,11 @@ interface Interview {
     mis_rescheduled?: boolean;
     mis_rescheduled_at?: string;
     mis_reschedule_data?: { date: string; time: string } | null;
+    pipeline_status: "active" | "rejected" | "offered" | "hired" | "withdrawn" | "expired";
+    current_round_number: number;
+    closed_at: string | null;
+    closed_reason: string | null;
+    offer: { status: string } | { status: string }[] | null;
     candidate: {
         first_name: string;
         last_name: string;
@@ -60,17 +66,12 @@ interface InterviewTableProps {
 }
 
 export function InterviewTable({ interviews, onViewDetails }: InterviewTableProps) {
-    const [mounted, setMounted] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
     const [modeFilter, setModeFilter] = useState<string>("all");
     const [companyFilter, setCompanyFilter] = useState<string>("all");
     const [jobRoleFilter, setJobRoleFilter] = useState<string>("all");
     const [cancelledByFilter, setCancelledByFilter] = useState<string>("all");
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     const filteredInterviews = useMemo(() => {
         return (interviews || []).filter((interview) => {
@@ -87,15 +88,7 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
 
             // Status filter
             if (statusFilter !== "all") {
-                if (statusFilter === "confirmed" && (!interview.interview_confirmed || interview.invitation_canceled)) {
-                    return false;
-                }
-                if (statusFilter === "pending" && (interview.interview_confirmed || interview.invitation_canceled)) {
-                    return false;
-                }
-                if (statusFilter === "cancelled" && !interview.invitation_canceled) {
-                    return false;
-                }
+                if (getMisInterviewStage(interview).key !== statusFilter) return false;
             }
 
             // Mode filter
@@ -139,7 +132,16 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
     }, [interviews]);
 
     const getStatusBadge = (interview: Interview) => {
-        if (interview.mis_rescheduled) {
+        const stage = getMisInterviewStage(interview);
+        const pipelineBadges: Record<string, string> = {
+            hired: "bg-emerald-600 text-white",
+            offered: "bg-violet-600 text-white",
+            rejected: "bg-red-600 text-white",
+            withdrawn: "bg-slate-600 text-white",
+            expired: "bg-slate-500 text-white",
+        };
+        if (pipelineBadges[stage.key]) return <Badge className={pipelineBadges[stage.key]}>{stage.label}</Badge>;
+        if (stage.key === "rescheduled") {
             return (
                 <Badge className="bg-green-600 text-white gap-1">
                     <Calendar className="h-3 w-3" />
@@ -147,7 +149,7 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
                 </Badge>
             );
         }
-        if (interview.invitation_canceled) {
+        if (stage.key === "cancelled") {
             return (
                 <Badge variant="destructive" className="gap-1">
                     <XCircle className="h-3 w-3" />
@@ -155,7 +157,7 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
                 </Badge>
             );
         }
-        if (interview.interview_confirmed) {
+        if (stage.key === "confirmed") {
             return (
                 <Badge variant="default" className="gap-1 bg-green-600">
                     <CheckCircle2 className="h-3 w-3" />
@@ -207,8 +209,7 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
                         className="pl-9"
                     />
                 </div>
-                {mounted && (
-                    <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger className="w-[140px]">
                                 <SelectValue placeholder="Status" />
@@ -217,7 +218,13 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
                                 <SelectItem value="all">All Statuses</SelectItem>
                                 <SelectItem value="confirmed">Confirmed</SelectItem>
                                 <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="rescheduled">Rescheduled</SelectItem>
                                 <SelectItem value="cancelled">Cancelled</SelectItem>
+                                <SelectItem value="offered">Offer Sent</SelectItem>
+                                <SelectItem value="hired">Hired</SelectItem>
+                                <SelectItem value="rejected">Rejected</SelectItem>
+                                <SelectItem value="withdrawn">Offer Declined</SelectItem>
+                                <SelectItem value="expired">Expired</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select value={modeFilter} onValueChange={setModeFilter}>
@@ -266,8 +273,7 @@ export function InterviewTable({ interviews, onViewDetails }: InterviewTableProp
                                 <SelectItem value="employer">Employer</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
-                )}
+                </div>
             </div>
 
             {/* Results count */}

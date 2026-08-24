@@ -23,6 +23,7 @@ import { CandidateDetailModal } from "./CandidateDetailModal";
 import { cn, formatIndustry } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { resolveIndustryIdsForProfile } from "@/lib/job-designations-resolve";
+import { uniqueDesignationsByName, type JobDesignation } from "@/hooks/useJobDesignations";
 import {
     getInvitationJourneyDisplay,
     journeyVariantToEmployerBadgeProps,
@@ -55,13 +56,6 @@ interface Candidate {
 interface Industry {
     industry_id: number;
     industry_name: string;
-}
-
-interface JobDesignation {
-    designation_id: number;
-    designation_name: string;
-    industry_id: number;
-    level_id: number;
 }
 
 interface CandidateTableProps {
@@ -264,7 +258,7 @@ export function CandidateTable({ candidates, industries }: CandidateTableProps) 
                                 <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 <div className="w-full" id="designation-filter">
                                     <MultiCombobox
-                                        options={jobDesignations.map((designation) => ({
+                                        options={uniqueDesignationsByName(jobDesignations).map((designation) => ({
                                             value: designation.designation_name,
                                             label: designation.designation_name,
                                         }))}
