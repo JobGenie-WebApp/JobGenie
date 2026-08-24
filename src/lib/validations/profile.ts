@@ -70,7 +70,6 @@ export const professionalQualificationEnum = z.enum([
 export const basicInfoSchema = z.object({
     first_name: z.string().min(1, "First name is required").max(100),
     last_name: z.string().min(1, "Last name is required").max(100),
-    nicPassport: z.string().min(1, "NIC/Passport is required").max(20),
     phone: z.string().min(1, "Phone is required").max(20),
     alternative_phone: z.string().max(20).optional(),
     country: z.string().max(100).optional(),

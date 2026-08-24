@@ -138,7 +138,7 @@ export function ExperienceStep({ experiences, onChange, onNext, onPrevious }: Ex
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor={`employmentType-${index}`}>Employment Type</Label>
+                                    <Label htmlFor={`employmentType-${index}`}>Employment Status</Label>
                                     <Select
                                         value={exp.employmentType}
                                         onValueChange={(value) => handleUpdate(index, "employmentType", value)}
@@ -156,7 +156,7 @@ export function ExperienceStep({ experiences, onChange, onNext, onPrevious }: Ex
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor={`locationType-${index}`}>Location Type</Label>
+                                    <Label htmlFor={`locationType-${index}`}>Mode of Employment</Label>
                                     <Select
                                         value={exp.locationType}
                                         onValueChange={(value) => handleUpdate(index, "locationType", value)}
@@ -188,7 +188,7 @@ export function ExperienceStep({ experiences, onChange, onNext, onPrevious }: Ex
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor={`startDate-${index}`}>Start Month</Label>
+                                    <Label htmlFor={`startDate-${index}`}>Start At</Label>
                                     <Input
                                         id={`startDate-${index}`}
                                         type="month"
@@ -198,7 +198,7 @@ export function ExperienceStep({ experiences, onChange, onNext, onPrevious }: Ex
                                     {errors[`${index}.startDate`] && <p className="text-sm text-destructive">{errors[`${index}.startDate`]}</p>}
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor={`endDate-${index}`}>End Month</Label>
+                                    <Label htmlFor={`endDate-${index}`}>End At</Label>
                                     <Input
                                         id={`endDate-${index}`}
                                         type="month"

@@ -68,7 +68,8 @@ model Candidate {
   // Basic Information (Section 1)
   first_name        String   @db.VarChar(100)
   last_name         String   @db.VarChar(100)
-  nicPassport       String   @db.VarChar(20)
+  /// deprecated: no longer collected, displayed or written. Column retained (nullable) so existing data is not lost.
+  nicPassport       String?  @db.VarChar(20)
   dob               DateTime @db.Date
   contact_no        String   @db.VarChar(20)
   email             String   @unique @db.VarChar(255)

@@ -50,7 +50,7 @@ export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerPro
         ];
 
     const totalSteps = steps.length;
-    const progress = Math.round(((currentStep + 1) / totalSteps) * 100);
+    const progress = Math.round((currentStep / (totalSteps - 1)) * 100);
 
     const handleNext = useCallback(() => {
         if (currentStep < totalSteps - 1) {
@@ -204,11 +204,12 @@ export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerPro
                 </CardHeader>
                 <CardContent className="pb-4">
                     <Progress value={progress} className="h-2" />
-                    <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                    <div className="relative mt-2 h-4 text-xs text-muted-foreground">
                         {steps.map((step, index) => (
                             <span
                                 key={step.id}
-                                className={index <= currentStep ? "text-primary font-medium" : ""}
+                                style={{ left: `${(index / (totalSteps - 1)) * 100}%` }}
+                                className={`absolute -translate-x-1/2 ${index <= currentStep ? "text-primary font-medium" : ""}`}
                             >
                                 {index + 1}
                             </span>

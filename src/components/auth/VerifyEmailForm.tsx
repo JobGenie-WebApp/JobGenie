@@ -127,7 +127,7 @@ export function VerifyEmailForm({ email }: VerifyEmailFormProps) {
             {/* Email display */}
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>Code sent to <strong className="text-foreground">{maskEmail(email)}</strong></span>
+                <span>Please enter the 6 digit verification code sent to your email address <strong className="text-foreground">{maskEmail(email)}</strong></span>
             </div>
 
             {/* Success/Error Message */}

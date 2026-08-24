@@ -95,9 +95,17 @@
 .jg-section-heading p { margin: 0 auto; color: var(--jg-muted); max-width: 590px; font-size: 17px; line-height: 1.7; }
 
 /* Hero */
-.jg-hero { min-height: 800px; position: relative; padding: 150px 0 0; background: radial-gradient(circle at 78% 25%,rgba(60,233,126,.17),transparent 28%), linear-gradient(180deg,#f8fbf9 0%,#edf5f0 72%,var(--jg-canvas) 100%); }
-.dark .jg-hero { background: radial-gradient(circle at 78% 25%,rgba(38,207,105,.15),transparent 29%), linear-gradient(180deg,#06110a 0%,#0a1a11 68%,var(--jg-canvas) 100%); }
-.jg-hero::before { content:""; position:absolute; inset:0; opacity:.55; background-image: linear-gradient(var(--jg-line) 1px,transparent 1px),linear-gradient(90deg,var(--jg-line) 1px,transparent 1px); background-size:72px 72px; mask-image:linear-gradient(to bottom,#000,transparent 72%); }
+/* Light mode was a near-flat wash, so the ground is layered: a mint bloom behind the genie,
+   a cooler one behind the headline, a warm accent low-left, and a white top sheen. */
+.jg-hero { min-height: 800px; position: relative; padding: 150px 0 0; background: radial-gradient(circle at 78% 22%,rgba(60,233,126,.20),transparent 32%), radial-gradient(circle at 8% 26%,rgba(86,205,178,.13),transparent 40%), radial-gradient(circle at 26% 92%,rgba(244,184,63,.09),transparent 44%), radial-gradient(120% 78% at 52% -8%,#ffffff 0%,rgba(255,255,255,0) 56%), linear-gradient(180deg,#f5faf7 0%,#e9f2ec 70%,var(--jg-canvas) 100%); }
+.dark .jg-hero { background: radial-gradient(circle at 78% 25%,rgba(38,207,105,.15),transparent 29%), radial-gradient(circle at 8% 26%,rgba(28,120,110,.13),transparent 42%), linear-gradient(180deg,#06110a 0%,#0a1a11 68%,var(--jg-canvas) 100%); }
+/* Magic ripples radiating from the genie instead of the usual tech grid - it echoes the
+   ring around the character (.jg-genie-glow) rather than looking like a template. */
+.jg-hero::before { content:""; position:absolute; inset:0; opacity:.85; background-image:repeating-radial-gradient(circle at 76% 27%,rgba(11,122,61,.08) 0 1px,transparent 1px 104px); -webkit-mask-image:radial-gradient(72% 74% at 76% 27%,#000 8%,rgba(0,0,0,.55) 42%,transparent 78%); mask-image:radial-gradient(72% 74% at 76% 27%,#000 8%,rgba(0,0,0,.55) 42%,transparent 78%); }
+.dark .jg-hero::before { opacity:.6; background-image:repeating-radial-gradient(circle at 76% 27%,rgba(126,255,186,.07) 0 1px,transparent 1px 104px); }
+/* Soft diagonal light shaft across the copy side, so the left half reads as lit, not empty. */
+.jg-hero::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(104deg,rgba(255,255,255,.72) 0 22%,rgba(255,255,255,.18) 38%,rgba(255,255,255,0) 58%),linear-gradient(284deg,rgba(9,58,33,.05) 0 24%,rgba(9,58,33,0) 52%); -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 92%); mask-image:linear-gradient(to bottom,#000 55%,transparent 92%); }
+.dark .jg-hero::after { background:linear-gradient(104deg,rgba(140,255,196,.05) 0 20%,rgba(140,255,196,0) 50%),linear-gradient(284deg,rgba(0,0,0,.22) 0 26%,rgba(0,0,0,0) 54%); }
 .jg-aurora { position:absolute; width:700px; height:700px; right:-180px; top:-200px; background:conic-gradient(from 40deg,transparent,rgba(75,232,137,.15),transparent 45%); filter:blur(22px); border-radius:50%; animation:jg-spin 18s linear infinite; }
 @keyframes jg-spin { to { transform:rotate(360deg); } }
 .jg-hero__grid { display:grid; grid-template-columns:1.05fr .95fr; align-items:center; position:relative; z-index:2; }

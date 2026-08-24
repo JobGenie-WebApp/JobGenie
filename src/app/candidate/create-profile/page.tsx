@@ -41,15 +41,12 @@ export default async function CreateProfilePage() {
                         <UserCircle className="h-6 w-6" aria-hidden="true" />
                     </div>
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                            Candidate onboarding
-                        </p>
                         <h1 className="mt-1.5 text-2xl font-bold tracking-[-0.035em] text-foreground">
-                            Complete your profile
+                            Let’s complete your profile
                         </h1>
                         <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-                            Welcome{candidate?.first_name ? `, ${candidate.first_name}` : ""}!
-                            Fill in your details to access your dashboard.
+                            Hello{candidate?.first_name ? `, ${candidate.first_name}` : ""}!
+                            Fill in your details to start your job search.
                         </p>
                     </div>
                 </div>

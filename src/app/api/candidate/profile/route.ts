@@ -29,7 +29,6 @@ export async function GET() {
                 contact_no,
                 address,
                 country,
-                nicPassport,
                 dob,
                 gender,
                 industry,
