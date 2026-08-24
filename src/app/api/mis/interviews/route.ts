@@ -73,6 +73,22 @@ export async function GET(request: NextRequest) {
                 mis_rescheduled_at,
                 mis_rescheduled_by,
                 mis_reschedule_data,
+                pipeline_status,
+                current_round_number,
+                closed_at,
+                closed_reason,
+                offer:job_offers(
+                    id,
+                    status,
+                    job_title,
+                    salary_amount,
+                    salary_currency,
+                    salary_period,
+                    start_date,
+                    expiry_date,
+                    responded_at,
+                    created_at
+                ),
                 candidate:candidates!inner(
                     id,
                     first_name,

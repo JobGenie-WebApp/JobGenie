@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logError } from "@/lib/logger";
@@ -6,7 +6,7 @@ import { getUserTimezone } from "@/lib/user-timezone";
 import { monthBoundsUTC } from "@/lib/date-utils";
 import { formatInTimeZone } from "date-fns-tz";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         // Authenticate user
         const supabase = await createClient();
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         // Fetch all accepted invitations (interviews)
         const { data: allInterviews, error: allError } = await adminClient
             .from("job_invitations")
-            .select("id, interview_confirmed, invitation_canceled, canceled_by, interview_mode, sent_at, viewed_at, responded_at, industry");
+            .select("id, interview_confirmed, invitation_canceled, canceled_by, interview_mode, sent_at, viewed_at, responded_at, industry, pipeline_status");
 
         if (allError) {
             console.error("Error fetching interview stats:", allError);
@@ -64,11 +64,13 @@ export async function GET(request: NextRequest) {
 
         // Calculate statistics
         const totalInterviews = interviews.length;
-        const confirmedInterviews = interviews.filter(i => i.interview_confirmed && !i.invitation_canceled).length;
-        const pendingConfirmation = interviews.filter(i => !i.interview_confirmed && !i.invitation_canceled).length;
+        const confirmedInterviews = interviews.filter(i => i.pipeline_status === "active" && i.interview_confirmed && !i.invitation_canceled).length;
+        const pendingConfirmation = interviews.filter(i => i.pipeline_status === "active" && !i.interview_confirmed && !i.invitation_canceled).length;
         const cancelledInterviews = interviews.filter(i => i.invitation_canceled).length;
         const cancelledByCandidate = interviews.filter(i => i.invitation_canceled && i.canceled_by === "candidate").length;
         const cancelledByEmployer = interviews.filter(i => i.invitation_canceled && i.canceled_by === "employer").length;
+        const offeredInterviews = interviews.filter(i => i.pipeline_status === "offered").length;
+        const hiredInterviews = interviews.filter(i => i.pipeline_status === "hired").length;
 
         // Interview mode distribution
         const onlineInterviews = interviews.filter(i => i.interview_mode === "online" && !i.invitation_canceled).length;
@@ -123,6 +125,8 @@ export async function GET(request: NextRequest) {
                     cancelledInterviews,
                     monthlyInterviews,
                     avgResponseTimeHours: avgResponseTime,
+                    offeredInterviews,
+                    hiredInterviews,
                 },
                 cancellations: {
                     total: cancelledInterviews,

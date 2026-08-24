@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, XCircle, Gift, UserCheck } from "lucide-react";
 
 interface InterviewStatsCardsProps {
     stats: {
@@ -12,6 +12,8 @@ interface InterviewStatsCardsProps {
             cancelledInterviews: number;
             monthlyInterviews: number;
             avgResponseTimeHours: number;
+            offeredInterviews: number;
+            hiredInterviews: number;
         };
         interviewMode: {
             online: number;
@@ -24,7 +26,7 @@ export function InterviewStatsCards({ stats }: InterviewStatsCardsProps) {
     const { overview } = stats;
 
     return (
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
             {/* Total Interviews */}
             <Card className="border-l-4 border-l-primary">
                 <CardContent className="p-4">
@@ -34,6 +36,30 @@ export function InterviewStatsCards({ stats }: InterviewStatsCardsProps) {
                             <p className="text-2xl font-bold">{overview.totalInterviews}</p>
                         </div>
                         <Calendar className="h-8 w-8 text-primary opacity-50" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-violet-500">
+                <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">Offers</p>
+                            <p className="text-2xl font-bold">{overview.offeredInterviews}</p>
+                        </div>
+                        <Gift className="h-8 w-8 text-violet-500 opacity-50" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-emerald-500">
+                <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground">Hired</p>
+                            <p className="text-2xl font-bold">{overview.hiredInterviews}</p>
+                        </div>
+                        <UserCheck className="h-8 w-8 text-emerald-500 opacity-50" />
                     </div>
                 </CardContent>
             </Card>

@@ -9,8 +9,8 @@ import { JobGenieLogo } from "@/components/brand/JobGenieLogo";
 import { PanelLeft } from "lucide-react";
 
 interface PortalHeaderProps {
-    /** When set, renders a notification bell wired to this role. MIS omits it. */
-    notificationRole?: "candidate" | "employer";
+    /** When set, renders a notification bell wired to this role. */
+    notificationRole?: "candidate" | "employer" | "mis";
     breadcrumbOverride?: string;
     /** Passed from DashboardShell; true once content div scrolls past 0. */
     scrolled?: boolean;

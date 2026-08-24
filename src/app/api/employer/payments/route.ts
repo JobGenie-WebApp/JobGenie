@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
+import { flattenInvitationEmbed } from "@/lib/payment-embed";
 
 // GET /api/employer/payments — list payment requests for the employer's company
 export async function GET(request: NextRequest) {
@@ -32,10 +33,15 @@ export async function GET(request: NextRequest) {
         let query = admin
             .from("payment_requests")
             .select(`
-                id, company_id, employer_id, payment_type_id, amount, currency,
+                id, company_id, employer_id, payment_type_id, reference_invitation_id, amount, currency,
                 description, due_date, status, bank_transfer_reference,
                 created_at, updated_at,
                 payment_types(id, code, label),
+                reference_invitation:job_invitations!payment_requests_reference_invitation_id_fkey(
+                    id,
+                    candidate:candidates!job_invitations_candidate_id_fkey(first_name, last_name),
+                    job_offer:job_offers!job_offers_invitation_id_fkey(salary_amount, salary_currency, salary_period, job_title)
+                ),
                 payment_proofs(
                     id, status, file_url, file_name, uploaded_at, reviewed_at, review_notes
                 )
@@ -83,7 +89,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            data: data ?? [],
+            data: (data ?? []).map(flattenInvitationEmbed),
             pagination: { page, limit, total: count ?? 0, pages: Math.ceil((count ?? 0) / limit) },
             summary: { total_paid: totalPaid, pending_amount: pendingAmount, overdue_amount: overdueAmount, currency: "LKR" },
         });

@@ -82,6 +82,23 @@ export async function GET(
                     location,
                     job_type,
                     description
+                ),
+                offer:job_offers(
+                    id,
+                    round_id,
+                    job_title,
+                    salary_amount,
+                    salary_currency,
+                    salary_period,
+                    start_date,
+                    expiry_date,
+                    offer_letter_url,
+                    description,
+                    status,
+                    decline_reason,
+                    responded_at,
+                    created_at,
+                    updated_at
                 )
             `)
             .eq("id", id)
@@ -116,9 +133,22 @@ export async function GET(
                 cancellation_reason,
                 canceled_at,
                 mis_rescheduled,
+                mis_rescheduled_at,
                 mis_reschedule_data,
                 outcome,
                 outcome_notes,
+                outcome_at,
+                viewed_at,
+                responded_at,
+                assessment_delivery_mode,
+                assessment_deadline,
+                assessment_link,
+                assessment_attachment_name,
+                assessment_start_at,
+                assessment_end_at,
+                assessment_submission_file_name,
+                assessment_submission_links,
+                assessment_submitted_at,
                 sent_at
             `)
             .eq("invitation_id", id)

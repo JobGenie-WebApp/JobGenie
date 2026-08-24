@@ -68,7 +68,7 @@ export default async function EmployerDashboardPage() {
     return (
         <EmployerLayout
             pageTitle="Dashboard"
-            pageDescription={data ? `Welcome back, ${data.firstName} — here's how ${data.companyName} is hiring.` : "Welcome back!"}
+            pageDescription={data ? `Welcome back, ${data.firstName} - here's how ${data.companyName} is hiring.` : "Welcome back!"}
         >
             <RestrictionToastListener />
 

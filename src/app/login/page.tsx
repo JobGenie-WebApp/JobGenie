@@ -13,8 +13,8 @@ export default async function LoginPage({
 
     return (
         <AuthShell
-            sideHeadline="Where great careers and great teams meet."
-            sideDescription="Access your personalized JobGenie workspace with one secure sign-in — whether you are growing your career or building a team."
+            sideHeadline="Build your profile and find your perfect fit!"
+            sideDescription="Create your personal or company profile to streamline your employment journey."
             formWidth="md"
         >
             <div className="mb-7">

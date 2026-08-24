@@ -1,6 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { computeHiringFee, type SalaryPeriod } from "@/lib/hiring-fee";
 
 interface CreatePaymentRequestParams {
   company_id: string;
@@ -57,6 +58,14 @@ export async function getHiringFeePercentage(): Promise<number> {
   const { data } = await supabase.from("payment_settings").select("hiring_fee_percentage").eq("id", 1).maybeSingle();
   const pct = data ? Number(data.hiring_fee_percentage) : 50;
   return Number.isFinite(pct) && pct >= 0 ? pct : 50;
+}
+
+// Read the MIS-configured payment terms for hiring fees (defaults to 14 days).
+export async function getHiringFeeDueDays(): Promise<number> {
+  const supabase = createAdminClient();
+  const { data } = await supabase.from("payment_settings").select("hiring_fee_due_days").eq("id", 1).maybeSingle();
+  const days = data ? Number(data.hiring_fee_due_days) : 14;
+  return Number.isFinite(days) && days >= 1 ? days : 14;
 }
 
 // Look up the current active price for a payment type code.
@@ -194,6 +203,103 @@ export async function notifyMisPaymentProofSubmitted(params: {
       title: "Payment Proof Submitted",
       body: `${company_name} submitted proof for ${currency} ${Number(amount).toFixed(2)}. Please review.`,
       data: { payment_request_id, company_name, amount, currency },
+    }))
+  );
+}
+
+// Bill a hire. The single place hiring-fee amount, currency, terms and wording
+// are decided — used both by the automatic path (candidate accepts an offer)
+// and by MIS creating a missed fee by hand from the Placements tab.
+// The unique index on payment_requests.reference_invitation_id makes a second
+// call for the same hire fail at the database, so this is safe to retry.
+export async function createHiringFeeForInvitation(
+  invitationId: string,
+  createdByMisUserId?: string
+): Promise<string> {
+  const supabase = createAdminClient();
+
+  const { data: inv, error } = await supabase
+    .from("job_invitations")
+    .select(`
+      id, company_id, employer_id, job_id,
+      employer:employers!job_invitations_employer_id_fkey(user_id),
+      candidate:candidates!job_invitations_candidate_id_fkey(first_name, last_name),
+      job_offer:job_offers!job_offers_invitation_id_fkey(salary_amount, salary_currency, salary_period, job_title)
+    `)
+    .eq("id", invitationId)
+    .single();
+
+  if (error || !inv) throw new Error(`Invitation ${invitationId} not found: ${error?.message ?? "no row"}`);
+
+  // Embeds arrive as an object or a single-element array depending on how
+  // PostgREST resolves the relationship.
+  const first = <T,>(v: T | T[] | null | undefined): T | null =>
+    Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
+
+  const employer = first(inv.employer as unknown as { user_id: string } | { user_id: string }[]);
+  const candidate = first(inv.candidate as unknown as { first_name: string; last_name: string } | { first_name: string; last_name: string }[]);
+  const offer = first(
+    inv.job_offer as unknown as
+      | { salary_amount: number | null; salary_currency: string | null; salary_period: string | null; job_title: string }
+      | { salary_amount: number | null; salary_currency: string | null; salary_period: string | null; job_title: string }[]
+  );
+
+  const pct = await getHiringFeePercentage();
+  const fee = computeHiringFee(
+    offer?.salary_amount ?? null,
+    (offer?.salary_period ?? "monthly") as SalaryPeriod,
+    pct
+  );
+
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + (await getHiringFeeDueDays()));
+
+  const candidateName = candidate ? `${candidate.first_name} ${candidate.last_name}` : "the candidate";
+
+  return createPaymentRequest({
+    company_id: inv.company_id,
+    employer_id: inv.employer_id,
+    employer_user_id: employer?.user_id,
+    payment_type_code: "hiring_fee",
+    reference_invitation_id: invitationId,
+    reference_job_id: inv.job_id ?? undefined,
+    due_date: dueDate.toISOString().slice(0, 10),
+    // Throws when no MIS user exists, so a missing creator surfaces to the
+    // caller instead of silently skipping the bill.
+    created_by_mis_user_id: await resolveSystemMisUserId(createdByMisUserId),
+    // No usable salary on the offer: fall back to the configured hiring_fee
+    // pricing by leaving amount/currency unset.
+    ...(fee != null
+      ? {
+          amount: fee,
+          currency: offer?.salary_currency ?? undefined,
+          description: `Hiring fee (${pct}% of monthly salary): ${offer?.job_title ?? "Placement"} — ${candidateName}`,
+        }
+      : {}),
+  });
+}
+
+// Alert every MIS user that a hire completed but was not billed, so the missing
+// payment request can be created by hand from the Placements tab.
+export async function notifyMisHiringFeeFailed(params: {
+  invitation_id: string;
+  company_name: string;
+  candidate_name: string;
+  reason: string;
+}): Promise<void> {
+  const { invitation_id, company_name, candidate_name, reason } = params;
+  const supabase = createAdminClient();
+
+  const { data: misUsers } = await supabase.from("mis_user").select("user_id");
+  if (!misUsers || misUsers.length === 0) return;
+
+  await supabase.from("notifications").insert(
+    misUsers.map((u) => ({
+      user_id: u.user_id,
+      type: "hiring_fee_creation_failed",
+      title: "Hiring Fee Not Created",
+      body: `${company_name} hired ${candidate_name} but the hiring fee could not be created. Create it from MIS → Payments → Placements.`,
+      data: { invitation_id, company_name, candidate_name, reason },
     }))
   );
 }

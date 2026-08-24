@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import {
     CreditCard, Building2, User, Calendar, DollarSign, Eye, CheckCircle2,
     XCircle, Clock, RefreshCw, Plus, Pencil, Trash2, AlertTriangle, FileText,
-    ExternalLink, Settings2, Receipt, ShieldAlert, Loader2,
+    ExternalLink, Settings2, Receipt, ShieldAlert, Loader2, Briefcase,
+    ChevronDown, ChevronRight, UserCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,12 @@ interface PaymentRequest {
     employers: { id: string; first_name: string; last_name: string; email: string; designation: string | null } | null;
     payment_types: { id: string; code: string; label: string } | null;
     reference_job: { id: string; job_title: string; status: string; mis_pause_locked: boolean } | null;
+    reference_invitation_id: string | null;
+    reference_invitation: {
+        id: string; job_id: string | null;
+        candidate: { first_name: string; last_name: string } | null;
+        job_offer: { salary_amount: number | null; salary_currency: string | null; salary_period: string | null; job_title: string } | null;
+    } | null;
     payment_proofs: {
         id: string; status: string; uploaded_at: string; file_url: string; file_name: string;
         reviewed_at: string | null; review_notes: string | null;
@@ -106,14 +113,16 @@ function fmtDate(iso: string) {
 
 // ── Main Component ────────────────────────────────────────────────────────
 
-export function PaymentsClient() {
-    const [activeTab, setActiveTab] = useState<"payments" | "compliance" | "configuration">("payments");
+export type PaymentsTabKey = "payments" | "placements" | "compliance" | "configuration";
+
+export function PaymentsClient({ initialTab = "payments" }: { initialTab?: PaymentsTabKey }) {
+    const [activeTab, setActiveTab] = useState<PaymentsTabKey>(initialTab);
 
     return (
         <div className="space-y-6">
             {/* Tab bar */}
             <div className="flex gap-1 border-b">
-                {(["payments", "compliance", "configuration"] as const).map((t) => (
+                {(["payments", "placements", "compliance", "configuration"] as const).map((t) => (
                     <button
                         key={t}
                         onClick={() => setActiveTab(t)}
@@ -125,6 +134,8 @@ export function PaymentsClient() {
                     >
                         {t === "payments" ? (
                             <span className="flex items-center gap-2"><Receipt className="h-4 w-4" />Payments</span>
+                        ) : t === "placements" ? (
+                            <span className="flex items-center gap-2"><Briefcase className="h-4 w-4" />Placements</span>
                         ) : t === "compliance" ? (
                             <span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4" />Compliance</span>
                         ) : (
@@ -134,7 +145,10 @@ export function PaymentsClient() {
                 ))}
             </div>
 
-            {activeTab === "payments" ? <PaymentsTab /> : activeTab === "compliance" ? <ComplianceTab /> : <ConfigurationTab />}
+            {activeTab === "payments" ? <PaymentsTab />
+                : activeTab === "placements" ? <PlacementsTab />
+                : activeTab === "compliance" ? <ComplianceTab />
+                : <ConfigurationTab />}
         </div>
     );
 }
@@ -320,6 +334,7 @@ function PaymentsTab() {
                         <tr>
                             <TH>Company</TH>
                             <TH>Employer</TH>
+                            <TH>For</TH>
                             <TH>Type</TH>
                             <TH>Amount</TH>
                             <TH>Due Date</TH>
@@ -332,13 +347,13 @@ function PaymentsTab() {
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
                                 <tr key={i} className="border-b">
-                                    {Array.from({ length: 8 }).map((__, j) => (
+                                    {Array.from({ length: 9 }).map((__, j) => (
                                         <TD key={j}><Skeleton className="h-4 w-full" /></TD>
                                     ))}
                                 </tr>
                             ))
                         ) : payments.length === 0 ? (
-                            <tr><td colSpan={8} className="py-10 text-center text-muted-foreground text-sm">No payment requests found</td></tr>
+                            <tr><td colSpan={9} className="py-10 text-center text-muted-foreground text-sm">No payment requests found</td></tr>
                         ) : (
                             payments.map((p) => {
                                 const latestProof = p.payment_proofs?.slice().sort((a, b) =>
@@ -356,6 +371,22 @@ function PaymentsTab() {
                                                     <div className="text-sm">{p.employers.first_name} {p.employers.last_name}</div>
                                                     <div className="text-xs text-muted-foreground">{p.employers.designation ?? ""}</div>
                                                 </div>
+                                            ) : "—"}
+                                        </TD>
+                                        <TD>
+                                            {p.reference_invitation ? (
+                                                <div>
+                                                    <div className="text-sm">
+                                                        {p.reference_invitation.candidate
+                                                            ? `${p.reference_invitation.candidate.first_name} ${p.reference_invitation.candidate.last_name}`
+                                                            : "—"}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {p.reference_invitation.job_offer?.job_title ?? p.reference_job?.job_title ?? ""}
+                                                    </div>
+                                                </div>
+                                            ) : p.reference_job ? (
+                                                <div className="text-sm">{p.reference_job.job_title}</div>
                                             ) : "—"}
                                         </TD>
                                         <TD>
@@ -435,6 +466,260 @@ function PaymentsTab() {
                     onReviewed={() => { loadPayments(); loadStats(); setShowReviewDialog(false); }}
                 />
             )}
+        </div>
+    );
+}
+
+// ── Placements Tab ────────────────────────────────────────────────────────
+// The hired-candidate register, grouped by company. Every hire sits next to the
+// hiring fee it generated, so an unbilled placement cannot go unnoticed.
+
+interface PlacementHire {
+    invitation_id: string;
+    company_id: string;
+    candidate: { first_name: string; last_name: string; email: string } | null;
+    employer: { first_name: string; last_name: string; email: string } | null;
+    job: { id: string; job_title: string } | null;
+    hired_at: string | null;
+    salary_amount: number | null;
+    salary_currency: string;
+    salary_period: string;
+    expected_fee: number | null;
+    payment_request: { id: string; amount: number; currency: string; status: string; due_date: string | null } | null;
+    billed: boolean;
+}
+interface PlacementGroup {
+    company_id: string;
+    company_name: string;
+    industry: string | null;
+    hire_count: number;
+    total_fees: number;
+    outstanding: number;
+    unbilled_count: number;
+    currency: string;
+    hires: PlacementHire[];
+}
+interface PlacementSummary {
+    hiring_fee_percentage: number;
+    total_hires: number;
+    total_companies: number;
+    unbilled_hires: number;
+    outstanding: number;
+}
+
+function PlacementsTab() {
+    const [groups, setGroups] = useState<PlacementGroup[]>([]);
+    const [summary, setSummary] = useState<PlacementSummary | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [expanded, setExpanded] = useState<Set<string>>(new Set());
+    const [search, setSearch] = useState("");
+    const [unbilledOnly, setUnbilledOnly] = useState(false);
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
+    const [creating, setCreating] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({ limit: "50" });
+            if (search) params.set("search", search);
+            if (unbilledOnly) params.set("billed", "false");
+            if (dateFrom) params.set("dateFrom", dateFrom);
+            if (dateTo) params.set("dateTo", dateTo);
+            const res = await fetch(`/api/mis/placements?${params}`);
+            const json = await res.json();
+            if (json.success) {
+                setGroups(json.data);
+                setSummary(json.summary);
+                // Expand automatically when something needs attention.
+                setExpanded(new Set(
+                    (json.data as PlacementGroup[]).filter((g) => g.unbilled_count > 0).map((g) => g.company_id)
+                ));
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [search, unbilledOnly, dateFrom, dateTo]);
+
+    useEffect(() => { load(); }, [load]);
+
+    async function createFee(hire: PlacementHire) {
+        setCreating(hire.invitation_id);
+        setError(null);
+        try {
+            const res = await fetch("/api/mis/payments", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    company_id: hire.company_id,
+                    payment_type_code: "hiring_fee",
+                    reference_invitation_id: hire.invitation_id,
+                }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error ?? "Failed to create hiring fee");
+            await load();
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to create hiring fee");
+        } finally {
+            setCreating(null);
+        }
+    }
+
+    function toggle(companyId: string) {
+        setExpanded((prev) => {
+            const next = new Set(prev);
+            if (next.has(companyId)) next.delete(companyId);
+            else next.add(companyId);
+            return next;
+        });
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <KpiCard title="Companies Hiring" value={summary ? String(summary.total_companies) : "—"}
+                    icon={Building2} color="text-blue-600" bgColor="bg-blue-50 dark:bg-blue-950" />
+                <KpiCard title="Total Hires" value={summary ? String(summary.total_hires) : "—"}
+                    icon={UserCheck} color="text-green-600" bgColor="bg-green-50 dark:bg-green-950" />
+                <KpiCard title="Not Billed" value={summary ? String(summary.unbilled_hires) : "—"}
+                    icon={AlertTriangle} color="text-red-600" bgColor="bg-red-50 dark:bg-red-950" />
+                <KpiCard title="Outstanding" value={summary ? fmtAmount(summary.outstanding) : "—"}
+                    icon={DollarSign} color="text-amber-600" bgColor="bg-amber-50 dark:bg-amber-950" />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+                <Input placeholder="Search company…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-48" />
+                <DateField value={dateFrom} onChange={setDateFrom} placeholder="Hired from" clearable className="w-36" />
+                <DateField value={dateTo} onChange={setDateTo} placeholder="Hired to" clearable className="w-36" />
+                <Button variant={unbilledOnly ? "default" : "outline"} size="sm" onClick={() => setUnbilledOnly((v) => !v)}>
+                    <AlertTriangle className="h-4 w-4 mr-1" />Not billed only
+                </Button>
+                <Button variant="ghost" size="sm" onClick={load}><RefreshCw className="h-4 w-4" /></Button>
+                {summary && (
+                    <span className="text-xs text-muted-foreground ml-auto">
+                        Hiring fee: {summary.hiring_fee_percentage}% of monthly salary
+                    </span>
+                )}
+            </div>
+
+            {error && (
+                <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {error}
+                </div>
+            )}
+
+            <div className="rounded-lg border bg-card divide-y">
+                {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="p-4"><Skeleton className="h-6 w-full" /></div>
+                    ))
+                ) : groups.length === 0 ? (
+                    <div className="py-10 text-center text-muted-foreground text-sm">No hired candidates found</div>
+                ) : (
+                    groups.map((g) => (
+                        <div key={g.company_id}>
+                            <button
+                                onClick={() => toggle(g.company_id)}
+                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+                            >
+                                {expanded.has(g.company_id)
+                                    ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-sm truncate">{g.company_name}</div>
+                                    <div className="text-xs text-muted-foreground">{g.industry ?? ""}</div>
+                                </div>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                    {g.hire_count} {g.hire_count === 1 ? "hire" : "hires"}
+                                </span>
+                                <span className="text-sm font-medium whitespace-nowrap">{fmtAmount(g.total_fees, g.currency)}</span>
+                                {g.unbilled_count > 0 ? (
+                                    <Badge variant="destructive" className="whitespace-nowrap">{g.unbilled_count} not billed</Badge>
+                                ) : g.outstanding > 0 ? (
+                                    <Badge variant="secondary" className="whitespace-nowrap">{fmtAmount(g.outstanding, g.currency)} pending</Badge>
+                                ) : (
+                                    <Badge variant="default" className="whitespace-nowrap">Settled</Badge>
+                                )}
+                            </button>
+
+                            {expanded.has(g.company_id) && (
+                                <div className="overflow-x-auto border-t bg-muted/20">
+                                    <table className="w-full text-left">
+                                        <thead className="border-b">
+                                            <tr>
+                                                <TH>Candidate</TH>
+                                                <TH>Job</TH>
+                                                <TH>Hired On</TH>
+                                                <TH>Offered Salary</TH>
+                                                <TH>Hiring Fee</TH>
+                                                <TH>Payment</TH>
+                                                <TH>Due</TH>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {g.hires.map((h) => (
+                                                <tr key={h.invitation_id} className="border-b last:border-0">
+                                                    <TD>
+                                                        <div className="text-sm">
+                                                            {h.candidate ? `${h.candidate.first_name} ${h.candidate.last_name}` : "—"}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">{h.candidate?.email ?? ""}</div>
+                                                    </TD>
+                                                    <TD>{h.job?.job_title ?? "—"}</TD>
+                                                    <TD>{h.hired_at ? fmtDate(h.hired_at) : "—"}</TD>
+                                                    <TD>
+                                                        {h.salary_amount != null
+                                                            ? `${fmtAmount(h.salary_amount, h.salary_currency)} / ${h.salary_period}`
+                                                            : "—"}
+                                                    </TD>
+                                                    <TD className="font-medium">
+                                                        {h.payment_request
+                                                            ? fmtAmount(Number(h.payment_request.amount), h.payment_request.currency)
+                                                            : h.expected_fee != null
+                                                                ? <span className="text-muted-foreground">{fmtAmount(h.expected_fee, h.salary_currency)} (expected)</span>
+                                                                : "—"}
+                                                    </TD>
+                                                    <TD>
+                                                        {h.payment_request ? (
+                                                            <StatusBadge status={h.payment_request.status} />
+                                                        ) : (
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge variant="destructive">Not billed</Badge>
+                                                                <Button
+                                                                    size="sm" variant="outline"
+                                                                    disabled={creating === h.invitation_id}
+                                                                    onClick={() => createFee(h)}
+                                                                >
+                                                                    {creating === h.invitation_id
+                                                                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                        : <><Plus className="h-3.5 w-3.5 mr-1" />Create fee</>}
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </TD>
+                                                    <TD>
+                                                        {h.payment_request?.due_date ? (
+                                                            <span className={
+                                                                new Date(h.payment_request.due_date) < new Date()
+                                                                    && h.payment_request.status === "pending_payment"
+                                                                    ? "text-red-600 font-medium" : ""
+                                                            }>
+                                                                {fmtDate(h.payment_request.due_date)}
+                                                            </span>
+                                                        ) : "—"}
+                                                    </TD>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
         </div>
     );
 }
@@ -941,15 +1226,19 @@ function ComplianceTab() {
 
     useEffect(() => { load(); }, [load]);
 
-    const resolve = async (flag: ComplianceFlag, action: "republish" | "dismiss") => {
+    const resolve = async (flag: ComplianceFlag, action: "republish" | "reject") => {
         if (!flag.job) return;
         if (action === "republish" && !confirm(`Republish "${flag.job.job_title}"?`)) return;
+        const notes = action === "reject"
+            ? prompt("Why was this replacement document rejected?")?.trim()
+            : undefined;
+        if (action === "reject" && (!notes || notes.length < 3)) return;
         setBusyId(flag.id);
         try {
             const res = await fetch(`/api/mis/jobs/${flag.job.id}/compliance-resolve`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action }),
+                body: JSON.stringify({ action, notes }),
             });
             const data = await res.json();
             if (!res.ok) { alert(data.error || "Failed"); return; }
@@ -1028,9 +1317,11 @@ function ComplianceTab() {
 
                                     {open && (
                                         <div className="flex justify-end gap-2">
-                                            <Button variant="outline" size="sm" disabled={busyId === flag.id} onClick={() => resolve(flag, "dismiss")}>
-                                                Dismiss
-                                            </Button>
+                                            {flag.status === "resubmitted" && (
+                                                <Button variant="outline" size="sm" disabled={busyId === flag.id} onClick={() => resolve(flag, "reject")}>
+                                                    Request another document
+                                                </Button>
+                                            )}
                                             <Button size="sm" disabled={busyId === flag.id} onClick={() => resolve(flag, "republish")}>
                                                 {busyId === flag.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
                                                 Republish
@@ -1068,7 +1359,8 @@ function ConfigurationTab() {
 
 function HiringFeeSettingsManager() {
     const [percentage, setPercentage] = useState("");
-    const [saved, setSaved] = useState<string | null>(null);
+    const [dueDays, setDueDays] = useState("");
+    const [saved, setSaved] = useState<{ pct: string; days: string } | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
@@ -1079,9 +1371,11 @@ function HiringFeeSettingsManager() {
             const res = await fetch("/api/mis/payment-settings");
             const json = await res.json();
             if (json.success) {
-                const val = String(json.data.hiring_fee_percentage ?? "");
-                setPercentage(val);
-                setSaved(val);
+                const pct = String(json.data.hiring_fee_percentage ?? "");
+                const days = String(json.data.hiring_fee_due_days ?? "");
+                setPercentage(pct);
+                setDueDays(days);
+                setSaved({ pct, days });
             }
         } finally {
             setLoading(false);
@@ -1089,21 +1383,30 @@ function HiringFeeSettingsManager() {
     }, []);
     useEffect(() => { load(); }, [load]);
 
+    const dirty = saved === null || percentage !== saved.pct || dueDays !== saved.days;
+
     const save = async () => {
         const pct = Number(percentage);
         if (!Number.isFinite(pct) || pct < 0 || pct > 100) { setError("Enter a percentage between 0 and 100."); return; }
+        const days = Number(dueDays);
+        if (!Number.isInteger(days) || days < 1 || days > 365) { setError("Enter payment terms between 1 and 365 days."); return; }
         setError("");
         setSaving(true);
         try {
             const res = await fetch("/api/mis/payment-settings", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ hiring_fee_percentage: pct }),
+                body: JSON.stringify({ hiring_fee_percentage: pct, hiring_fee_due_days: days }),
             });
             const json = await res.json();
             if (!res.ok) { setError(json.error ?? "Failed to save"); return; }
-            setSaved(String(json.data.hiring_fee_percentage));
-            setPercentage(String(json.data.hiring_fee_percentage));
+            const next = {
+                pct: String(json.data.hiring_fee_percentage),
+                days: String(json.data.hiring_fee_due_days),
+            };
+            setSaved(next);
+            setPercentage(next.pct);
+            setDueDays(next.days);
         } finally {
             setSaving(false);
         }
@@ -1113,7 +1416,7 @@ function HiringFeeSettingsManager() {
         <div className="space-y-4">
             <div>
                 <h3 className="text-base font-semibold">Hiring Fee</h3>
-                <p className="text-sm text-muted-foreground">Percentage of the offered monthly salary charged to the employer when a candidate is hired.</p>
+                <p className="text-sm text-muted-foreground">Percentage of the offered monthly salary charged to the employer when a candidate is hired, and how long they have to pay it.</p>
             </div>
             {error && <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded px-3 py-2">{error}</div>}
             {loading ? (
@@ -1122,18 +1425,22 @@ function HiringFeeSettingsManager() {
                 <div className="rounded-lg border p-4 space-y-3 max-w-md">
                     <div className="text-sm">
                         <span className="text-muted-foreground">Current: </span>
-                        <span className="font-semibold">{saved !== null ? `${saved}%` : "—"}</span>
+                        <span className="font-semibold">{saved !== null ? `${saved.pct}%, due in ${saved.days} days` : "—"}</span>
                     </div>
                     <div className="flex items-end gap-2">
                         <div className="space-y-1 flex-1">
                             <Label className="text-xs">Percentage (%)</Label>
                             <Input type="number" min="0" max="100" step="0.01" value={percentage} onChange={(e) => setPercentage(e.target.value)} />
                         </div>
-                        <Button size="sm" onClick={save} disabled={saving || percentage === saved}>
+                        <div className="space-y-1 flex-1">
+                            <Label className="text-xs">Payment terms (days)</Label>
+                            <Input type="number" min="1" max="365" step="1" value={dueDays} onChange={(e) => setDueDays(e.target.value)} />
+                        </div>
+                        <Button size="sm" onClick={save} disabled={saving || !dirty}>
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
                         </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">e.g. 50 → fee is half of the offered monthly salary. Used at the moment a candidate accepts an offer.</p>
+                    <p className="text-xs text-muted-foreground">e.g. 50 → fee is half of the offered monthly salary. Applied the moment a candidate accepts an offer, with the due date set that many days later.</p>
                 </div>
             )}
         </div>

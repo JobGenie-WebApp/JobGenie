@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 interface NotificationBellProps {
-  role?: "employer" | "candidate";
+  role?: "employer" | "candidate" | "mis";
 }
 
 function getNotificationMeta(type: string): {
@@ -92,6 +92,35 @@ export function NotificationBell({ role = "candidate" }: NotificationBellProps) 
 
     try {
       switch (notification.type) {
+        case "payment_proof_submitted":
+        case "payment_suspicious_reported":
+          if (role === "mis") router.push("/mis/payments");
+          break;
+        case "job_compliance_resubmitted":
+        case "payment_suspicious_flagged":
+          if (role === "mis") router.push("/mis/payments?tab=compliance");
+          break;
+        case "mis_interview_updated":
+          if (role === "mis") {
+            const interviewId = data.invitation_id as string | undefined;
+            router.push(interviewId ? `/mis/interviews?interview=${interviewId}` : "/mis/interviews");
+          }
+          break;
+        case "mis_candidate_updated":
+          if (role === "mis") router.push("/mis/candidates");
+          break;
+        case "mis_employer_updated":
+          if (role === "mis") router.push("/mis/employers");
+          break;
+        case "mis_job_updated":
+          if (role === "mis") router.push("/mis/jobs");
+          break;
+        case "mis_application_updated":
+          if (role === "mis") router.push("/mis/reports?section=applications");
+          break;
+        case "mis_payment_updated":
+          if (role === "mis") router.push("/mis/payments");
+          break;
         case "invitation_received":
         case "invitation_cancelled":
         case "invitation_accepted":

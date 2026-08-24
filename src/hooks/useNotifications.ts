@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "./use-toast";
@@ -38,7 +38,7 @@ export function useNotifications(): UseNotificationsReturn {
     error: null,
   });
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Fetch notifications from the database
   const fetchNotifications = useCallback(async () => {

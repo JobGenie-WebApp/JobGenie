@@ -13,9 +13,9 @@ import { JobGenieLogo } from "@/components/brand/JobGenieLogo";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_BULLETS = [
-    "Verified employers & credential-backed candidates",
-    "Interview orchestration in one timeline",
-    "Audit-ready trails for enterprise teams",
+    "Simple, user friendly interface",
+    "Verification at every stage",
+    "A complete solution for all your employment needs",
 ];
 
 type FormWidthKey = "md" | "lg" | "xl" | "2xl";
@@ -83,11 +83,6 @@ function TrustPanel({
             />
 
             <div className="relative z-10 max-w-lg">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200">
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    Trusted hiring workspace
-                </div>
-
                 <h2 className="mt-6 max-w-md text-3xl font-bold leading-[1.08] tracking-[-0.04em] text-white xl:text-[2.7rem]">
                     {headline}
                 </h2>

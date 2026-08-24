@@ -1307,7 +1307,7 @@ export default function InvitationDetailClient({ invitationId, onMutateList }: {
     };
 
     return (
-        <div className={cn("space-y-5 pb-8", !onMutateList && "max-w-5xl mx-auto")}>
+        <div className={cn("space-y-5 pb-8", !onMutateList && "max-w-7xl mx-auto")}>
             {/* ── Hero card ── */}
             <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
                 {/* Top gradient strip */}

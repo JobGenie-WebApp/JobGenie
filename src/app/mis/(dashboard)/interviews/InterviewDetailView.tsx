@@ -21,20 +21,24 @@ import {
     Link as LinkIcon,
     MapPinned,
     Layers,
+    Gift,
+    FileCheck2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RescheduleModal } from "./RescheduleModal";
 import { RoundRescheduleModal } from "./RoundRescheduleModal";
 import { formatUTCTime, formatDate } from "@/lib/date-utils";
 import { formatIndustry } from "@/lib/utils";
+import { getMisInterviewStage } from "@/lib/mis-interview-status";
 
 interface InterviewDetailViewProps {
     interviewId: string | null;
     onClose: () => void;
     onInterviewUpdate?: () => void;
+    refreshToken?: number;
 }
 
-export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }: InterviewDetailViewProps) {
+export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate, refreshToken = 0 }: InterviewDetailViewProps) {
     const [interview, setInterview] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -43,34 +47,33 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
 
     // Fetch interview details when dialog opens or ID changes
     useEffect(() => {
-        if (interviewId) {
+        if (!interviewId) return;
+        let cancelled = false;
+
+        const loadInterview = async () => {
+            await Promise.resolve();
+            if (cancelled) return;
             setLoading(true);
             setInterview(null);
             setError(null);
 
-            fetch(`/api/mis/interviews/${interviewId}`)
-                .then((res) => {
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-                    return res.json();
-                })
-                .then((data) => {
-                    if (data.success) {
-                        setInterview(data.interview);
-                    } else {
-                        setError(data.error || "Failed to fetch interview details");
-                        console.error("Failed to fetch interview:", data.error);
-                    }
-                })
-                .catch((error) => {
-                    const msg = error instanceof Error ? error.message : "An unexpected error occurred";
-                    setError(msg);
-                    console.error("Error fetching interview:", error);
-                })
-                .finally(() => setLoading(false));
-        }
-    }, [interviewId]);
+            try {
+                const response = await fetch(`/api/mis/interviews/${interviewId}`, { cache: "no-store" });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                if (cancelled) return;
+                if (data.success) setInterview(data.interview);
+                else setError(data.error || "Failed to fetch interview details");
+            } catch (error) {
+                if (!cancelled) setError(error instanceof Error ? error.message : "An unexpected error occurred");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+
+        void loadInterview();
+        return () => { cancelled = true; };
+    }, [interviewId, refreshToken]);
 
     const refetchInterview = () => {
         if (interviewId) {
@@ -96,6 +99,16 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
 
 
     const getStatusInfo = (interview: any) => {
+        const stage = getMisInterviewStage(interview);
+        const pipelineStatuses: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+            hired: { label: "Hired", color: "text-emerald-700", bgColor: "bg-emerald-50", borderColor: "border-emerald-200" },
+            offered: { label: "Offer Sent", color: "text-violet-700", bgColor: "bg-violet-50", borderColor: "border-violet-200" },
+            rejected: { label: "Rejected", color: "text-red-700", bgColor: "bg-red-50", borderColor: "border-red-200" },
+            withdrawn: { label: "Offer Declined", color: "text-slate-700", bgColor: "bg-slate-50", borderColor: "border-slate-200" },
+            expired: { label: "Expired", color: "text-slate-700", bgColor: "bg-slate-50", borderColor: "border-slate-200" },
+        };
+        const pipeline = pipelineStatuses[stage.key];
+        if (pipeline) return { icon: Gift, text_color: pipeline.color, ...pipeline };
         if (interview.invitation_canceled) {
             // Prioritize Rescheduled status if it was cancelled and rescheduled
             if (interview.mis_rescheduled) {
@@ -326,7 +339,49 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
                                 </div>
                             </div>
 
-
+                            {/* End-to-end hiring pipeline */}
+                            <Separator />
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                                    <Gift className="h-4 w-4" />
+                                    Hiring Pipeline
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    <div className="rounded-lg border p-3">
+                                        <p className="text-xs text-muted-foreground">Current stage</p>
+                                        <p className="mt-1 font-semibold capitalize">{String(interview.pipeline_status ?? "active").replaceAll("_", " ")}</p>
+                                    </div>
+                                    <div className="rounded-lg border p-3">
+                                        <p className="text-xs text-muted-foreground">Current round</p>
+                                        <p className="mt-1 font-semibold">Round {interview.current_round_number ?? 1}</p>
+                                    </div>
+                                    <div className="rounded-lg border p-3">
+                                        <p className="text-xs text-muted-foreground">Offer</p>
+                                        <p className="mt-1 font-semibold capitalize">
+                                            {(() => {
+                                                const offer = Array.isArray(interview.offer) ? interview.offer[0] : interview.offer;
+                                                return offer?.status ?? "Not issued";
+                                            })()}
+                                        </p>
+                                    </div>
+                                </div>
+                                {interview.closed_reason && <p className="text-sm text-muted-foreground">Closed: {interview.closed_reason}</p>}
+                                {(() => {
+                                    const offer = Array.isArray(interview.offer) ? interview.offer[0] : interview.offer;
+                                    if (!offer) return null;
+                                    return (
+                                        <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3 text-sm space-y-1">
+                                            <p className="font-semibold text-violet-800">{offer.job_title} · {String(offer.status).toUpperCase()}</p>
+                                            {offer.salary_amount != null && (
+                                                <p>{offer.salary_currency ?? "LKR"} {Number(offer.salary_amount).toLocaleString()} / {offer.salary_period ?? "monthly"}</p>
+                                            )}
+                                            {offer.start_date && <p className="text-xs text-muted-foreground">Starts {formatDate(offer.start_date)}</p>}
+                                            {offer.decline_reason && <p className="text-xs text-red-700">Reason: {offer.decline_reason}</p>}
+                                            {offer.responded_at && <p className="text-xs text-muted-foreground">Responded {formatDate(offer.responded_at, "MMM d, yyyy HH:mm")}</p>}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
 
                             {/* Engagement Timeline */}
                             <Separator />
@@ -468,6 +523,23 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate }:
                                                                         {" · "}
                                                                         {round.mis_reschedule_data.interview_mode === "online" ? "Online" : "Physical"}
                                                                     </p>
+                                                                </div>
+                                                            )}
+
+                                                            {round.outcome && (
+                                                                <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+                                                                    <p className="text-xs font-semibold capitalize">Outcome: {String(round.outcome).replaceAll("_", " ")}</p>
+                                                                    {round.outcome_notes && <p className="text-xs text-muted-foreground">{round.outcome_notes}</p>}
+                                                                    {round.outcome_at && <p className="text-xs text-muted-foreground">Recorded {formatDate(round.outcome_at, "MMM d, yyyy HH:mm")}</p>}
+                                                                </div>
+                                                            )}
+
+                                                            {(round.assessment_deadline || round.assessment_submitted_at) && (
+                                                                <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-1">
+                                                                    <p className="flex items-center gap-1.5 text-xs font-semibold"><FileCheck2 className="h-3.5 w-3.5" />Assessment</p>
+                                                                    {round.assessment_deadline && <p className="text-xs text-muted-foreground">Deadline {formatDate(round.assessment_deadline, "MMM d, yyyy HH:mm")}</p>}
+                                                                    {round.assessment_submitted_at && <p className="text-xs text-green-700">Submitted {formatDate(round.assessment_submitted_at, "MMM d, yyyy HH:mm")}</p>}
+                                                                    {round.assessment_submission_file_name && <p className="text-xs">File: {round.assessment_submission_file_name}</p>}
                                                                 </div>
                                                             )}
                                                         </div>

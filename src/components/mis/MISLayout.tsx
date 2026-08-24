@@ -54,6 +54,7 @@ export async function MISLayout({ children, pageTitle, pageDescription, headerAc
             headerActions={headerActions}
             breadcrumbOverride={breadcrumbOverride}
             fullHeight={fullHeight}
+            notificationRole="mis"
         >
             {children}
         </DashboardShell>
