@@ -3,6 +3,7 @@ import {
     RegistrationFlow,
     type RegistrationRole,
 } from "@/components/auth/RegistrationFlow";
+import { getCountries } from "@/lib/countries";
 
 export const metadata: Metadata = {
     title: "Get Started | JobGenie",
@@ -18,5 +19,7 @@ export default async function SignupPage({
     const initialRole: RegistrationRole | null =
         role === "candidate" || role === "company" ? role : null;
 
-    return <RegistrationFlow initialRole={initialRole} />;
+    const countries = await getCountries();
+
+    return <RegistrationFlow initialRole={initialRole} countries={countries} />;
 }

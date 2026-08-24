@@ -62,10 +62,6 @@ export const candidateRegistrationSchema = z
             .max(50, "Last name must be less than 50 characters")
             .regex(/^[a-zA-Z\s'-]+$/, "Last name can only contain letters, spaces, hyphens, and apostrophes"),
 
-        nicPassport: z
-            .string()
-            .regex(/^([0-9]{9}[vV]|[0-9]{12})$/, "NIC must be 9 digits followed by 'V' or 12 digits"),
-
         gender: z.enum(["male", "female", "other"], {
             message: "Please select a gender",
         }),
@@ -88,11 +84,16 @@ export const candidateRegistrationSchema = z
             .min(5, "Address must be at least 5 characters")
             .max(200, "Address must be less than 200 characters"),
 
+        country: z
+            .string()
+            .min(1, "Country is required")
+            .max(100),
+
         contactNo: z
             .string()
-            .max(15, "Phone number cannot exceed 15 characters")
+            .max(16, "Phone number cannot exceed 16 characters")
             .transform((val) => val.replace(/[\s-]/g, ""))
-            .pipe(z.string().regex(/^\+94\d{9}$/, "Phone number must be in the format +947XXXXXXXX")),
+            .pipe(z.string().regex(/^\+[1-9]\d{6,14}$/, "Enter a valid international number, e.g. +94771234567")),
 
         email: z
             .string()

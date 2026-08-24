@@ -28,8 +28,6 @@ const EXPERIENCE_LEVELS = [
     { value: "junior", label: "Junior" },
     { value: "mid", label: "Mid Level" },
     { value: "senior", label: "Senior" },
-    { value: "lead", label: "Lead" },
-    { value: "principal", label: "Principal" },
 ];
 
 const AVAILABILITY_STATUSES = [
@@ -55,16 +53,17 @@ const EMPLOYMENT_TYPES = [
     { value: "freelance", label: "Freelance" },
 ];
 
+// Ordered lowest to highest qualification
 const QUALIFICATION_OPTIONS = [
-    { value: "bachelors_degree", label: "Bachelor's Degree" },
-    { value: "masters_degree", label: "Master's Degree" },
-    { value: "doctorate_phd", label: "Doctorate/PhD" },
-    { value: "undergraduate", label: "Undergraduate" },
-    { value: "post_graduate", label: "Post Graduate" },
-    { value: "diploma", label: "Diploma" },
+    { value: "vocational_training", label: "Vocational Training" },
     { value: "certificate", label: "Certificate" },
     { value: "professional_certification", label: "Professional Certification" },
-    { value: "vocational_training", label: "Vocational Training" },
+    { value: "diploma", label: "Diploma" },
+    { value: "undergraduate", label: "Undergraduate" },
+    { value: "bachelors_degree", label: "Bachelor's Degree" },
+    { value: "post_graduate", label: "Post Graduate" },
+    { value: "masters_degree", label: "Master's Degree" },
+    { value: "doctorate_phd", label: "Doctorate/PhD" },
     { value: "no_formal_education", label: "No Formal Education" },
 ];
 
@@ -144,7 +143,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
         <div className="space-y-6">
             <FormSection
                 title="Personal Information"
-                description="Your basic contact details"
+                description="Your basic details"
             >
                 <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -187,7 +186,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                         <div className="space-y-1">
                             <Label htmlFor="profileImage" className="text-base font-medium">Profile Picture</Label>
                             <p className="text-sm text-muted-foreground pb-2">
-                                Upload a professional picture (Max 5MB)
+                                Upload your professional image (Up to 5MB)
                             </p>
                             <Input
                                 id="profileImage"
@@ -211,22 +210,22 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                 className="bg-muted cursor-not-allowed"
                             />
                         </FormField>
-                        <FormField label={<>Phone <span className="text-xs text-muted-foreground font-normal ml-1">( Format: +94XXXXXXXXX )</span></>} id="phone" required error={errors.phone}>
+                        <FormField label={<>Contacy Number <span className="text-xs text-muted-foreground font-normal ml-1">( Include country code, e.g. +94771234567 )</span></>} id="phone" required error={errors.phone}>
                             <Input
                                 id="phone"
                                 value={data.phone}
-                                maxLength={15}
+                                maxLength={16}
                                 onChange={(e) => updateField("phone", e.target.value)}
                                 placeholder="+94771234567"
                             />
                         </FormField>
                     </div>
 
-                    <FormField label={<>Alternative Phone <span className="text-xs text-muted-foreground font-normal ml-1">( Format: +94XXXXXXXXX )</span></>} id="alternativePhone" error={errors.alternativePhone}>
+                    <FormField label={<>Optional Contact Number <span className="text-xs text-muted-foreground font-normal ml-1">( Include country code, e.g. +94771234567 )</span></>} id="alternativePhone" error={errors.alternativePhone}>
                         <Input
                             id="alternativePhone"
                             value={data.alternativePhone}
-                            maxLength={15}
+                            maxLength={16}
                             onChange={(e) => updateField("alternativePhone", e.target.value)}
                             placeholder="+94771234567 (Optional)"
                         />
@@ -258,7 +257,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
 
             <FormSection
                 title="Professional Details"
-                description="Your current role and experience"
+                description="Your current role"
             >
                 <div className="space-y-4">
                     <FormField label="Current Position" id="currentPosition" required error={errors.currentPosition}>
@@ -366,11 +365,10 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
 
             <FormSection
                 title="Job Preferences"
-                description="Your availability and expectations"
             >
                 <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
-                        <FormField label="Availability Status" id="availabilityStatus" error={errors.availabilityStatus}>
+                        <FormField label="Availability" id="availabilityStatus" error={errors.availabilityStatus}>
                             <Select
                                 value={data.availabilityStatus}
                                 onValueChange={(value) => updateField("availabilityStatus", value as BasicInfoData["availabilityStatus"])}
@@ -440,7 +438,7 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                     <FormField
                         label={
                             <>
-                                Expected Job Positions
+                                Expected Job Roles
                                 <span className="text-xs text-muted-foreground font-normal ml-1">
                                     (Up to 3)
                                 </span>

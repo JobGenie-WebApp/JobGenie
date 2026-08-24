@@ -101,7 +101,7 @@ export function EducationStep({ educations, onChange, onNext, onPrevious }: Educ
                         <div className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor={`educationType-${index}`}>Type</Label>
+                                    <Label htmlFor={`educationType-${index}`}>Qualification Level</Label>
                                     <Select
                                         value={edu.educationType}
                                         onValueChange={(value) => handleUpdate(index, "educationType", value)}

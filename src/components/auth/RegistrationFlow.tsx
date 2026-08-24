@@ -11,6 +11,7 @@ import {
     UserRound,
 } from "lucide-react";
 import { CandidateSignupForm } from "@/components/auth/CandidateSignupForm";
+import type { CountryOption } from "@/lib/countries";
 import { EmployerSignupWizard } from "@/components/employer/EmployerSignupWizard";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { cn } from "@/lib/utils";
@@ -37,7 +38,7 @@ const roleOptions: RoleOption[] = [
         value: "company",
         title: "Are you an employer?",
         description: "Register your company and find the best talent!",
-        detail: "Recruit qualified candidates",
+        detail: "Discover the best talent!",
         icon: Building2,
     },
 ];
@@ -123,7 +124,7 @@ function RoleSelector({
                             <span className="min-w-0 flex-1">
                                 <span className={cn("block font-semibold text-foreground", compact ? "text-sm" : "text-base")}>
                                     {compact
-                                        ? option.value === "candidate" ? "Candidate" : "Company"
+                                        ? option.value === "candidate" ? "Job Seeker" : "Employer"
                                         : option.title}
                                 </span>
                                 <span className={cn("block text-muted-foreground", compact ? "mt-0.5 text-xs" : "mt-2 text-sm leading-relaxed")}>
@@ -161,7 +162,7 @@ function AccountTypeHeader({
         <section className="rounded-2xl border border-border/80 bg-card/95 p-4 shadow-[0_12px_40px_-30px_rgba(0,0,0,.45)] ring-1 ring-primary/[0.04] backdrop-blur-xl sm:p-5">
             <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                    <p className="text-sm font-semibold text-foreground">Account type</p>
+                    <p className="text-sm font-semibold text-foreground">Pick Your Profile</p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">Select the option that reflects how you will use the platform.</p>
                 </div>
             </div>
@@ -185,7 +186,7 @@ function RegistrationHeader({
             </div>
             <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                    {candidate ? "Candidate account" : "Company account"}
+                    {candidate ? "Job Seeker account" : "Employer account"}
                 </p>
                 <h1 className="mt-1.5 text-2xl font-bold tracking-[-0.035em] text-foreground">
                     {candidate ? "Create Your Profile" : "Register Your Company"}
@@ -200,7 +201,7 @@ function RegistrationHeader({
     );
 }
 
-export function RegistrationFlow({ initialRole }: { initialRole: RegistrationRole | null }) {
+export function RegistrationFlow({ initialRole, countries }: { initialRole: RegistrationRole | null; countries: CountryOption[] }) {
     const router = useRouter();
     const role = initialRole;
     const content = role ? shellContent[role] : shellContent.undecided;
@@ -257,7 +258,7 @@ export function RegistrationFlow({ initialRole }: { initialRole: RegistrationRol
                     <RegistrationHeader role={role} />
 
                     <div className="rounded-2xl border border-border/80 bg-card/95 p-5 shadow-[0_16px_50px_-36px_rgba(0,0,0,.5)] ring-1 ring-primary/[0.04] sm:p-7">
-                        <CandidateSignupForm />
+                        <CandidateSignupForm countries={countries} />
                     </div>
 
                     <p className="text-center text-sm text-muted-foreground">

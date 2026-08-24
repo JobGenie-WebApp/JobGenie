@@ -66,7 +66,6 @@ export interface CandidateProfile {
     contact_no: string;
     address: string;
     country: string | null;
-    nicPassport: string;
     dob: string;
     gender: string;
     industry: string;

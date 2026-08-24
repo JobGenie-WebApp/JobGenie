@@ -142,18 +142,18 @@ export const basicInfoSchema = z.object({
     email: z.email("Invalid email address").max(255),
     phone: z
         .string()
-        .max(15, "Phone number cannot exceed 15 characters")
+        .max(16, "Phone number cannot exceed 16 characters")
         .transform((val) => val.replace(/[\s-]/g, ""))
-        .pipe(z.string().regex(/^\+94\d{9}$/, "Phone number must be in the format +947XXXXXXXX")),
+        .pipe(z.string().regex(/^\+[1-9]\d{6,14}$/, "Enter a valid international number, e.g. +94771234567")),
     alternativePhone: z
         .string()
-        .max(15, "Phone number cannot exceed 15 characters")
+        .max(16, "Phone number cannot exceed 16 characters")
         .optional()
         .transform((val) => {
             if (!val) return "";
             return val.replace(/[\s-]/g, "");
         })
-        .pipe(z.string().regex(/^\+94\d{9}$/, "Phone number must be in the format +947XXXXXXXX").or(z.literal(""))),
+        .pipe(z.string().regex(/^\+[1-9]\d{6,14}$/, "Enter a valid international number, e.g. +94771234567").or(z.literal(""))),
     address: z.string().min(1, "Address is required"),
     country: z.string().max(100).optional(),
     currentPosition: z.string().min(1, "Current position is required").max(200),

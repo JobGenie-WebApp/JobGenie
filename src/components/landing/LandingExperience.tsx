@@ -265,7 +265,7 @@ export function LandingExperience({ content = landingContent }: { content?: Land
               {heroDescriptionLines.map((line) => (
                 <span key={line}>{line}</span>
               ))}
-              <strong>{heroWishLine}</strong>
+              <strong className="text-2xl">{heroWishLine}</strong>
             </motion.p>
           </div>
           <div className="jg-hero__visual"><GenieScene content={content.hero} /></div>

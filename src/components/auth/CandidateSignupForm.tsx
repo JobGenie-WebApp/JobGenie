@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, Check, X, UserPlus } from "lucide-react";
 import {
@@ -17,6 +17,8 @@ import { registerCandidate, type ActionState } from "@/app/actions/auth";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { PolicyConsent } from "@/components/auth/PolicyConsent";
 import { DateField } from "@/components/ui/date-field";
+import { Combobox } from "@/components/ui/combobox";
+import type { CountryOption } from "@/lib/countries";
 import { cn } from "@/lib/utils";
 
 // ── Shared input style ────────────────────────────────────────────────────────
@@ -42,7 +44,7 @@ function Field({ label, id, error, children, required = true }: {
     );
 }
 
-export function CandidateSignupForm() {
+export function CandidateSignupForm({ countries }: { countries: CountryOption[] }) {
     const router = useRouter();
     const [state, formAction, isPending] = useActionState<ActionState | null, FormData>(registerCandidate, null);
 
@@ -55,8 +57,8 @@ export function CandidateSignupForm() {
     }, [state, router]);
 
     const [formData, setFormData] = useState({
-        firstName: "", lastName: "", nicPassport: "", gender: "",
-        dateOfBirth: "", address: "", contactNo: "", email: "",
+        firstName: "", lastName: "", gender: "",
+        dateOfBirth: "", address: "", country: "", dialCountry: "", phoneLocal: "", email: "",
         password: "", confirmPassword: "",
     });
     const [showPassword, setShowPassword] = useState(false);
@@ -68,13 +70,23 @@ export function CandidateSignupForm() {
         const saved = localStorage.getItem("candidate-signup-form");
         if (!saved) return;
         const timer = window.setTimeout(() => {
-            try { setFormData(JSON.parse(saved)); } catch {}
+            try { setFormData(prev => ({ ...prev, ...JSON.parse(saved) })); } catch {}
         }, 0);
         return () => window.clearTimeout(timer);
     }, []);
     useEffect(() => {
         localStorage.setItem("candidate-signup-form", JSON.stringify(formData));
     }, [formData]);
+
+    // Dial code follows the selected country until the user picks a different one.
+    const dialOptions = useMemo(
+        () => countries.filter(c => c.calling_code).map(c => ({
+            value: c.code, label: `${c.flag_emoji} ${c.calling_code}`, keywords: c.name,
+        })),
+        [countries],
+    );
+    const dialCode = countries.find(c => c.code === formData.dialCountry)?.calling_code ?? "";
+    const composeContactNo = (local: string) => dialCode + local.replace(/\D/g, "");
 
     const set = (field: string, value: string) =>
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -126,14 +138,8 @@ export function CandidateSignupForm() {
                 </Field>
             </div>
 
-            {/* NIC / Gender row */}
+            {/* Gender / Date of birth row */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label="NIC / Passport" id="nicPassport" error={errors.nicPassport}>
-                    <input id="nicPassport" name="nicPassport" placeholder="123456789V" maxLength={12}
-                        value={formData.nicPassport} onChange={e => set("nicPassport", e.target.value)}
-                        onBlur={e => validateField("nicPassport", e.target.value)}
-                        className={cn(inputCls, errors.nicPassport && "border-red-500/50 focus:ring-red-500/30")} />
-                </Field>
                 <Field label="Gender" id="gender" error={errors.gender}>
                     <input type="hidden" name="gender" value={formData.gender} />
                     <Select value={formData.gender} onValueChange={v => set("gender", v)}>
@@ -152,10 +158,6 @@ export function CandidateSignupForm() {
                         </SelectContent>
                     </Select>
                 </Field>
-            </div>
-
-            {/* Date of birth / Address row */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label="Date of Birth" id="dateOfBirth" error={errors.dateOfBirth}>
                     <DateField id="dateOfBirth" name="dateOfBirth"
                         value={formData.dateOfBirth}
@@ -166,21 +168,62 @@ export function CandidateSignupForm() {
                         error={!!errors.dateOfBirth}
                         triggerClassName={cn("h-12 rounded-xl border-border/80 bg-background/70 px-4 shadow-sm focus-visible:border-primary/60 focus-visible:ring-4 focus-visible:ring-primary/10", errors.dateOfBirth && "border-red-500/50 focus-visible:ring-red-500/20")} />
                 </Field>
+            </div>
+
+            {/* Address / Country row */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label="Residential Address" id="address" error={errors.address}>
                     <input id="address" name="address" placeholder="123 Main Street, City"
                         value={formData.address} onChange={e => set("address", e.target.value)}
                         onBlur={e => validateField("address", e.target.value)}
                         className={cn(inputCls, errors.address && "border-red-500/50 focus:ring-red-500/30")} />
                 </Field>
+                <Field label="Country" id="country" error={errors.country}>
+                    <input type="hidden" name="country" value={formData.country} />
+                    <Combobox
+                        id="country"
+                        options={countries.map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))}
+                        value={formData.country}
+                        onValueChange={v => {
+                            set("country", v);
+                            validateField("country", v);
+                            const picked = countries.find(c => c.name === v);
+                            if (picked?.calling_code) set("dialCountry", picked.code);
+                        }}
+                        placeholder="Select country"
+                        searchPlaceholder="Search countries..."
+                        emptyMessage="No country found."
+                        className={cn(
+                            "h-12 w-full rounded-xl border-border/80 bg-background/70 px-4 text-base shadow-sm sm:text-sm",
+                            !formData.country && "text-muted-foreground/60",
+                            errors.country && "border-red-500/50",
+                        )}
+                    />
+                </Field>
             </div>
 
             {/* Contact / Email row */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label={<>Contact Number <span className="text-xs font-normal normal-case tracking-normal text-muted-foreground">+94XXXXXXXXX</span></>} id="contactNo" error={errors.contactNo}>
-                    <input id="contactNo" name="contactNo" type="tel" maxLength={15} placeholder="+94771234567"
-                        value={formData.contactNo} onChange={e => set("contactNo", e.target.value)}
-                        onBlur={e => validateField("contactNo", e.target.value)}
-                        className={cn(inputCls, errors.contactNo && "border-red-500/50 focus:ring-red-500/30")} />
+                <Field label="Contact Number" id="contactNo" error={errors.contactNo}>
+                    <input type="hidden" name="contactNo" value={composeContactNo(formData.phoneLocal)} />
+                    <div className="flex gap-2">
+                        <Combobox
+                            options={dialOptions}
+                            value={formData.dialCountry}
+                            onValueChange={v => set("dialCountry", v)}
+                            placeholder="Code"
+                            searchPlaceholder="Country or code..."
+                            emptyMessage="No country found."
+                            className={cn(
+                                "h-12 w-32 shrink-0 rounded-xl border-border/80 bg-background/70 px-3 text-base shadow-sm sm:text-sm",
+                                errors.contactNo && "border-red-500/50",
+                            )}
+                        />
+                        <input id="contactNo" type="tel" inputMode="tel" maxLength={14} placeholder="771234567"
+                            value={formData.phoneLocal} onChange={e => set("phoneLocal", e.target.value)}
+                            onBlur={e => validateField("contactNo", composeContactNo(e.target.value))}
+                            className={cn(inputCls, "flex-1", errors.contactNo && "border-red-500/50 focus:ring-red-500/30")} />
+                    </div>
                 </Field>
                 <Field label="Email" id="email" error={errors.email}>
                     <input id="email" name="email" type="email" placeholder="you@example.com"

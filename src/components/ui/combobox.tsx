@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export interface ComboboxOption {
     value: string
     label: string
+    /** Extra text matched by the search box but not shown in the trigger (e.g. a country name behind a dial code). */
+    keywords?: string
 }
 
 interface ComboboxProps {
@@ -46,7 +48,8 @@ export function Combobox({
         const query = searchQuery.toLowerCase()
         return options.filter((option) =>
             option.label.toLowerCase().includes(query) ||
-            option.value.toLowerCase().includes(query)
+            option.value.toLowerCase().includes(query) ||
+            option.keywords?.toLowerCase().includes(query)
         )
     }, [options, searchQuery])
 

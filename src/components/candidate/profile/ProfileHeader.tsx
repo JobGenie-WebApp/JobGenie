@@ -223,10 +223,6 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                             <Phone className="h-4 w-4 flex-shrink-0" />
                             <span>{formatPhoneNumber(profile.phone)}{profile.alternative_phone ? ` / ${formatPhoneNumber(profile.alternative_phone)}` : ''}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span>{profile.nicPassport}</span>
-                        </div>
                         {profile.country && (
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <MapPin className="h-4 w-4 flex-shrink-0" />

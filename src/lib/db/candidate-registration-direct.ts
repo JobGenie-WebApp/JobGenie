@@ -12,10 +12,10 @@ export async function insertCandidateRegistrationDirect(params: {
     verificationExpiresAt: Date;
     firstName: string;
     lastName: string;
-    nicPassport: string;
     gender: string;
     dateOfBirth: string;
     address: string;
+    country: string;
     contactNo: string;
 }): Promise<CandidateRegistrationDirectResult> {
     const sql = getServerSql();
@@ -82,10 +82,10 @@ export async function insertCandidateRegistrationDirect(params: {
                     "user_id",
                     "first_name",
                     "last_name",
-                    "nicPassport",
                     "gender",
                     "dob",
                     "address",
+                    "country",
                     "contact_no",
                     "phone",
                     "email",
@@ -98,10 +98,10 @@ export async function insertCandidateRegistrationDirect(params: {
                     ${params.userId}::uuid,
                     ${params.firstName},
                     ${params.lastName},
-                    ${params.nicPassport},
                     ${params.gender}::"Gender",
                     ${params.dateOfBirth}::date,
                     ${params.address},
+                    ${params.country},
                     ${params.contactNo},
                     ${params.contactNo},
                     ${params.email},

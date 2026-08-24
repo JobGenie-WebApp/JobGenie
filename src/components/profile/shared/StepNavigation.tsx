@@ -17,8 +17,6 @@ interface StepNavigationProps {
 }
 
 export function StepNavigation({
-    currentStep,
-    totalSteps,
     onPrevious,
     onNext,
     onSave,
@@ -29,10 +27,7 @@ export function StepNavigation({
     canProceed = true,
 }: StepNavigationProps) {
     return (
-        <div className="flex items-center justify-between pt-6 border-t">
-            <div className="text-sm text-muted-foreground">
-                Step {currentStep} of {totalSteps}
-            </div>
+        <div className="flex items-center justify-end pt-6 border-t">
             <div className="flex gap-2">
                 {!isFirstStep && (
                     <Button

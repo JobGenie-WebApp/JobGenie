@@ -197,7 +197,7 @@ export function ExperienceDialog({ open, onOpenChange, experience }: ExperienceD
                                 name="employment_type"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Employment Type *</FormLabel>
+                                        <FormLabel>Employment Status *</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
@@ -222,7 +222,7 @@ export function ExperienceDialog({ open, onOpenChange, experience }: ExperienceD
                                 name="location_type"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Location Type</FormLabel>
+                                        <FormLabel>Mode of Employment</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
                                             value={field.value || ""}

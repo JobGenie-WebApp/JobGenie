@@ -710,7 +710,6 @@ export async function updateBasicInfo(data: BasicInfoFormData): Promise<ActionRe
         const updateData = {
             first_name: validated.first_name,
             last_name: validated.last_name,
-            nicPassport: validated.nicPassport,
             phone: validated.phone,
             alternative_phone: validated.alternative_phone ?? null,
             country: validated.country ?? null,

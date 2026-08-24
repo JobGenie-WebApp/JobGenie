@@ -18,10 +18,6 @@ export default async function LoginPage({
             formWidth="md"
         >
             <div className="mb-7">
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.07] px-3 py-1.5 text-xs font-semibold text-primary">
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    Secure workspace access
-                </div>
 
                 <h1 className="mt-5 text-3xl font-bold tracking-[-0.04em] text-foreground sm:text-[2rem]">
                     Welcome back
@@ -45,7 +41,7 @@ export default async function LoginPage({
             >
                 <span>
                     <span className="block text-sm font-semibold text-foreground">Create an account</span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">Choose candidate or company</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">Choose Your Profile</span>
                 </span>
                 <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
             </Link>
@@ -53,11 +49,11 @@ export default async function LoginPage({
             <div className="mt-4 grid grid-cols-2 gap-3" aria-label="Supported account types">
                 <div className="flex items-center gap-2.5 rounded-xl border border-border/70 bg-background/50 px-3 py-2.5">
                     <UserRound className="h-4 w-4 text-primary" aria-hidden="true" />
-                    <span className="text-xs font-medium text-muted-foreground">Candidates</span>
+                    <span className="text-xs font-medium text-muted-foreground">Job Seekers</span>
                 </div>
                 <div className="flex items-center gap-2.5 rounded-xl border border-border/70 bg-background/50 px-3 py-2.5">
                     <Building2 className="h-4 w-4 text-primary" aria-hidden="true" />
-                    <span className="text-xs font-medium text-muted-foreground">Companies</span>
+                    <span className="text-xs font-medium text-muted-foreground">Employers</span>
                 </div>
             </div>
         </AuthShell>

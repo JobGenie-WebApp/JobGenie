@@ -62,7 +62,6 @@ export function BasicInfoDialog({ open, onOpenChange, profile, onProfileUpdated 
         defaultValues: {
             first_name: "",
             last_name: "",
-            nicPassport: "",
             phone: "",
             alternative_phone: "",
             country: "",
@@ -78,7 +77,6 @@ export function BasicInfoDialog({ open, onOpenChange, profile, onProfileUpdated 
             form.reset({
                 first_name: profile.first_name || "",
                 last_name: profile.last_name || "",
-                nicPassport: profile.nicPassport || "",
                 phone: profile.phone || "",
                 alternative_phone: profile.alternative_phone || "",
                 country: profile.country || "",
@@ -292,30 +290,16 @@ export function BasicInfoDialog({ open, onOpenChange, profile, onProfileUpdated 
                             />
                         </div>
 
-                        {/* NIC/Passport and Phone Fields */}
+                        {/* Phone Field */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="nicPassport"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>NIC/Passport *</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g. 199012345678 or N1234567" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
                             <FormField
                                 control={form.control}
                                 name="phone"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Phone * <span className="text-xs text-muted-foreground font-normal ml-1">( Format: +94XXXXXXXXX )</span></FormLabel>
+                                        <FormLabel>Phone * <span className="text-xs text-muted-foreground font-normal ml-1">( Include country code, e.g. +94771234567 )</span></FormLabel>
                                         <FormControl>
-                                            <Input placeholder="+94771234567" maxLength={15} {...field} />
+                                            <Input placeholder="+94771234567" maxLength={16} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -328,9 +312,9 @@ export function BasicInfoDialog({ open, onOpenChange, profile, onProfileUpdated 
                             name="alternative_phone"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Alternative Phone <span className="text-xs text-muted-foreground font-normal ml-1">( Format: +94XXXXXXXXX )</span></FormLabel>
+                                    <FormLabel>Alternative Phone <span className="text-xs text-muted-foreground font-normal ml-1">( Include country code, e.g. +94771234567 )</span></FormLabel>
                                     <FormControl>
-                                        <Input placeholder="+94771234567 (Optional)" maxLength={15} {...field} />
+                                        <Input placeholder="+94771234567 (Optional)" maxLength={16} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -491,16 +475,16 @@ export function BasicInfoDialog({ open, onOpenChange, profile, onProfileUpdated 
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="bachelors_degree">Bachelor&apos;s Degree</SelectItem>
-                                            <SelectItem value="masters_degree">Master&apos;s Degree</SelectItem>
-                                            <SelectItem value="doctorate_phd">Doctorate/PhD</SelectItem>
-                                            <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                                            <SelectItem value="post_graduate">Post Graduate</SelectItem>
-                                            <SelectItem value="diploma">Diploma</SelectItem>
+                                            <SelectItem value="no_formal_education">No Formal Education</SelectItem>
+                                            <SelectItem value="vocational_training">Vocational Training</SelectItem>
                                             <SelectItem value="certificate">Certificate</SelectItem>
                                             <SelectItem value="professional_certification">Professional Certification</SelectItem>
-                                            <SelectItem value="vocational_training">Vocational Training</SelectItem>
-                                            <SelectItem value="no_formal_education">No Formal Education</SelectItem>
+                                            <SelectItem value="diploma">Diploma</SelectItem>
+                                            <SelectItem value="undergraduate">Undergraduate</SelectItem>
+                                            <SelectItem value="bachelors_degree">Bachelor&apos;s Degree</SelectItem>
+                                            <SelectItem value="post_graduate">Post Graduate</SelectItem>
+                                            <SelectItem value="masters_degree">Master&apos;s Degree</SelectItem>
+                                            <SelectItem value="doctorate_phd">Doctorate/PhD</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

@@ -42,7 +42,7 @@ export function UniversalLoginForm({ returnUrl }: { returnUrl?: string }) {
 
             <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-semibold text-foreground">
-                    Email Address
+                    Email
                 </label>
                 <div className="group relative">
                     <Mail className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" aria-hidden="true" />
