@@ -114,3 +114,54 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
     }
 }
+
+/** Removing a cover just clears the column - the header falls back to the branded default. */
+export async function DELETE() {
+    try {
+        const supabase = await createClient();
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { data: candidate } = await supabase
+            .from("candidates")
+            .select("id")
+            .eq("user_id", user.id)
+            .single();
+
+        if (!candidate) {
+            return NextResponse.json({ success: false, error: "Candidate profile not found" }, { status: 404 });
+        }
+
+        const adminClient = createAdminClient();
+
+        const { error: updateError } = await adminClient
+            .from("candidates")
+            .update({ cover_image_url: null, updated_at: new Date().toISOString() })
+            .eq("id", candidate.id);
+
+        if (updateError) {
+            console.error("Failed to clear cover image url:", updateError);
+            return NextResponse.json({ success: false, error: "Failed to remove cover image" }, { status: 500 });
+        }
+
+        // Best effort: drop the candidate's stored covers (uploads are timestamped, so this also
+        // clears the ones earlier changes left behind). A failure here is not worth failing on -
+        // the profile already shows the default.
+        const { data: stored } = await adminClient.storage.from(BUCKET_NAME).list(candidate.id);
+        if (stored?.length) {
+            const { error: removeError } = await adminClient.storage
+                .from(BUCKET_NAME)
+                .remove(stored.map((f) => `${candidate.id}/${f.name}`));
+            if (removeError) console.error("Failed to delete stored cover images:", removeError);
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Error removing cover image:", error);
+        await logError({ source: "api/candidate/upload-cover-image:DELETE", errorType: "UploadError", message: error instanceof Error ? error.message : String(error) });
+        return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
+    }
+}

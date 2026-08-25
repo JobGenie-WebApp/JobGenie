@@ -772,6 +772,7 @@ export async function updateAboutSection(data: AboutSectionFormData): Promise<Ac
             years_of_experience: validated.years_of_experience ?? null,
             experience_level: validated.experience_level ?? null,
             expected_monthly_salary: validated.expected_monthly_salary ?? null,
+            expected_salary_currency: validated.expected_salary_currency ?? "LKR",
             notice_period: validated.notice_period ?? null,
             employment_type: validated.employment_type ?? null,
             availability_status: validated.availability_status ?? null,

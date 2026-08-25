@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, formatLabel } from "@/lib/utils";
 
 const MDXViewer = dynamic(
     () => import("@/components/employer/MdxViewer").then((m) => m.MdxViewer),
@@ -243,7 +243,7 @@ function JobDetailPanel({
                             <h2 className="font-bold text-base leading-tight truncate">{job.job_title}</h2>
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                 <Badge variant="secondary">{JOB_TYPE_LABELS[job.job_type] ?? job.job_type}</Badge>
-                                {job.experience_level && <Badge variant="outline">{job.experience_level}</Badge>}
+                                {job.experience_level && <Badge variant="outline">{formatLabel(job.experience_level)}</Badge>}
                                 {job.industry && <Badge variant="outline">{job.industry}</Badge>}
                                 <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full flex items-center gap-1", cfg.color)}>
                                     <span className={cn("h-1.5 w-1.5 rounded-full", cfg.dot)} />

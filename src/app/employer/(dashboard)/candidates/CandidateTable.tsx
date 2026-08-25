@@ -20,7 +20,7 @@ import {
 import { MultiCombobox } from "@/components/ui/multi-combobox";
 import { Input } from "@/components/ui/input";
 import { CandidateDetailModal } from "./CandidateDetailModal";
-import { cn, formatIndustry } from "@/lib/utils";
+import { cn, formatIndustry, formatLabel } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { resolveIndustryIdsForProfile } from "@/lib/job-designations-resolve";
 import { uniqueDesignationsByName, type JobDesignation } from "@/hooks/useJobDesignations";
@@ -61,21 +61,6 @@ interface Industry {
 interface CandidateTableProps {
     candidates: Candidate[];
     industries: Industry[];
-}
-
-function formatExperienceLevel(level: string | null): string {
-    if (!level) return 'N/A';
-    return level.charAt(0).toUpperCase() + level.slice(1).replace('_', ' ');
-}
-
-function formatEmploymentType(type: string | null): string {
-    if (!type) return 'N/A';
-    return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-}
-
-function formatAvailabilityStatus(status: string | null): string {
-    if (!status) return 'N/A';
-    return status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
 function getHighestQualification(qualifications: string[]): string {
@@ -160,8 +145,6 @@ export function CandidateTable({ candidates, industries }: CandidateTableProps) 
         "junior",
         "mid",
         "senior",
-        "lead",
-        "principal"
     ];
 
     const QUALIFICATIONS = [
@@ -325,7 +308,7 @@ export function CandidateTable({ candidates, industries }: CandidateTableProps) 
                                         <SelectItem value="_all">Any Experience</SelectItem>
                                         {EXPERIENCE_LEVELS.map((exp) => (
                                             <SelectItem key={exp} value={exp}>
-                                                {formatExperienceLevel(exp)}
+                                                {formatLabel(exp, 'N/A')}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -427,14 +410,14 @@ export function CandidateTable({ candidates, industries }: CandidateTableProps) 
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant="outline" className="capitalize">
-                                                        {formatExperienceLevel(candidate.experience_level)}
+                                                        {formatLabel(candidate.experience_level, 'N/A')}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="capitalize">
                                                     {candidate.highest_qualification ? candidate.highest_qualification.replace(/_/g, ' ') : 'N/A'}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {formatEmploymentType(candidate.employment_type)}
+                                                    {formatLabel(candidate.employment_type, 'N/A')}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge
@@ -445,7 +428,7 @@ export function CandidateTable({ candidates, industries }: CandidateTableProps) 
                                                             candidate.availability_status === 'not_looking' && "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-400"
                                                         )}
                                                     >
-                                                        {formatAvailabilityStatus(candidate.availability_status)}
+                                                        {formatLabel(candidate.availability_status, 'N/A')}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>

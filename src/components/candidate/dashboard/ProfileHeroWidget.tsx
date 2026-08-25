@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { formatSalary } from "@/lib/currencies";
 import Link from "next/link";
 import {
     User,
@@ -12,7 +13,7 @@ import {
     ChevronRight,
     Building2,
 } from "lucide-react";
-import { cn, formatIndustry } from "@/lib/utils";
+import { cn, formatIndustry, formatLabel } from "@/lib/utils";
 import type { CandidateDashboardData } from "@/app/actions/candidate-dashboard-data";
 
 interface ProfileHeroWidgetProps {
@@ -88,6 +89,7 @@ export function ProfileHeroWidget({ data }: ProfileHeroWidgetProps) {
         approvalStatus, membershipNo, profileImageUrl,
         profileCompletionPercent, profileCompletionItems,
         expectedMonthlySalary,
+        expectedSalaryCurrency,
     } = data;
 
     const initials = `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
@@ -95,9 +97,7 @@ export function ProfileHeroWidget({ data }: ProfileHeroWidgetProps) {
     const availColor = availabilityColors[availKey] || availabilityColors.not_available;
     const availLabel = availabilityLabels[availKey] || availabilityStatus;
 
-    const expLabel = experienceLevel
-        ? experienceLevel.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())
-        : null;
+    const expLabel = formatLabel(experienceLevel) || null;
 
     const incompleteItems = profileCompletionItems
         .filter(i => !i.done)
@@ -210,7 +210,7 @@ export function ProfileHeroWidget({ data }: ProfileHeroWidgetProps) {
                             <div className="rounded-xl bg-muted/50 border border-border px-4 py-3">
                                 <p className="text-xs text-muted-foreground mb-0.5">Expected Monthly Salary</p>
                                 <p className="text-xl font-bold text-foreground">
-                                    LKR {Number(expectedMonthlySalary).toLocaleString()}
+                                    {formatSalary(expectedMonthlySalary, expectedSalaryCurrency)}
                                 </p>
                             </div>
                         )}

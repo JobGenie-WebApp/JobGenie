@@ -2,14 +2,15 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Phone, MapPin, Briefcase, Calendar, FileText, Pencil, GraduationCap, TrendingUp, Camera, Loader2 } from "lucide-react";
+import { Mail, Phone, MapPin, Briefcase, Calendar, FileText, Pencil, GraduationCap, TrendingUp, Camera, Loader2, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CandidateProfile } from "@/types/profile-types";
 import { BasicInfoDialog } from "./dialogs/BasicInfoDialog";
-import { formatIndustry, formatPhoneNumber } from "@/lib/utils";
+import { DeleteConfirmDialog } from "./dialogs/DeleteConfirmDialog";
+import { formatIndustry, formatPhoneNumber, formatLabel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProfileHeaderProps {
@@ -22,6 +23,8 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
     const { toast } = useToast();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
+    const [removingCover, setRemovingCover] = useState(false);
+    const [confirmRemoveCover, setConfirmRemoveCover] = useState(false);
     const coverInputRef = useRef<HTMLInputElement>(null);
     const initials = `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
 
@@ -59,6 +62,25 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
         }
     };
 
+    const handleCoverRemove = async () => {
+        setRemovingCover(true);
+        try {
+            const response = await fetch("/api/candidate/upload-cover-image", { method: "DELETE" });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Failed to remove cover image");
+            }
+            toast({ title: "Cover removed", description: "Your profile shows the default cover again." });
+            setConfirmRemoveCover(false);
+            router.refresh();
+            onProfileUpdated?.();
+        } catch (error) {
+            toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to remove cover image", variant: "destructive" });
+        } finally {
+            setRemovingCover(false);
+        }
+    };
+
     const getAvailabilityColor = (status: string | null) => {
         switch (status) {
             case "available":
@@ -70,13 +92,6 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
             default:
                 return "";
         }
-    };
-
-    const formatAvailabilityStatus = (status: string | null) => {
-        if (!status) return null;
-        return status.split("_").map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(" ");
     };
 
     return (
@@ -136,6 +151,24 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                                 {uploadingCover ? "Uploading..." : (profile.cover_image_url ? "Change cover" : "Add cover")}
                             </span>
                         </Button>
+                        {profile.cover_image_url && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="size-8 gap-0 bg-background/75 p-0 shadow-none backdrop-blur-sm sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+                                disabled={uploadingCover || removingCover}
+                                onClick={() => setConfirmRemoveCover(true)}
+                                aria-label="Remove cover"
+                                title="Remove cover"
+                            >
+                                {removingCover ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                )}
+                                <span className="hidden sm:inline">{removingCover ? "Removing..." : "Remove"}</span>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -167,7 +200,7 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                                 variant="outline"
                                 className={`mt-12 sm:mt-14 ${getAvailabilityColor(profile.availability_status)}`}
                             >
-                                {formatAvailabilityStatus(profile.availability_status)}
+                                {formatLabel(profile.availability_status)}
                             </Badge>
                         )}
                     </div>
@@ -249,6 +282,15 @@ export function ProfileHeader({ profile, onProfileUpdated }: ProfileHeaderProps)
                 onOpenChange={setDialogOpen}
                 profile={profile}
                 onProfileUpdated={onProfileUpdated}
+            />
+
+            <DeleteConfirmDialog
+                open={confirmRemoveCover}
+                onOpenChange={setConfirmRemoveCover}
+                onConfirm={handleCoverRemove}
+                isLoading={removingCover}
+                title="Remove cover image?"
+                description="Your uploaded cover will be deleted and your profile will show the default cover. You can upload a new one any time."
             />
         </>
     );

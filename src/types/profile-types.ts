@@ -75,6 +75,7 @@ export interface CandidateProfile {
     qualifications: string[];
     highest_qualification: string | null;
     expected_monthly_salary: number | null;
+    expected_salary_currency: string | null;
     availability_status: string | null;
     notice_period: string | null;
     employment_type: string | null;

@@ -36,6 +36,8 @@ import { aboutSectionSchema, type AboutSectionFormData } from "@/lib/validations
 import { updateAboutSection } from "@/app/actions/profile-mutations";
 import { useToast } from "@/hooks/use-toast";
 import { CandidateProfile } from "@/types/profile-types";
+import { Combobox } from "@/components/ui/combobox";
+import { currencySelectOptions, DEFAULT_CURRENCY } from "@/lib/currencies";
 
 interface AboutDialogProps {
     open: boolean;
@@ -47,6 +49,7 @@ export function AboutDialog({ open, onOpenChange, profile }: AboutDialogProps) {
     const router = useRouter();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const currencies = currencySelectOptions();
 
     const form = useForm<AboutSectionFormData>({
         resolver: zodResolver(aboutSectionSchema),
@@ -55,6 +58,7 @@ export function AboutDialog({ open, onOpenChange, profile }: AboutDialogProps) {
             years_of_experience: null,
             experience_level: undefined,
             expected_monthly_salary: null,
+            expected_salary_currency: DEFAULT_CURRENCY,
             notice_period: "",
             employment_type: undefined,
             availability_status: undefined,
@@ -69,6 +73,7 @@ export function AboutDialog({ open, onOpenChange, profile }: AboutDialogProps) {
                 years_of_experience: profile.years_of_experience,
                 experience_level: profile.experience_level || undefined,
                 expected_monthly_salary: profile.expected_monthly_salary ? Number(profile.expected_monthly_salary) : null,
+                expected_salary_currency: profile.expected_salary_currency || DEFAULT_CURRENCY,
                 notice_period: profile.notice_period || "",
                 employment_type: profile.employment_type || undefined,
                 availability_status: profile.availability_status || undefined,
@@ -208,20 +213,32 @@ export function AboutDialog({ open, onOpenChange, profile }: AboutDialogProps) {
                                 name="expected_monthly_salary"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Expected Monthly Salary (LKR)</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                placeholder="e.g. 150000"
-                                                {...field}
-                                                value={field.value ?? ""}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    field.onChange(value === "" ? null : parseFloat(value));
-                                                }}
+                                        <FormLabel>Expected Monthly Salary</FormLabel>
+                                        <div className="flex gap-2">
+                                            <Combobox
+                                                options={currencies}
+                                                value={form.watch("expected_salary_currency") || DEFAULT_CURRENCY}
+                                                onValueChange={(v) => form.setValue("expected_salary_currency", v)}
+                                                placeholder="Currency"
+                                                searchPlaceholder="Search currencies..."
+                                                emptyMessage="No currency found."
+                                                className="w-32 shrink-0 px-3"
                                             />
-                                        </FormControl>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    placeholder="e.g. 150000"
+                                                    {...field}
+                                                    value={field.value ?? ""}
+                                                    className="flex-1"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        field.onChange(value === "" ? null : parseFloat(value));
+                                                    }}
+                                                />
+                                            </FormControl>
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}

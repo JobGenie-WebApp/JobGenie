@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { formatLabel } from "@/lib/utils";
 import {
     CreditCard, Building2, User, Calendar, DollarSign, Eye, CheckCircle2,
     XCircle, Clock, RefreshCw, Plus, Pencil, Trash2, AlertTriangle, FileText,
@@ -996,7 +997,7 @@ function PaymentDetailDialog({ open, payment, onClose, onChanged }: {
                                                 <ExternalLink className="h-3 w-3" />
                                             </a>
                                             <Badge variant={proof.status === "approved" ? "default" : proof.status === "rejected" ? "destructive" : "secondary"}>
-                                                {proof.status}
+                                                {formatLabel(proof.status)}
                                             </Badge>
                                         </div>
                                         <div className="text-xs text-muted-foreground">

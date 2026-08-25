@@ -38,6 +38,7 @@ export async function GET() {
                 qualifications,
                 highest_qualification,
                 expected_monthly_salary,
+                expected_salary_currency,
                 availability_status,
                 notice_period,
                 employment_type,

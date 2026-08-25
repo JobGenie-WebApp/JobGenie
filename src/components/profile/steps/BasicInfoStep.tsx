@@ -11,7 +11,10 @@ import { StepNavigation } from "../shared/StepNavigation";
 import type { BasicInfoData } from "@/lib/validations/profile-schema";
 import { basicInfoSchema } from "@/lib/validations/profile-schema";
 import { useJobDesignations, uniqueDesignationsByName } from "@/hooks/useJobDesignations";
-import { useState } from "react";
+import type { CountryOption } from "@/lib/countries";
+import { currencySelectOptions, DEFAULT_CURRENCY } from "@/lib/currencies";
+import { Button } from "@/components/ui/button";
+import { useMemo, useState } from "react";
 
 interface BasicInfoStepProps {
     data: BasicInfoData;
@@ -20,7 +23,7 @@ interface BasicInfoStepProps {
     onPrevious: () => void;
     onImageSelect: (file: File | null) => void;
     industry?: string; // Selected industry from previous step
-    countries: string[]; // From the `countries` table, loaded server-side by the page
+    countries: CountryOption[]; // From the `countries` table, loaded server-side by the page
 }
 
 const EXPERIENCE_LEVELS = [
@@ -45,6 +48,10 @@ const NOTICE_PERIODS = [
     { value: "3_months", label: "3+ Months" },
 ];
 
+/** Sentinel for the Select only - what gets stored is "<n> days". */
+const CUSTOM_NOTICE = "__custom__";
+const customNoticeDays = (value?: string) => value?.match(/^(\d+) days$/)?.[1] ?? "";
+
 const EMPLOYMENT_TYPES = [
     { value: "full_time", label: "Full Time" },
     { value: "part_time", label: "Part Time" },
@@ -66,6 +73,64 @@ const QUALIFICATION_OPTIONS = [
     { value: "doctorate_phd", label: "Doctorate/PhD" },
     { value: "no_formal_education", label: "No Formal Education" },
 ];
+
+/**
+ * Dial-code picker + local number, composing the single E.164 string the schema stores.
+ * Same shape as the registration form's contact field.
+ */
+function PhoneField({
+    id, countries, value, onChange, placeholder,
+}: {
+    id: string;
+    countries: CountryOption[];
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+}) {
+    const dialOptions = useMemo(
+        () => countries.filter((c) => c.calling_code).map((c) => ({
+            value: c.code, label: `${c.flag_emoji} ${c.calling_code}`, keywords: c.name,
+        })),
+        [countries],
+    );
+
+    // The flag follows whatever number is stored (so a CV-extracted phone shows the right one);
+    // an explicit pick only matters where one dial code covers several countries (+1).
+    const [picked, setPicked] = useState<string | null>(null);
+    const derived = countries
+        .filter((c) => c.calling_code && value.startsWith(c.calling_code))
+        .sort((a, b) => b.calling_code!.length - a.calling_code!.length)[0];
+    const dialCountry = picked ?? derived?.code ?? "";
+    const dial = countries.find((c) => c.code === dialCountry)?.calling_code ?? "";
+    const local = dial && value.startsWith(dial) ? value.slice(dial.length) : value.replace(/^\+/, "");
+
+    return (
+        <div className="flex gap-2">
+            <Combobox
+                options={dialOptions}
+                value={dialCountry}
+                onValueChange={(code) => {
+                    setPicked(code);
+                    onChange((countries.find((c) => c.code === code)?.calling_code ?? "") + local);
+                }}
+                placeholder="Code"
+                searchPlaceholder="Country or code..."
+                emptyMessage="No country found."
+                className="w-32 shrink-0 px-3"
+            />
+            <Input
+                id={id}
+                type="tel"
+                inputMode="tel"
+                maxLength={14}
+                value={local}
+                onChange={(e) => onChange(dial + e.target.value.replace(/\D/g, ""))}
+                placeholder={placeholder}
+                className="flex-1"
+            />
+        </div>
+    );
+}
 
 function FormField({
     label, id, required, children, error,
@@ -92,6 +157,14 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
     const designationOptions = uniqueDesignationsByName(jobDesignations);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Anything the preset list does not cover ("45 days") is custom; the flag also has to survive
+    // the moment right after picking "Custom", when the stored value is still empty.
+    const [customNotice, setCustomNotice] = useState(
+        () => Boolean(data.noticePeriod) && !NOTICE_PERIODS.some((p) => p.value === data.noticePeriod),
+    );
+
+    const currencies = useMemo(currencySelectOptions, []);
 
     const updateField = <K extends keyof BasicInfoData>(key: K, value: BasicInfoData[K]) => {
         onChange({ ...data, [key]: value });
@@ -137,6 +210,15 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
             updateField("profileImageUrl", objectUrl);
             onImageSelect(file);
         }
+    };
+
+    const handleImageRemove = () => {
+        if (data.profileImageUrl?.startsWith("blob:")) URL.revokeObjectURL(data.profileImageUrl);
+        updateField("profileImageUrl", "");
+        onImageSelect(null);
+        // The file input keeps the old filename otherwise, and re-picking it fires no change event.
+        const input = document.getElementById("profileImage") as HTMLInputElement | null;
+        if (input) input.value = "";
     };
 
     return (
@@ -188,13 +270,21 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                             <p className="text-sm text-muted-foreground pb-2">
                                 Upload your professional image (Up to 5MB)
                             </p>
-                            <Input
-                                id="profileImage"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                className="w-full max-w-xs"
-                            />
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="profileImage"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="w-full max-w-xs"
+                                />
+                                {data.profileImageUrl && (
+                                    <Button type="button" variant="ghost" size="sm" onClick={handleImageRemove}>
+                                        <X className="h-4 w-4 mr-1" />
+                                        Remove
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -210,24 +300,24 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                 className="bg-muted cursor-not-allowed"
                             />
                         </FormField>
-                        <FormField label={<>Contacy Number <span className="text-xs text-muted-foreground font-normal ml-1">( Include country code, e.g. +94771234567 )</span></>} id="phone" required error={errors.phone}>
-                            <Input
+                        <FormField label="Contact Number" id="phone" required error={errors.phone}>
+                            <PhoneField
                                 id="phone"
+                                countries={countries}
                                 value={data.phone}
-                                maxLength={16}
-                                onChange={(e) => updateField("phone", e.target.value)}
-                                placeholder="+94771234567"
+                                onChange={(v) => updateField("phone", v)}
+                                placeholder="771234567"
                             />
                         </FormField>
                     </div>
 
-                    <FormField label={<>Optional Contact Number <span className="text-xs text-muted-foreground font-normal ml-1">( Include country code, e.g. +94771234567 )</span></>} id="alternativePhone" error={errors.alternativePhone}>
-                        <Input
+                    <FormField label="Optional Contact Number" id="alternativePhone" error={errors.alternativePhone}>
+                        <PhoneField
                             id="alternativePhone"
+                            countries={countries}
                             value={data.alternativePhone}
-                            maxLength={16}
-                            onChange={(e) => updateField("alternativePhone", e.target.value)}
-                            placeholder="+94771234567 (Optional)"
+                            onChange={(v) => updateField("alternativePhone", v)}
+                            placeholder="771234567 (Optional)"
                         />
                     </FormField>
 
@@ -244,9 +334,13 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                     <FormField label="Country" id="country" error={errors.country}>
                         <Combobox
                             id="country"
-                            options={countries.map((country) => ({ value: country, label: country }))}
+                            options={countries.map((c) => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))}
                             value={data.country}
-                            onValueChange={(value) => updateField("country", value)}
+                            onValueChange={(value) => {
+                                // Seed the dial code from the country, but only while no number is typed yet.
+                                const callingCode = countries.find((c) => c.name === value)?.calling_code;
+                                onChange({ ...data, country: value, ...(callingCode && !data.phone && { phone: callingCode }) });
+                            }}
                             placeholder="Select country"
                             searchPlaceholder="Search countries..."
                             emptyMessage="No country found."
@@ -386,21 +480,45 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                             </Select>
                         </FormField>
                         <FormField label="Notice Period" id="noticePeriod" error={errors.noticePeriod}>
-                            <Select
-                                value={data.noticePeriod}
-                                onValueChange={(value) => updateField("noticePeriod", value)}
-                            >
-                                <SelectTrigger id="noticePeriod" className="w-full">
-                                    <SelectValue placeholder="Select period" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {NOTICE_PERIODS.map((period) => (
-                                        <SelectItem key={period.value} value={period.value}>
-                                            {period.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="space-y-2">
+                                <Select
+                                    value={customNotice ? CUSTOM_NOTICE : data.noticePeriod}
+                                    onValueChange={(value) => {
+                                        setCustomNotice(value === CUSTOM_NOTICE);
+                                        updateField("noticePeriod", value === CUSTOM_NOTICE ? "" : value);
+                                    }}
+                                >
+                                    <SelectTrigger id="noticePeriod" className="w-full">
+                                        <SelectValue placeholder="Select period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {NOTICE_PERIODS.map((period) => (
+                                            <SelectItem key={period.value} value={period.value}>
+                                                {period.label}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value={CUSTOM_NOTICE}>Custom (days)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {customNotice && (
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            max="365"
+                                            value={customNoticeDays(data.noticePeriod)}
+                                            onChange={(e) => {
+                                                const days = e.target.value.replace(/\D/g, "").slice(0, 3);
+                                                updateField("noticePeriod", days ? `${days} days` : "");
+                                            }}
+                                            placeholder="e.g., 45"
+                                            className="w-32"
+                                            autoFocus
+                                        />
+                                        <span className="text-sm text-muted-foreground">days</span>
+                                    </div>
+                                )}
+                            </div>
                         </FormField>
                     </div>
 
@@ -422,15 +540,27 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                 </SelectContent>
                             </Select>
                         </FormField>
-                        <FormField label="Expected Monthly Salary (LKR)" id="expectedMonthlySalary" error={errors.expectedMonthlySalary}>
-                            <Input
-                                id="expectedMonthlySalary"
-                                type="number"
-                                min="0"
-                                value={data.expectedMonthlySalary || ""}
-                                onChange={(e) => updateField("expectedMonthlySalary", parseInt(e.target.value) || 0)}
-                                placeholder="e.g., 150000"
-                            />
+                        <FormField label="Expected Monthly Salary" id="expectedMonthlySalary" error={errors.expectedMonthlySalary}>
+                            <div className="flex gap-2">
+                                <Combobox
+                                    options={currencies}
+                                    value={data.expectedSalaryCurrency || DEFAULT_CURRENCY}
+                                    onValueChange={(value) => updateField("expectedSalaryCurrency", value)}
+                                    placeholder="Currency"
+                                    searchPlaceholder="Search currencies..."
+                                    emptyMessage="No currency found."
+                                    className="w-32 shrink-0 px-3"
+                                />
+                                <Input
+                                    id="expectedMonthlySalary"
+                                    type="number"
+                                    min="0"
+                                    value={data.expectedMonthlySalary || ""}
+                                    onChange={(e) => updateField("expectedMonthlySalary", parseInt(e.target.value) || 0)}
+                                    placeholder="e.g., 150000"
+                                    className="flex-1"
+                                />
+                            </div>
                         </FormField>
                     </div>
 

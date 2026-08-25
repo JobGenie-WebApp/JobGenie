@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatSalary } from "@/lib/currencies";
 import { X, Loader2, User, Briefcase, GraduationCap, Award, FolderGit2, BadgeCheck as CertIcon, CheckCircle2, XCircle, RotateCcw, FileText } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { approveCandidateProfile, rejectCandidateProfile, revokeCandidateApproval } from "@/app/actions/candidate";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { formatIndustry, sortEducations } from "@/lib/utils";
+import { formatIndustry, sortEducations, formatLabel } from "@/lib/utils";
 import { formatUTCDate } from "@/lib/date-utils";
 
 interface CandidateData {
@@ -36,6 +37,7 @@ interface CandidateData {
     years_of_experience: number;
     experience_level: string;
     expected_monthly_salary?: number;
+    expected_salary_currency?: string | null;
     availability_status?: string;
     notice_period?: string;
     professional_summary?: string;
@@ -242,25 +244,25 @@ export function CandidateProfileView({ candidateId, onClose }: CandidateProfileV
                                         <div>
                                             <p className="text-muted-foreground">Experience</p>
                                             <p className="font-medium">
-                                                {candidate.years_of_experience} years ({candidate.experience_level})
+                                                {candidate.years_of_experience} years ({formatLabel(candidate.experience_level)})
                                             </p>
                                         </div>
                                         {candidate.expected_monthly_salary && (
                                             <div>
                                                 <p className="text-muted-foreground">Expected Salary</p>
-                                                <p className="font-medium">LKR {candidate.expected_monthly_salary.toLocaleString()}</p>
+                                                <p className="font-medium">{formatSalary(candidate.expected_monthly_salary, candidate.expected_salary_currency)}</p>
                                             </div>
                                         )}
                                         {candidate.availability_status && (
                                             <div>
                                                 <p className="text-muted-foreground">Availability</p>
-                                                <p className="font-medium">{candidate.availability_status}</p>
+                                                <p className="font-medium">{formatLabel(candidate.availability_status)}</p>
                                             </div>
                                         )}
                                         {candidate.notice_period && (
                                             <div>
                                                 <p className="text-muted-foreground">Notice Period</p>
-                                                <p className="font-medium">{candidate.notice_period}</p>
+                                                <p className="font-medium">{formatLabel(candidate.notice_period)}</p>
                                             </div>
                                         )}
                                         {candidate.resume_url && (
@@ -323,7 +325,7 @@ export function CandidateProfileView({ candidateId, onClose }: CandidateProfileV
                                                     <div key={idx} className="text-sm">
                                                         <p className="font-medium">{edu.degree_diploma}</p>
                                                         <p className="text-muted-foreground">{edu.institution}</p>
-                                                        <Badge variant="outline" className="text-xs mt-1">{edu.status}</Badge>
+                                                        <Badge variant="outline" className="text-xs mt-1">{formatLabel(edu.status)}</Badge>
                                                     </div>
                                                 ))}
                                             </div>

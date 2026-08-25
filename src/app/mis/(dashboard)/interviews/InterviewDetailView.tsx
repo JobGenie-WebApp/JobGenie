@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { RescheduleModal } from "./RescheduleModal";
 import { RoundRescheduleModal } from "./RoundRescheduleModal";
 import { formatUTCTime, formatDate } from "@/lib/date-utils";
-import { formatIndustry } from "@/lib/utils";
+import { formatIndustry, formatLabel } from "@/lib/utils";
 import { getMisInterviewStage } from "@/lib/mis-interview-status";
 
 interface InterviewDetailViewProps {
@@ -230,7 +230,7 @@ export function InterviewDetailView({ interviewId, onClose, onInterviewUpdate, r
                                             </h3>
                                             <p className="text-sm text-muted-foreground">{interview.candidate.current_position}</p>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                {interview.candidate.years_of_experience || 0} years experience · {interview.candidate.experience_level}
+                                                {interview.candidate.years_of_experience || 0} years experience · {formatLabel(interview.candidate.experience_level)}
                                             </p>
                                         </div>
                                     </div>

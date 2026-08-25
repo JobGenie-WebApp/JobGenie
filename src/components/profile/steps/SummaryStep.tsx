@@ -112,8 +112,6 @@ export function SummaryStep({
         junior: "Junior",
         mid: "Mid",
         senior: "Senior",
-        lead: "Lead",
-        principal: "Principal",
     };
 
     const availabilityLabels: Record<string, string> = {
@@ -425,9 +423,21 @@ export function SummaryStep({
                             </Button>
                         </div>
                         {/* A <textarea> cannot colour part of its own value, so the text is mirrored
-                            into the div behind it and the textarea itself renders transparent. Both
-                            sit in the same grid cell, which keeps them the same size as it grows. */}
+                            into a div and the textarea itself renders transparent. Both sit in the
+                            same grid cell, which keeps them the same size as it grows. The mirror is
+                            painted *over* the textarea: dark mode gives inputs an opaque background
+                            (globals.css), which would otherwise hide a mirror sitting behind. */}
                         <div className="grid">
+                            <Textarea
+                                id="professionalSummary"
+                                value={professionalSummary}
+                                onChange={(e) => onSummaryChange(e.target.value)}
+                                placeholder="Write a compelling professional summary (minimum 50 characters)..."
+                                rows={5}
+                                aria-invalid={overLimitBy > 0}
+                                aria-describedby="professionalSummaryCount"
+                                className="col-start-1 row-start-1 text-transparent caret-foreground selection:bg-primary/30"
+                            />
                             <div
                                 aria-hidden
                                 className="pointer-events-none col-start-1 row-start-1 rounded-md border border-transparent px-3 py-2 text-base break-words whitespace-pre-wrap md:text-sm"
@@ -439,16 +449,6 @@ export function SummaryStep({
                                 {/* stops the mirror collapsing below the textarea on a trailing newline */}
                                 {"\u200b"}
                             </div>
-                            <Textarea
-                                id="professionalSummary"
-                                value={professionalSummary}
-                                onChange={(e) => onSummaryChange(e.target.value)}
-                                placeholder="Write a compelling professional summary (minimum 50 characters)..."
-                                rows={5}
-                                aria-invalid={overLimitBy > 0}
-                                aria-describedby="professionalSummaryCount"
-                                className="col-start-1 row-start-1 bg-transparent text-transparent caret-foreground selection:bg-primary/30 dark:bg-transparent"
-                            />
                         </div>
                         <p
                             id="professionalSummaryCount"

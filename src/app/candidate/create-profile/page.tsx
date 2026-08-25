@@ -1,7 +1,7 @@
 import { UserCircle } from "lucide-react";
 import { CreateProfileWizard } from "@/components/profile/CreateProfileWizard";
 import { createClient } from "@/lib/supabase/server";
-import { getCountryNames } from "@/lib/countries";
+import { getCountries } from "@/lib/countries";
 import { redirect } from "next/navigation";
 
 async function getCandidateData() {
@@ -30,7 +30,7 @@ async function getCandidateData() {
 }
 
 export default async function CreateProfilePage() {
-    const [{ userId, candidate }, countries] = await Promise.all([getCandidateData(), getCountryNames()]);
+    const [{ userId, candidate }, countries] = await Promise.all([getCandidateData(), getCountries()]);
 
     return (
         <div className="mx-auto w-full max-w-4xl space-y-5">

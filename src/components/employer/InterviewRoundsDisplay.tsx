@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatUTCDate, formatUTCTime, formatTimestamp } from "@/lib/date-utils";
-import { cn } from "@/lib/utils";
+import { cn, formatLabel } from "@/lib/utils";
 import { InterviewFeedbackDialog } from "./InterviewFeedbackDialog";
 import { NextRoundDialog } from "./NextRoundDialog";
 import { JobOfferDialog } from "./JobOfferDialog";
@@ -568,7 +568,7 @@ export function InterviewRoundsDisplay({
                         <div className="flex items-center gap-2 mb-3">
                             {mode === "assessment" ? <ClipboardCheck className="h-4 w-4 text-primary" /> : <Calendar className="h-4 w-4 text-primary" />}
                             <span className="text-sm font-semibold">{label}</span>
-                            <span className="ml-auto text-xs text-muted-foreground capitalize">{activeRound.status}</span>
+                            <span className="ml-auto text-xs text-muted-foreground">{formatLabel(activeRound.status)}</span>
                         </div>
                         {mode === "assessment" ? (
                             <div className="space-y-2 text-xs">
@@ -843,7 +843,7 @@ export function InterviewRoundsDisplay({
                                         <h4 className="font-semibold text-sm">
                                             {round.round_label || `Round ${round.round_number}`}
                                         </h4>
-                                        <Badge variant="outline" className="text-xs">{round.status}</Badge>
+                                        <Badge variant="outline" className="text-xs">{formatLabel(round.status)}</Badge>
                                     </div>
 
                                     {outcomeInfo && (

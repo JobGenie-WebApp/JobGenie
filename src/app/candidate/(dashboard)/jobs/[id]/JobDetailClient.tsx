@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { formatLabel } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -321,14 +322,14 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
 
     const company = Array.isArray(job.company) ? job.company[0] : job.company;
     const salary = salaryDisplay(job.salary_min, job.salary_max, job.salary_currency);
-    const jobType = JOB_TYPE_LABELS[job.job_type] ?? job.job_type;
+    const jobType = JOB_TYPE_LABELS[job.job_type] ?? formatLabel(job.job_type);
     const descriptionHasTechnicalError =
         Boolean(job.description) && TECHNICAL_ERROR_PATTERN.test(job.description ?? "");
 
     const quickFacts = [
         {
             label: "Experience",
-            value: job.experience_level || "Not specified",
+            value: formatLabel(job.experience_level, "Not specified"),
             icon: Briefcase,
         },
         {
@@ -382,7 +383,7 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
                                 </Badge>
                                 {job.experience_level ? (
                                     <Badge variant="outline" className="font-normal text-muted-foreground">
-                                        {job.experience_level}
+                                        {formatLabel(job.experience_level)}
                                     </Badge>
                                 ) : null}
                             </div>

@@ -21,7 +21,7 @@ export async function GET() {
         const admin = createAdminClient();
         const { data, error } = await admin
             .from("candidates")
-            .select("availability_status, employment_type, notice_period, expected_monthly_salary, expected_positions")
+            .select("availability_status, employment_type, notice_period, expected_monthly_salary, expected_salary_currency, expected_positions")
             .eq("user_id", user.id)
             .single();
 
@@ -87,6 +87,15 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: "Invalid expected_monthly_salary." }, { status: 400 });
         }
 
+        // Validate expected_salary_currency (ISO 4217)
+        if (
+            body.expected_salary_currency !== undefined &&
+            body.expected_salary_currency !== null &&
+            (typeof body.expected_salary_currency !== "string" || !/^[A-Z]{3}$/.test(body.expected_salary_currency))
+        ) {
+            return NextResponse.json({ error: "Invalid expected_salary_currency." }, { status: 400 });
+        }
+
         // Validate expected_positions
         if (body.expected_positions !== undefined) {
             if (!Array.isArray(body.expected_positions)) {
@@ -105,6 +114,7 @@ export async function PUT(request: NextRequest) {
         if (body.employment_type !== undefined) update.employment_type = body.employment_type;
         if (body.notice_period !== undefined) update.notice_period = body.notice_period;
         if (body.expected_monthly_salary !== undefined) update.expected_monthly_salary = body.expected_monthly_salary;
+        if (body.expected_salary_currency !== undefined) update.expected_salary_currency = body.expected_salary_currency;
         if (body.expected_positions !== undefined) update.expected_positions = body.expected_positions.map((p: string) => p.trim());
 
         const admin = createAdminClient();
@@ -112,7 +122,7 @@ export async function PUT(request: NextRequest) {
             .from("candidates")
             .update(update)
             .eq("user_id", user.id)
-            .select("availability_status, employment_type, notice_period, expected_monthly_salary, expected_positions")
+            .select("availability_status, employment_type, notice_period, expected_monthly_salary, expected_salary_currency, expected_positions")
             .single();
 
         if (error) {
