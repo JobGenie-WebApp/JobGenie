@@ -71,8 +71,7 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
                     <Building2 className="h-4.5 w-4.5 text-primary" />
                 </div>
                 <div>
-                    <h2 className="text-base font-bold text-foreground">Company Information</h2>
-                    <p className="text-xs text-muted-foreground">Step 1 of 2 — Business details</p>
+                    <h2 className="text-base font-bold text-foreground">Company Profile</h2>
                 </div>
             </div>
 
@@ -80,7 +79,7 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
             <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.08] px-4 py-3">
                 <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
                 <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300">
-                    Company name & Business registration number must match your BR certificate exactly. Please verify before continuing.
+                    Please enter your company name exactly as it appears on your business registration.
                 </p>
             </div>
 
@@ -97,7 +96,7 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
             <div>
                 <div className="mb-2 flex items-center gap-2">
                     <label htmlFor="businessRegistrationNo" className={cn(labelCls, "mb-0")}>
-                        Business Registration No <span className="text-destructive">*</span>
+                        Business Registration Number <span className="text-destructive">*</span>
                     </label>
                     <TooltipProvider>
                         <Tooltip>
@@ -159,7 +158,7 @@ export function CompanyInfoStep({ data, onChange, onNext, onFileVerified, onFile
             <div>
                 <label className={labelCls}>Business Registration Certificate <span className="text-destructive">*</span></label>
                 <p className="text-xs text-muted-foreground/70 mb-3 leading-relaxed">
-                    Upload your BR certificate. Our AI will automatically verify it matches your company details.
+                    Please upload your business registration to verify your company details
                 </p>
                 <BRCertificateUpload
                     onFileSelect={onFileSelect}

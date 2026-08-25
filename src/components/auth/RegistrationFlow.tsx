@@ -63,12 +63,12 @@ const shellContent = {
         ],
     },
     company: {
-        headline: "Build your team with greater confidence.",
-        description: "Verify your organization, manage recruiters, and review qualified candidates through one structured workspace.",
+        headline: "Build your dream team with exceptional talent.",
+        description: "One platform for all your hiring needs.",
         bullets: [
-            "Business registration and document verification",
-            "Clear recruitment pipeline insights",
-            "Structured interviews and centralized feedback",
+            "Set up your profile in just a few clicks.",
+            "A trusted, regulated interview process you can rely on.",
+            "Easily evaluate and monitor individual competencies.",
         ],
     },
 };
