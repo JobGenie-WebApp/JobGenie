@@ -188,6 +188,7 @@ export async function completeFullProfile(
                 years_of_experience: Math.round(data.basicInfo.yearsOfExperience), // Convert to integer
                 experience_level: data.basicInfo.experienceLevel,
                 expected_monthly_salary: data.basicInfo.expectedMonthlySalary || null,
+                expected_salary_currency: data.basicInfo.expectedSalaryCurrency || "LKR",
                 availability_status: data.basicInfo.availabilityStatus,
                 notice_period: data.basicInfo.noticePeriod || null,
                 employment_type: data.basicInfo.employmentType,
@@ -527,6 +528,7 @@ export async function completeFullProfileWithCV(
                     years_of_experience: Math.round(data.basicInfo.yearsOfExperience),
                     experience_level: data.basicInfo.experienceLevel,
                     expected_monthly_salary: data.basicInfo.expectedMonthlySalary || null,
+                    expected_salary_currency: data.basicInfo.expectedSalaryCurrency || "LKR",
                     availability_status: data.basicInfo.availabilityStatus,
                     notice_period: data.basicInfo.noticePeriod || null,
                     employment_type: data.basicInfo.employmentType,

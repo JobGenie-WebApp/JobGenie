@@ -41,6 +41,8 @@ import {
     toIsoDate,
     totalYearsOfExperience,
 } from "@/lib/cv-derive";
+import type { CountryOption } from "@/lib/countries";
+import { DEFAULT_CURRENCY } from "@/lib/currencies";
 
 interface CreateProfileWizardProps {
     userId: string;
@@ -53,8 +55,8 @@ interface CreateProfileWizardProps {
         country?: string;
         industry?: string;
     };
-    /** Country names from the `countries` table, loaded by the page (server-side). */
-    countries: string[];
+    /** Countries from the `countries` table, loaded by the page (server-side). */
+    countries: CountryOption[];
 }
 
 type Step = {
@@ -86,6 +88,7 @@ export function CreateProfileWizard({ userId, initialData, countries }: CreatePr
         yearsOfExperience: 0,
         experienceLevel: "entry",
         expectedMonthlySalary: 0,
+        expectedSalaryCurrency: DEFAULT_CURRENCY,
         availabilityStatus: "available",
         noticePeriod: "immediate",
         employmentType: "full_time",
@@ -143,7 +146,7 @@ export function CreateProfileWizard({ userId, initialData, countries }: CreatePr
         const yearsOfExperience = totalYearsOfExperience(extractedExps) || data.yearsOfExperience || 0;
         const phone = normalizeLkPhone(data.phone);
         const alternativePhone = normalizeLkPhone(data.alternativePhone);
-        const country = matchFromList(data.country, countries);
+        const country = matchFromList(data.country, countries.map((c) => c.name));
         const expectedPositions = (data.expectedPositions ?? [])
             .map((p) => (p || "").trim())
             .filter(Boolean)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { formatLabel } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -310,7 +311,7 @@ export function MisJobDetailClient({ jobId }: { jobId: string }) {
                                                     <div key={i} className="text-xs text-muted-foreground flex items-center gap-2">
                                                         <span>Proof uploaded {fmt(proof.uploaded_at)}</span>
                                                         <Badge variant={proof.status === "approved" ? "default" : proof.status === "rejected" ? "destructive" : "secondary"} className="text-xs">
-                                                            {proof.status}
+                                                            {formatLabel(proof.status)}
                                                         </Badge>
                                                         {proof.review_notes && <span>· {proof.review_notes}</span>}
                                                     </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { formatLabel } from "@/lib/utils";
+import { formatSalary } from "@/lib/currencies";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,18 +55,6 @@ export function AboutSection({ profile }: AboutSectionProps) {
         );
     }
 
-    const formatEmploymentType = (type: string | null) => {
-        if (!type) return null;
-        return type.split("_").map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(" ");
-    };
-
-    const formatExperienceLevel = (level: string | null) => {
-        if (!level) return null;
-        return level.charAt(0).toUpperCase() + level.slice(1);
-    };
-
     return (
         <>
             <Card className="group relative">
@@ -100,8 +90,8 @@ export function AboutSection({ profile }: AboutSectionProps) {
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Highest Qualification</p>
-                                    <p className="text-sm text-muted-foreground capitalize">
-                                        {profile.highest_qualification.replace(/_/g, ' ')}
+                                    <p className="text-sm text-muted-foreground">
+                                        {formatLabel(profile.highest_qualification)}
                                     </p>
                                 </div>
                             </div>
@@ -118,7 +108,7 @@ export function AboutSection({ profile }: AboutSectionProps) {
                                         {profile.years_of_experience} years
                                         {profile.experience_level && (
                                             <Badge variant="secondary" className="ml-2">
-                                                {formatExperienceLevel(profile.experience_level)}
+                                                {formatLabel(profile.experience_level)}
                                             </Badge>
                                         )}
                                     </p>
@@ -134,7 +124,7 @@ export function AboutSection({ profile }: AboutSectionProps) {
                                 <div>
                                     <p className="text-sm font-medium">Expected Salary</p>
                                     <p className="text-sm text-muted-foreground">
-                                        LKR {profile.expected_monthly_salary.toLocaleString()}/month
+                                        {formatSalary(profile.expected_monthly_salary, profile.expected_salary_currency)}/month
                                     </p>
                                 </div>
                             </div>
@@ -147,8 +137,8 @@ export function AboutSection({ profile }: AboutSectionProps) {
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Notice Period</p>
-                                    <p className="text-sm text-muted-foreground capitalize">
-                                        {profile.notice_period}
+                                    <p className="text-sm text-muted-foreground">
+                                        {formatLabel(profile.notice_period)}
                                     </p>
                                 </div>
                             </div>
@@ -162,7 +152,7 @@ export function AboutSection({ profile }: AboutSectionProps) {
                                 <div>
                                     <p className="text-sm font-medium">Employment Type</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {formatEmploymentType(profile.employment_type)}
+                                        {formatLabel(profile.employment_type)}
                                     </p>
                                 </div>
                             </div>

@@ -24,6 +24,19 @@ export function formatIndustry(industry: string | null | undefined): string {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
 }
+/**
+ * Turns a stored enum value into something a person can read: "open_to_opportunities" ->
+ * "Open To Opportunities", "1_month" -> "1 Month". Screens must never print the raw value.
+ */
+export function formatLabel(value: string | null | undefined, fallback = ""): string {
+    if (!value) return fallback;
+    return value
+        .split(/[_\s]+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}
+
 export function getEducationWeight(educationName: string | null | undefined): number {
     if (!educationName) return 99;
 

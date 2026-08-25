@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatLabel } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,13 +94,6 @@ export function ExperienceSection({ experiences }: ExperienceSectionProps) {
     const formatDate = (dateString: string | null) => {
         if (!dateString) return "";
         return formatUTCDate(dateString, "MMM yyyy");
-    };
-
-    const formatEmploymentType = (type: string | null) => {
-        if (!type) return null;
-        return type.split("_").map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(" ");
     };
 
     const formatLocationType = (type: string | null) => {
@@ -263,7 +257,7 @@ export function ExperienceSection({ experiences }: ExperienceSectionProps) {
 
                                                     {exp.employment_type && (
                                                         <Badge variant="secondary" className="text-xs">
-                                                            {formatEmploymentType(exp.employment_type)}
+                                                            {formatLabel(exp.employment_type)}
                                                         </Badge>
                                                     )}
 

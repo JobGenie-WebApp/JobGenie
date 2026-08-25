@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatLabel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { IndustrySpecialization } from "@/types/profile-types";
 import { Sparkles, Target } from "lucide-react";
@@ -12,12 +13,6 @@ export function SkillsSection({ qualifications, specializations }: SkillsSection
     if ((!qualifications || qualifications.length === 0) && (!specializations || specializations.length === 0)) {
         return null;
     }
-
-    const formatQualification = (qual: string) => {
-        return qual.split("_").map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(" ");
-    };
 
     const formatIndustry = (industry: string) => {
         return industry.split("_").map(word =>
@@ -48,7 +43,7 @@ export function SkillsSection({ qualifications, specializations }: SkillsSection
                                     variant="secondary"
                                     className="text-sm"
                                 >
-                                    {formatQualification(qual)}
+                                    {formatLabel(qual)}
                                 </Badge>
                             ))}
                         </div>

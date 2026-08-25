@@ -102,8 +102,9 @@ describe("experienceLevelFromYears", () => {
         expect(experienceLevelFromYears(2)).toBe("junior");
         expect(experienceLevelFromYears(5)).toBe("mid");
         expect(experienceLevelFromYears(8)).toBe("senior");
-        expect(experienceLevelFromYears(12)).toBe("lead");
-        expect(experienceLevelFromYears(20)).toBe("principal");
+        // "lead"/"principal" were retired - everything above the senior threshold stays senior.
+        expect(experienceLevelFromYears(12)).toBe("senior");
+        expect(experienceLevelFromYears(20)).toBe("senior");
     });
 });
 

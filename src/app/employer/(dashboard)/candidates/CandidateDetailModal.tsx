@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { formatSalary } from "@/lib/currencies";
 import { X, Loader2, User, Briefcase, GraduationCap, Award, FolderGit2, BadgeCheck as CertIcon, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { InviteCandidateButton } from "@/components/employer/InviteCandidateButton";
-import { formatIndustry, sortEducations, formatPhoneNumber } from "@/lib/utils";
+import { formatIndustry, sortEducations, formatPhoneNumber, formatLabel } from "@/lib/utils";
 import { formatUTCDate } from "@/lib/date-utils";
 
 interface CandidateData {
@@ -40,6 +41,7 @@ interface CandidateData {
     experience_level: string;
     employment_type?: string;
     expected_monthly_salary?: number;
+    expected_salary_currency?: string | null;
     availability_status?: string;
     notice_period?: string;
     professional_summary?: string;
@@ -91,10 +93,6 @@ interface CandidateDetailModalProps {
     // Used by the applicant flow to render application-linked actions instead.
     actionsSlot?: React.ReactNode;
     onClose: () => void;
-}
-
-function formatQualification(qual: string): string {
-    return qual.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
 export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDesignation, isInvited = false, isHiredElsewhere = false, invitationStatus, invitationPipelineStatus, invitationInterviewConfirmed, invitationCurrentRound, invitationMisRescheduled, actionsSlot, onClose }: CandidateDetailModalProps) {
@@ -225,7 +223,7 @@ export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDe
                                     <div>
                                         <p className="text-muted-foreground">Experience</p>
                                         <p className="font-medium">
-                                            {candidate.years_of_experience} years ({candidate.experience_level})
+                                            {candidate.years_of_experience} years ({formatLabel(candidate.experience_level)})
                                         </p>
                                     </div>
                                     {candidate.employment_type && (
@@ -237,7 +235,7 @@ export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDe
                                     {candidate.expected_monthly_salary && (
                                         <div>
                                             <p className="text-muted-foreground">Expected Salary</p>
-                                            <p className="font-medium">LKR {candidate.expected_monthly_salary.toLocaleString()}</p>
+                                            <p className="font-medium">{formatSalary(candidate.expected_monthly_salary, candidate.expected_salary_currency)}</p>
                                         </div>
                                     )}
                                     {candidate.availability_status && (
@@ -249,7 +247,7 @@ export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDe
                                     {candidate.notice_period && (
                                         <div>
                                             <p className="text-muted-foreground">Notice Period</p>
-                                            <p className="font-medium">{candidate.notice_period}</p>
+                                            <p className="font-medium">{formatLabel(candidate.notice_period)}</p>
                                         </div>
                                     )}
                                     {candidate.country && (
@@ -270,7 +268,7 @@ export function CandidateDetailModal({ candidateId, selectedIndustry, selectedDe
                                             <div className="flex flex-wrap gap-2">
                                                 {candidate.qualifications.map((qual, idx) => (
                                                     <Badge key={idx} variant="outline">
-                                                        {formatQualification(qual)}
+                                                        {formatLabel(qual)}
                                                     </Badge>
                                                 ))}
                                             </div>

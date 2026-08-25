@@ -88,6 +88,7 @@ export const aboutSectionSchema = z.object({
     years_of_experience: z.number().int().min(0).max(100).nullable().optional(),
     experience_level: z.enum(["entry", "junior", "mid", "senior"]).optional(),
     expected_monthly_salary: z.number().min(0).nullable().optional(),
+    expected_salary_currency: z.string().length(3).optional(),
     notice_period: z.string().max(50).optional(),
     employment_type: z.enum(["full_time", "part_time", "contract", "internship", "freelance", "volunteer"]).optional(),
     availability_status: z.enum(["available", "open_to_opportunities", "not_looking"]).optional(),

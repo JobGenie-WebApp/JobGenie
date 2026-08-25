@@ -64,9 +64,8 @@ export function normalizeLkPhone(value: string | null | undefined): string {
  * Years of experience is the only signal a CV reliably gives for this.
  */
 // ponytail: fixed bands. If the business defines levels differently, this is the one place to change.
-export function experienceLevelFromYears(years: number): "entry" | "junior" | "mid" | "senior" | "lead" | "principal" {
-    if (years >= 16) return "principal";
-    if (years >= 11) return "lead";
+export function experienceLevelFromYears(years: number): "entry" | "junior" | "mid" | "senior" {
+    // "lead" and "principal" were retired - senior is the top band the profile offers.
     if (years >= 7) return "senior";
     if (years >= 4) return "mid";
     if (years >= 2) return "junior";

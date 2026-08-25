@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     CheckCircle2, CircleDot, MinusCircle, Briefcase, Clock,
     DollarSign, Tag, X, Save, Loader2,
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
+import { currencySelectOptions, DEFAULT_CURRENCY } from "@/lib/currencies";
 
 type AvailabilityStatus = "available" | "open_to_opportunities" | "not_looking";
 type EmploymentType = "full_time" | "part_time" | "contract" | "internship" | "freelance" | "volunteer";
@@ -21,6 +23,7 @@ interface JobPrefs {
     employment_type: EmploymentType | null;
     notice_period: string | null;
     expected_monthly_salary: number | null;
+    expected_salary_currency: string;
     expected_positions: string[];
 }
 
@@ -42,7 +45,11 @@ const NOTICE_PERIODS = [
     { value: "3 months", label: "3 Months" }, { value: "negotiable", label: "Negotiable" },
 ];
 
-const DEFAULT: JobPrefs = { availability_status: null, employment_type: null, notice_period: null, expected_monthly_salary: null, expected_positions: [] };
+/** Sentinel for the Select only - what gets stored is "<n> days". */
+const CUSTOM_NOTICE = "__custom__";
+const customNoticeDays = (value: string | null) => value?.match(/^(\d+) days$/)?.[1] ?? "";
+
+const DEFAULT: JobPrefs = { availability_status: null, employment_type: null, notice_period: null, expected_monthly_salary: null, expected_salary_currency: DEFAULT_CURRENCY, expected_positions: [] };
 
 function deepEqual(a: JobPrefs, b: JobPrefs) { return JSON.stringify(a) === JSON.stringify(b); }
 
@@ -52,12 +59,14 @@ export function JobPreferencesSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [posInput, setPosInput] = useState("");
+    const [customNotice, setCustomNotice] = useState(false);
+    const currencies = useMemo(currencySelectOptions, []);
 
     useEffect(() => {
         fetch("/api/candidate/job-preferences").then(r => r.json()).then(d => {
             if (d.success && d.data) {
-                const p: JobPrefs = { availability_status: d.data.availability_status ?? null, employment_type: d.data.employment_type ?? null, notice_period: d.data.notice_period ?? null, expected_monthly_salary: d.data.expected_monthly_salary ? Number(d.data.expected_monthly_salary) : null, expected_positions: d.data.expected_positions ?? [] };
-                setPrefs(p); setSavedPrefs(p);
+                const p: JobPrefs = { availability_status: d.data.availability_status ?? null, employment_type: d.data.employment_type ?? null, notice_period: d.data.notice_period ?? null, expected_monthly_salary: d.data.expected_monthly_salary ? Number(d.data.expected_monthly_salary) : null, expected_salary_currency: d.data.expected_salary_currency ?? DEFAULT_CURRENCY, expected_positions: d.data.expected_positions ?? [] };
+                setPrefs(p); setSavedPrefs(p); setCustomNotice(Boolean(customNoticeDays(p.notice_period)));
             }
         }).catch(() => toast.error("Failed to load job preferences.")).finally(() => setLoading(false));
     }, []);
@@ -77,7 +86,7 @@ export function JobPreferencesSettings() {
             const res = await fetch("/api/candidate/job-preferences", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(prefs) });
             const data = await res.json();
             if (data.success) {
-                const u: JobPrefs = { availability_status: data.data.availability_status ?? null, employment_type: data.data.employment_type ?? null, notice_period: data.data.notice_period ?? null, expected_monthly_salary: data.data.expected_monthly_salary ? Number(data.data.expected_monthly_salary) : null, expected_positions: data.data.expected_positions ?? [] };
+                const u: JobPrefs = { availability_status: data.data.availability_status ?? null, employment_type: data.data.employment_type ?? null, notice_period: data.data.notice_period ?? null, expected_monthly_salary: data.data.expected_monthly_salary ? Number(data.data.expected_monthly_salary) : null, expected_salary_currency: data.data.expected_salary_currency ?? DEFAULT_CURRENCY, expected_positions: data.data.expected_positions ?? [] };
                 setSavedPrefs(u); setPrefs(u); toast.success("Job preferences saved.");
             } else toast.error(data.error || "Failed to save.");
         } catch { toast.error("Failed to save."); }
@@ -151,12 +160,30 @@ export function JobPreferencesSettings() {
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <h3 className="text-sm font-semibold">Notice Period</h3>
                     </div>
-                    <Select value={prefs.notice_period ?? ""} onValueChange={v => setPrefs(p => ({ ...p, notice_period: v || null }))}>
+                    <Select
+                        value={customNotice ? CUSTOM_NOTICE : (prefs.notice_period ?? "")}
+                        onValueChange={v => {
+                            setCustomNotice(v === CUSTOM_NOTICE);
+                            setPrefs(p => ({ ...p, notice_period: v === CUSTOM_NOTICE ? null : (v || null) }));
+                        }}
+                    >
                         <SelectTrigger><SelectValue placeholder="Select notice period…" /></SelectTrigger>
                         <SelectContent>
                             {NOTICE_PERIODS.map(({ value, label }) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                            <SelectItem value={CUSTOM_NOTICE}>Custom (days)</SelectItem>
                         </SelectContent>
                     </Select>
+                    {customNotice && (
+                        <div className="flex items-center gap-2">
+                            <Input type="number" min={1} max={365} placeholder="e.g. 45" className="w-32"
+                                value={customNoticeDays(prefs.notice_period)}
+                                onChange={e => {
+                                    const days = e.target.value.replace(/\D/g, "").slice(0, 3);
+                                    setPrefs(p => ({ ...p, notice_period: days ? `${days} days` : null }));
+                                }} />
+                            <span className="text-sm text-muted-foreground">days</span>
+                        </div>
+                    )}
                     <p className="text-xs text-muted-foreground">How soon can you start after accepting an offer?</p>
                 </div>
             </div>
@@ -171,14 +198,20 @@ export function JobPreferencesSettings() {
                         <h3 className="text-sm font-semibold">Expected Monthly Salary</h3>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="flex h-10 items-center rounded-l-lg border border-r-0 bg-muted px-3">
-                            <span className="text-xs font-semibold text-muted-foreground">LKR</span>
-                        </div>
+                        <Combobox
+                            options={currencies}
+                            value={prefs.expected_salary_currency}
+                            onValueChange={v => setPrefs(p => ({ ...p, expected_salary_currency: v }))}
+                            placeholder="Currency"
+                            searchPlaceholder="Search currencies…"
+                            emptyMessage="No currency found."
+                            className="h-10 w-32 shrink-0 px-3"
+                        />
                         <Input
                             type="number" min={0} step={5000} placeholder="e.g. 150,000"
                             value={prefs.expected_monthly_salary ?? ""}
                             onChange={e => setPrefs(p => ({ ...p, expected_monthly_salary: e.target.value ? Number(e.target.value) : null }))}
-                            className="rounded-l-none flex-1"
+                            className="flex-1"
                         />
                         {prefs.expected_monthly_salary !== null && (
                             <Button type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0"

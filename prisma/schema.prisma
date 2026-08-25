@@ -92,11 +92,12 @@ model Candidate {
   qualifications        ProfessionalQualification[]
   highest_qualification ProfessionalQualification?
 
-  expected_monthly_salary Decimal?            @db.Decimal(12, 2)
-  availability_status     AvailabilityStatus? @default(available)
-  notice_period           String?             @db.VarChar(50) // e.g., "immediate", "1 month", "2 months"
-  employment_type         EmploymentType?     @default(full_time)
-  expected_positions      String[]            @default([]) // Up to 3 expected job positions
+  expected_monthly_salary  Decimal?            @db.Decimal(12, 2)
+  expected_salary_currency String?             @default("LKR") @db.VarChar(3) // ISO 4217
+  availability_status      AvailabilityStatus? @default(available)
+  notice_period            String?             @db.VarChar(50) // e.g., "immediate", "1 month", "2 months"
+  employment_type          EmploymentType?     @default(full_time)
+  expected_positions       String[]            @default([]) // Up to 3 expected job positions
 
   professional_summary String? @db.VarChar(1000)
   profile_image_url    String? @db.VarChar(255)

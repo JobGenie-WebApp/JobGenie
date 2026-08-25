@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { formatLabel } from "@/lib/utils";
 import QRCode from "react-qr-code";
 import {
     CreditCard, Clock, CheckCircle2, XCircle, AlertTriangle,
@@ -652,7 +653,7 @@ function PaymentDetailDialog({ open, payment, onClose, onUpload }: {
                                                 <ExternalLink className="h-3 w-3" />
                                             </a>
                                             <Badge variant={proof.status === "approved" ? "default" : proof.status === "rejected" ? "destructive" : "secondary"}>
-                                                {proof.status}
+                                                {formatLabel(proof.status)}
                                             </Badge>
                                         </div>
                                         <div className="text-xs text-muted-foreground">Uploaded {fmtDate(proof.uploaded_at)}</div>

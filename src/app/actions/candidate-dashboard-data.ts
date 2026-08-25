@@ -72,6 +72,7 @@ export interface CandidateDashboardData {
     profileImageUrl: string | null;
     profileCompleted: boolean;
     expectedMonthlySalary: number | null;
+    expectedSalaryCurrency: string | null;
     gender: string | null;
     country: string | null;
     qualifications: string[] | null;
@@ -149,7 +150,7 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
       id, first_name, last_name, current_position, industry,
       years_of_experience, experience_level, availability_status,
       approval_status, membership_no, profile_image_url, profile_completed,
-      expected_monthly_salary, gender, country, qualifications,
+      expected_monthly_salary, expected_salary_currency, gender, country, qualifications,
       highest_qualification, professional_summary, phone, contact_no, created_at
     `)
         .eq('user_id', user.id)
@@ -398,6 +399,7 @@ export async function getCandidateDashboardData(): Promise<CandidateDashboardDat
         profileImageUrl: (candidate.profile_image_url as string) || null,
         profileCompleted: (candidate.profile_completed as boolean) || false,
         expectedMonthlySalary: candidate.expected_monthly_salary as number | null,
+        expectedSalaryCurrency: candidate.expected_salary_currency as string | null,
         gender: (candidate.gender as string) || null,
         country: (candidate.country as string) || null,
         qualifications: (candidate.qualifications as string[]) || null,

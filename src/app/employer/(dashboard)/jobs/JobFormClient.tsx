@@ -16,7 +16,7 @@ import {
     DollarSign, Users, Building2, Eye, ChevronsUpDown, Check,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, formatLabel } from "@/lib/utils";
 
 const MdxEditor = dynamic(
     () => import("@/components/employer/MdxEditor").then((m) => m.MdxEditor),
@@ -119,7 +119,7 @@ function JobAdPreview({ form, companyName }: { form: JobFormData; companyName: s
 
             <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">{jobTypeLabel}</Badge>
-                {form.experience_level && <Badge variant="outline">{form.experience_level}</Badge>}
+                {form.experience_level && <Badge variant="outline">{formatLabel(form.experience_level)}</Badge>}
                 {form.industry_name && <Badge variant="outline">{form.industry_name}</Badge>}
             </div>
 

@@ -21,7 +21,7 @@ export const genderSchema = z.enum(["male", "female", "other"], {
     message: "Gender is required",
 });
 
-export const experienceLevelSchema = z.enum(["entry", "junior", "mid", "senior", "lead", "principal"]);
+export const experienceLevelSchema = z.enum(["entry", "junior", "mid", "senior"]);
 
 export const employmentTypeSchema = z.enum(["full_time", "part_time", "contract", "internship", "freelance", "volunteer"]);
 
@@ -160,6 +160,7 @@ export const basicInfoSchema = z.object({
     yearsOfExperience: z.number().min(0).max(50).default(0),
     experienceLevel: experienceLevelSchema.default("entry"),
     expectedMonthlySalary: z.number().min(0).optional(),
+    expectedSalaryCurrency: z.string().length(3).default("LKR"),
     availabilityStatus: availabilityStatusSchema.default("available"),
     noticePeriod: z.string().max(50).optional(),
     employmentType: employmentTypeSchema.default("full_time"),

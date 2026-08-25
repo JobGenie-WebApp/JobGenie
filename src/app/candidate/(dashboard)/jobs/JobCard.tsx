@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { formatLabel } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +73,7 @@ export function JobCard({ job, rightSlot, extraBadges, footer, applied }: {
                 <div className="mb-2 flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="outline" className="text-xs">{JOB_TYPE_LABELS[job.job_type] ?? job.job_type}</Badge>
-                        {job.experience_level && <Badge variant="secondary" className="text-xs">{job.experience_level}</Badge>}
+                        {job.experience_level && <Badge variant="secondary" className="text-xs">{formatLabel(job.experience_level)}</Badge>}
                         {extraBadges}
                     </div>
                     {rightSlot}
