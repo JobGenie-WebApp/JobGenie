@@ -10,7 +10,7 @@ import { EmployerProfileStep } from "./steps/EmployerProfileStep";
 import { registerEmployer } from "@/app/actions/auth";
 
 const steps = [
-    { id: "company", title: "Company Info", description: "Business details & BR verification" },
+    { id: "company", title: "Company Credentials", description: "Business details & BR verification" },
     { id: "profile", title: "Your Profile", description: "Admin account credentials" },
 ];
 

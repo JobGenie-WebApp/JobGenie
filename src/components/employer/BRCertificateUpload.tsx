@@ -185,9 +185,8 @@ export function BRCertificateUpload({
                         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
                             <Upload className="h-5 w-5" aria-hidden="true" />
                         </span>
-                        <h3 className="text-base font-semibold text-foreground">Upload business registration certificate</h3>
                         <p className="mb-5 mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                            Drag and drop your BR certificate here, or click to browse
+                            Drag and drop your Business Registration
                         </p>
                         <input
                             type="file"
@@ -204,11 +203,11 @@ export function BRCertificateUpload({
                         />
                         <label htmlFor="br-certificate">
                             <Button variant="outline" asChild disabled={isUploading} className="min-h-11 px-5">
-                                <span className="cursor-pointer">Choose File</span>
+                                <span className="cursor-pointer">Browse File</span>
                             </Button>
                         </label>
                         <p className="mt-4 text-xs text-muted-foreground">
-                            Supported formats: PDF, JPG, PNG (Max size: 10MB)
+                            PDF format Only (Up to 5MB)
                         </p>
                     </CardContent>
                 </Card>
