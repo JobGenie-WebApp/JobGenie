@@ -88,7 +88,6 @@ export function CompanyLogoUpload({ onLogoSelect, currentLogoUrl }: CompanyLogoU
                 >
                     <CardContent className="flex flex-col items-center justify-center py-10">
                         <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Upload Company Logo</h3>
                         <p className="text-sm text-muted-foreground mb-4 text-center">
                             Drag and drop your logo here, or click to browse
                         </p>
@@ -106,11 +105,11 @@ export function CompanyLogoUpload({ onLogoSelect, currentLogoUrl }: CompanyLogoU
                         />
                         <label htmlFor="company-logo">
                             <Button variant="outline" asChild>
-                                <span className="cursor-pointer">Choose Logo</span>
+                                <span className="cursor-pointer">Browse File</span>
                             </Button>
                         </label>
                         <p className="text-xs text-muted-foreground mt-4">
-                            Supported formats: JPG, PNG (Max size: 5MB)
+                            Supported formats: PDF, JPG, PNG only (Max size: 5MB)
                         </p>
                     </CardContent>
                 </Card>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getEmployerProfileData } from "@/app/actions/employer-profile";
 import { EmployerProfileWizard } from "@/components/employer/profile/EmployerProfileWizard";
+import { getCountries } from "@/lib/countries";
 
 export const metadata: Metadata = {
     title: "Complete Profile | JobGenie",
@@ -37,6 +38,8 @@ export default async function CompleteProfilePage() {
 
     const isSuperAdmin = employerInfo?.is_super_admin || false;
 
+    const countries = await getCountries();
+
     // If both profiles are complete, redirect to dashboard
     // For sub-admins, only check employer profile completion
     const isProfileComplete = isSuperAdmin
@@ -62,7 +65,7 @@ export default async function CompleteProfilePage() {
                 </div>
 
                 {/* Wizard */}
-                <EmployerProfileWizard initialData={profileData} isSuperAdmin={isSuperAdmin} />
+                <EmployerProfileWizard initialData={profileData} isSuperAdmin={isSuperAdmin} countries={countries} />
             </div>
         </div>
     );

@@ -111,7 +111,7 @@ export function CompanyDetailsStep({
                     {/* Company Size */}
                     <div className="space-y-2">
                         <Label htmlFor="company_size">
-                            Company Size <span className="text-destructive">*</span>
+                            Workforce <span className="text-destructive">*</span>
                         </Label>
                         <Select value={data.company_size} onValueChange={(value) => handleChange("company_size", value)}>
                             <SelectTrigger className={errors.company_size ? "border-destructive" : ""}>
@@ -167,7 +167,7 @@ export function CompanyDetailsStep({
                     <div className="space-y-2">
                         <Label>Company Logo</Label>
                         <p className="text-sm text-muted-foreground mb-3">
-                            Upload your company logo to be displayed on job postings
+                            Upload your company logo for your job postings.
                         </p>
                         <CompanyLogoUpload
                             onLogoSelect={onFileSelect}

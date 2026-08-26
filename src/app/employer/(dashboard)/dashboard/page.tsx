@@ -67,8 +67,7 @@ export default async function EmployerDashboardPage() {
 
     return (
         <EmployerLayout
-            pageTitle="Dashboard"
-            pageDescription={data ? `Welcome back, ${data.firstName} - here's how ${data.companyName} is hiring.` : "Welcome back!"}
+            pageTitle="Recruitment Overview"
         >
             <RestrictionToastListener />
 
@@ -92,7 +91,7 @@ export default async function EmployerDashboardPage() {
                         <div className="min-w-0 flex-1">
                             <p className="text-base font-semibold text-foreground">Company profile in review</p>
                             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                                MIS is verifying your organization. You will be notified when you are cleared to post jobs and run full hiring workflows. You can still refine your company profile while you wait.
+                                The profile is in the verification stage. Once approved, you will be able to post jobs and access the full features of the employer portal.
                             </p>
                         </div>
                     </div>
@@ -110,8 +109,7 @@ export default async function EmployerDashboardPage() {
                     <div>
                         <PortalSectionTitle
                             tone="employer"
-                            eyebrow="Recruiting"
-                            title="Operations snapshot"
+                            title="Recruitment Dashboard"
                             description="Live counts across your postings, applicants and interviews."
                         />
                         <StatCardContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -163,7 +161,7 @@ export default async function EmployerDashboardPage() {
                     </div>
 
                     {/* ─── Attention strip ───────────────────────────────── */}
-                    {(data.expiringSoon > 0 || data.paymentsOutstanding > 0) && (
+                    {(data.expiringSoon > 0 || data.lapsedJobs > 0 || data.paymentsOutstanding > 0) && (
                         <Card variant="glass" className="flex flex-wrap items-center gap-x-6 gap-y-3 border-amber-500/25 bg-amber-50/60 p-4 dark:bg-amber-950/15">
                             <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
                                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -172,6 +170,11 @@ export default async function EmployerDashboardPage() {
                             {data.expiringSoon > 0 && (
                                 <Link href="/employer/jobs" className="text-sm text-muted-foreground hover:text-primary hover:underline">
                                     {data.expiringSoon} job posting{data.expiringSoon === 1 ? "" : "s"} expiring within 7 days
+                                </Link>
+                            )}
+                            {data.lapsedJobs > 0 && (
+                                <Link href="/employer/jobs" className="text-sm text-muted-foreground hover:text-primary hover:underline">
+                                    {data.lapsedJobs} job posting{data.lapsedJobs === 1 ? " has" : "s have"} passed their deadline
                                 </Link>
                             )}
                             {data.paymentsOutstanding > 0 && (
@@ -186,8 +189,7 @@ export default async function EmployerDashboardPage() {
                     <div>
                         <PortalSectionTitle
                             tone="employer"
-                            eyebrow="Shortcuts"
-                            title="Get things done"
+                            title="Action Panel"
                             description="The actions employers reach for most, one click away."
                         />
                         <QuickActionsWidget data={data} />
@@ -197,7 +199,6 @@ export default async function EmployerDashboardPage() {
                     <div>
                         <PortalSectionTitle
                             tone="employer"
-                            eyebrow="Pipeline"
                             title="Hiring at a glance"
                             description="Funnel health, your live postings and where your company profile stands."
                         />
@@ -212,7 +213,6 @@ export default async function EmployerDashboardPage() {
                     <div>
                         <PortalSectionTitle
                             tone="employer"
-                            eyebrow="Activity"
                             title="People and billing"
                             description="Who just applied, what's on the calendar and anything outstanding."
                         />

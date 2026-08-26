@@ -275,7 +275,7 @@ export function RegistrationFlow({ initialRole, countries }: { initialRole: Regi
                     <AccountTypeHeader role={role} onChange={selectRole} />
                     <RegistrationHeader role={role} />
 
-                    <EmployerSignupWizard />
+                    <EmployerSignupWizard countries={countries} />
 
                     <p className="text-center text-sm text-muted-foreground">
                         Already have an account?{" "}
