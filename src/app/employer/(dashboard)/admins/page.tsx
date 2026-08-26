@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { EmployerLayout } from "@/components/employer";
 import { AdminProfilesClient } from "./AdminProfilesClient";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,12 @@ export const metadata: Metadata = {
     description: "View all company administrators",
 };
 
+/** The `employers` SELECT policy is `user_id = auth.uid()`, so a user-client read of the
+ *  company roster returns just the caller — the page listed one admin and the badge said
+ *  "0 / 5 sub-admins". Read through the admin client scoped to the caller's own company,
+ *  the way the add-admin page already counts them. Auth is enforced before this runs. */
 async function getCompanyAdmins(companyId: string) {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data: admins, error } = await supabase
         .from("employers")

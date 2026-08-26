@@ -9,13 +9,15 @@ import { CompanyDetailsStep } from "./steps/CompanyDetailsStep";
 import { EmployerDetailsStep } from "./steps/EmployerDetailsStep";
 import { completeEmployerProfile, type ProfileData } from "@/app/actions/employer-profile";
 import { createClient } from "@/lib/supabase/client";
+import type { CountryOption } from "@/lib/countries";
 
 interface EmployerProfileWizardProps {
     initialData: ProfileData;
     isSuperAdmin: boolean;
+    countries: CountryOption[];
 }
 
-export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerProfileWizardProps) {
+export function EmployerProfileWizard({ initialData, isSuperAdmin, countries }: EmployerProfileWizardProps) {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
@@ -177,6 +179,7 @@ export function EmployerProfileWizard({ initialData, isSuperAdmin }: EmployerPro
             case "employer":
                 return (
                     <EmployerDetailsStep
+                        countries={countries}
                         data={employerData}
                         onChange={setEmployerData}
                         onPrevious={handlePrevious}

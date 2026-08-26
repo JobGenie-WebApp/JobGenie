@@ -8,13 +8,14 @@ import { cn } from "@/lib/utils";
 import { CompanyInfoStep } from "./steps/CompanyInfoStep";
 import { EmployerProfileStep } from "./steps/EmployerProfileStep";
 import { registerEmployer } from "@/app/actions/auth";
+import type { CountryOption } from "@/lib/countries";
 
 const steps = [
     { id: "company", title: "Company Credentials", description: "Business details & BR verification" },
-    { id: "profile", title: "Your Profile", description: "Admin account credentials" },
+    { id: "profile", title: "Admin Profile", description: "Admin account credentials" },
 ];
 
-export function EmployerSignupWizard() {
+export function EmployerSignupWizard({ countries }: { countries: CountryOption[] }) {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
@@ -163,6 +164,7 @@ export function EmployerSignupWizard() {
             )}
             {currentStep === 1 && (
                 <EmployerProfileStep
+                    countries={countries}
                     data={employerData}
                     onChange={setEmployerData}
                     onPrevious={handlePrevious}

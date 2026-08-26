@@ -122,9 +122,9 @@ export const employerProfileSchema = z
 
         phone: z
             .string()
-            .max(15, "Phone number cannot exceed 15 characters")
+            .max(16, "Phone number cannot exceed 16 characters")
             .transform((val) => val.replace(/[\s-]/g, ""))
-            .pipe(z.string().regex(/^\+94\d{9}$/, "Phone number must be in the format +947XXXXXXXX")),
+            .pipe(z.string().regex(/^\+[1-9]\d{6,14}$/, "Enter a valid international number, e.g. +94771234567")),
 
         email: z
             .string()

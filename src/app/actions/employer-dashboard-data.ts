@@ -1,9 +1,11 @@
 'use server';
 
-import { format } from 'date-fns';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { formatInTz } from '@/lib/date-utils';
+import { getUserTimezone } from '@/lib/user-timezone';
 import { resolveInvitationSlot, resolveRoundSlot, type CalendarInvitation } from '@/lib/calendar-utils';
+import { countExpiringSoon, countHires, isLive } from '@/lib/employer-dashboard-stats';
 
 /**
  * Employer dashboard aggregate.
@@ -68,6 +70,7 @@ export interface EmployerDashboardData {
     draftJobs: number;
     pausedJobs: number;
     closedJobs: number;
+    lapsedJobs: number;      // published, but past their deadline
     expiringSoon: number;
 
     // Hiring funnel
@@ -159,9 +162,12 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
 
     const company = employer.companies as unknown as Record<string, unknown>;
     const companyId = employer.company_id as string;
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const sevenDaysAgo = new Date(Date.now() - 7 * 864e5).toISOString();
-    const inSevenDays = new Date(Date.now() + 7 * 864e5).toISOString();
+    const now = Date.now();
+    const sevenDaysAgoIso = new Date(now - 7 * 864e5).toISOString();
+    // Interview slots are stored as wall-clock date + time, so "upcoming" has to be judged
+    // against the employer's own clock — on a UTC server, Colombo's evening is tomorrow.
+    const employerTz = await getUserTimezone(user.id);
+    const nowLocal = formatInTz(new Date(), 'yyyy-MM-dd HH:mm', employerTz);
 
     // ── Batch 1: everything reachable straight from company_id ──────────────
     const [
@@ -177,10 +183,13 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
             .eq('is_deleted', false)
             .order('created_at', { ascending: false }),
 
+        // ponytail: invitations are still fetched whole — the slot resolvers need every round.
+        // Fine to a few hundred per company; past the API's max-rows cap this needs the same
+        // count-in-Postgres treatment as applications, with the rounds fetched per page.
         supabase
             .from('job_invitations')
             .select(`
-                id, job_designation, status, interview_mode, pipeline_status,
+                id, application_id, job_designation, status, interview_mode, pipeline_status,
                 interview_confirmed, invitation_canceled, current_round_number,
                 selected_time_slot, given_time_slots, confirmed_time,
                 mis_rescheduled, mis_reschedule_data,
@@ -209,8 +218,35 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
     const invitations = (invitationRaw ?? []) as unknown as CalendarInvitation[];
     const invitationIds = invitations.map((i) => i.id);
 
+    // Live = published and not past its deadline. A lapsed posting is hidden from the
+    // candidate job board (api/candidate/jobs filters `expires_at > now`), so counting it
+    // as "active" told the employer they had openings nobody could see.
+    const liveJobs = jobList.filter((j) => isLive(j, now));
+    const topJobIds = liveJobs.slice(0, 5).map((j) => j.id as string);
+
     // ── Batch 2: rows that hang off the ids resolved above ──────────────────
-    const [{ data: applications }, { data: offers }] = await Promise.all([
+    // Applicant totals are counted in Postgres rather than by fetching every row: the API
+    // caps a single response at max-rows (1000 by default), which silently truncated every
+    // count derived from the list once a company got busy.
+    const applicationsQuery = () =>
+        supabase.from('job_applications').select('id', { count: 'exact', head: true }).in('job_id', jobIds);
+
+    const zeroCount = Promise.resolve({ count: 0 });
+    const emptyRows = Promise.resolve({ data: [] as Record<string, unknown>[] });
+
+    const [
+        { count: totalApplicantCount },
+        { count: newApplicantCount },
+        { count: shortlistedCount },
+        { data: recentAppRows },
+        { data: hiredAppRows },
+        { data: offers },
+        perJobCounts,
+    ] = await Promise.all([
+        jobIds.length ? applicationsQuery() : zeroCount,
+        jobIds.length ? applicationsQuery().gte('applied_at', sevenDaysAgoIso) : zeroCount,
+        jobIds.length ? applicationsQuery().eq('status', 'shortlisted') : zeroCount,
+
         jobIds.length
             ? supabase
                 .from('job_applications')
@@ -221,33 +257,41 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
                 `)
                 .in('job_id', jobIds)
                 .order('applied_at', { ascending: false })
-            : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+                .limit(5)
+            : emptyRows,
+
+        // Hires are few, and their ids are needed to de-duplicate against invitations.
+        jobIds.length
+            ? supabase.from('job_applications').select('id').in('job_id', jobIds).eq('status', 'hired')
+            : emptyRows,
 
         invitationIds.length
             ? supabase
                 .from('job_offers')
                 .select('id, status, invitation_id')
                 .in('invitation_id', invitationIds)
-            : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+            : emptyRows,
+
+        Promise.all(
+            topJobIds.map(async (id) => {
+                const { count } = await supabase
+                    .from('job_applications')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('job_id', id);
+                return [id, count ?? 0] as const;
+            }),
+        ),
     ]);
 
-    const appList = (applications ?? []) as Record<string, unknown>[];
+    const recentAppList = (recentAppRows ?? []) as Record<string, unknown>[];
+    const hiredAppIds = ((hiredAppRows ?? []) as { id: string }[]).map((a) => a.id);
     const offerList = (offers ?? []) as Record<string, unknown>[];
     const paymentList = (payments ?? []) as Record<string, unknown>[];
+    const applicantsPerJob = new Map<string, number>(perJobCounts);
 
     /* ── Job posting counts ──────────────────────────────────────────────── */
     const countJobs = (s: string) => jobList.filter((j) => j.status === s).length;
-    const expiringSoon = jobList.filter((j) =>
-        j.status === 'published' && j.expires_at && (j.expires_at as string) <= inSevenDays,
-    ).length;
-
-    /* ── Applicant counts ────────────────────────────────────────────────── */
-    const applicantsPerJob = new Map<string, number>();
-    for (const a of appList) {
-        const jid = a.job_id as string;
-        applicantsPerJob.set(jid, (applicantsPerJob.get(jid) ?? 0) + 1);
-    }
-    const countApps = (s: string) => appList.filter((a) => a.status === s).length;
+    const expiringSoon = countExpiringSoon(jobList, now);
 
     /* ── Interview events (shared resolver with the calendar) ────────────── */
     const events: UpcomingInterview[] = invitations.flatMap((inv): UpcomingInterview[] => {
@@ -294,8 +338,11 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
         });
     });
 
-    const upcomingInterviews = events
-        .filter((e) => e.date >= today)
+    // An interview earlier today is history, not "upcoming" — the calendar page draws the
+    // same line (`e.start >= new Date()`), and the two counts have to agree.
+    const isUpcoming = (e: UpcomingInterview) => `${e.date} ${e.time || '23:59'}` >= nowLocal;
+    const upcomingEvents = events.filter(isUpcoming);
+    const upcomingInterviews = [...upcomingEvents]
         .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
         .slice(0, 5);
 
@@ -303,8 +350,12 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
     const interviewing = invitations.filter(
         (i) => i.status === 'accepted' && !i.invitation_canceled && i.pipeline_status === 'active',
     ).length;
-    const hired = invitations.filter((i) => i.pipeline_status === 'hired').length
-        + countApps('hired');
+    // Accepting an offer writes `hired` to both the invitation and the application it came
+    // from (api/candidate/invitations/[id]/offer), so the two sources must be de-duplicated.
+    const hired = countHires(
+        invitations as (CalendarInvitation & { application_id?: string | null })[],
+        hiredAppIds.map((id) => ({ id, status: 'hired' })),
+    );
 
     return {
         firstName: (employer.first_name as string) || 'there',
@@ -315,21 +366,25 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
         isSuperAdmin: !!employer.is_super_admin,
         memberSince: employer.created_at as string,
 
-        activeJobs: countJobs('published'),
+        activeJobs: liveJobs.length,
         draftJobs: countJobs('draft'),
         pausedJobs: countJobs('paused'),
         closedJobs: countJobs('closed'),
+        lapsedJobs: jobList.filter((j) => j.status === 'published' && !isLive(j, now)).length,
         expiringSoon,
 
-        totalApplicants: appList.length,
-        newApplicants: appList.filter((a) => (a.applied_at as string) >= sevenDaysAgo).length,
-        shortlisted: countApps('shortlisted'),
+        totalApplicants: totalApplicantCount ?? 0,
+        newApplicants: newApplicantCount ?? 0,
+        shortlisted: shortlistedCount ?? 0,
         interviewing,
         offersExtended: offerList.length,
         hired,
 
-        pendingInvitations: invitations.filter((i) => i.status === 'pending' && !i.invitation_canceled).length,
-        upcomingInterviewCount: events.filter((e) => e.date >= today).length,
+        // 'viewed' means the candidate opened it without answering — still awaiting a reply.
+        pendingInvitations: invitations.filter(
+            (i) => (i.status === 'pending' || i.status === 'viewed') && !i.invitation_canceled,
+        ).length,
+        upcomingInterviewCount: upcomingEvents.length,
 
         offersPending: offerList.filter((o) => o.status === 'pending').length,
         offersAccepted: offerList.filter((o) => o.status === 'accepted').length,
@@ -349,7 +404,7 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
 
         upcomingInterviews,
 
-        recentApplicants: appList.slice(0, 5).map((a) => {
+        recentApplicants: recentAppList.map((a) => {
             const c = a.candidate as Record<string, string> | null;
             const j = a.job as Record<string, string> | null;
             return {
@@ -364,8 +419,7 @@ export async function getEmployerDashboardData(): Promise<EmployerDashboardData 
             };
         }),
 
-        topJobs: jobList
-            .filter((j) => j.status === 'published')
+        topJobs: liveJobs
             .slice(0, 5)
             .map((j) => ({
                 id: j.id as string,

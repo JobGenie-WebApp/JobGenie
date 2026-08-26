@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { CountryOption } from "@/lib/countries";
 
 interface EmployerDetailsStepProps {
+    countries: CountryOption[];
     data: {
         department: string;
         address: string;
@@ -22,6 +25,7 @@ interface EmployerDetailsStepProps {
 }
 
 export function EmployerDetailsStep({
+    countries,
     data,
     onChange,
     onPrevious,
@@ -52,8 +56,8 @@ export function EmployerDetailsStep({
             newErrors.address = "Address must be at least 10 characters";
         }
 
-        // Phone is optional, but if provided, check format
-        if (data.phone && data.phone.trim() && !/^[\d\s\-\+\(\)]+$/.test(data.phone)) {
+        // Phone is optional, but if provided, it must be a full international number
+        if (data.phone.trim() && !/^\+[1-9]\d{6,14}$/.test(data.phone.trim())) {
             newErrors.phone = "Please enter a valid phone number";
         }
 
@@ -73,7 +77,7 @@ export function EmployerDetailsStep({
                 <div className="flex items-center gap-2 mb-4">
                     <User className="h-5 w-5 text-primary" />
                     <div>
-                        <h2 className="text-xl font-semibold">Complete Your Profile</h2>
+                        <h2 className="text-xl font-semibold">Complete Admin Profile</h2>
                         <p className="text-sm text-muted-foreground">{employerName}</p>
                     </div>
                 </div>
@@ -99,15 +103,13 @@ export function EmployerDetailsStep({
 
                     {/* Phone Number */}
                     <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number <span className="text-xs text-muted-foreground font-normal ml-1">( Format: +94XXXXXXXXX )</span></Label>
-                        <Input
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <PhoneInput
                             id="phone"
-                            type="tel"
-                            maxLength={15}
-                            placeholder="+94 11 234 5678"
+                            countries={countries}
                             value={data.phone}
-                            onChange={(e) => handleChange("phone", e.target.value)}
-                            className={errors.phone ? "border-destructive" : ""}
+                            onChange={(v) => handleChange("phone", v)}
+                            hasError={Boolean(errors.phone)}
                         />
                         {errors.phone && (
                             <p className="text-sm text-destructive">{errors.phone}</p>

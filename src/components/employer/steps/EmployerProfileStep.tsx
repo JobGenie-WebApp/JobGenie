@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { PolicyConsent } from "@/components/auth/PolicyConsent";
 import { JobDesignationCombobox } from "@/components/auth/JobDesignationCombobox";
+import { PhoneInput } from "@/components/ui/phone-input";
+import type { CountryOption } from "@/lib/countries";
 
 const inputCls = cn(
     "min-h-12 w-full rounded-xl border border-border/80 bg-background/70 px-4 text-base text-foreground shadow-sm placeholder:text-muted-foreground/60 sm:text-sm",
@@ -14,6 +16,7 @@ const inputCls = cn(
 const labelCls = "mb-2 block text-sm font-semibold text-foreground";
 
 interface EmployerProfileStepProps {
+    countries: CountryOption[];
     data: { firstName: string; lastName: string; phone: string; email: string; password: string; confirmPassword: string; jobTitle: string; };
     onChange: (data: EmployerProfileStepProps["data"]) => void;
     onPrevious: () => void;
@@ -24,6 +27,7 @@ interface EmployerProfileStepProps {
 }
 
 export function EmployerProfileStep({
+    countries,
     data,
     onChange,
     onPrevious,
@@ -45,7 +49,7 @@ export function EmployerProfileStep({
         const e: Record<string, string> = {};
         if (!data.firstName.trim() || data.firstName.length < 2) e.firstName = "First name must be at least 2 characters";
         if (!data.lastName.trim() || data.lastName.length < 2) e.lastName = "Last name must be at least 2 characters";
-        if (!data.phone.trim() || !/^[+]?[\d\s-]+$/.test(data.phone)) e.phone = "Please enter a valid phone number";
+        if (!/^\+\d{7,15}$/.test(data.phone.trim())) e.phone = "Please enter a valid phone number";
         if (!data.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = "Please enter a valid email address";
         if (!data.jobTitle.trim()) e.jobTitle = "Job title is required";
         if (!data.password || data.password.length < 8) e.password = "Password must be at least 8 characters";
@@ -97,11 +101,16 @@ export function EmployerProfileStep({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <label htmlFor="phone" className={labelCls}>
-                        Phone <span className="text-xs font-normal normal-case tracking-normal text-muted-foreground">+94XXXXXXXXX</span> <span className="text-destructive">*</span>
+                        Contact Number <span className="text-destructive">*</span>
                     </label>
-                    <input id="phone" type="tel" maxLength={15} placeholder="+94771234567" value={data.phone}
-                        onChange={e => set("phone", e.target.value)}
-                        className={cn(inputCls, errors.phone && "border-red-500/50")} />
+                    <PhoneInput
+                        id="phone"
+                        countries={countries}
+                        value={data.phone}
+                        onChange={v => set("phone", v)}
+                        hasError={Boolean(errors.phone)}
+                        className={inputCls}
+                    />
                     {errors.phone && <p className="mt-1.5 text-xs text-destructive" role="alert">{errors.phone}</p>}
                 </div>
                 <div>
@@ -115,7 +124,7 @@ export function EmployerProfileStep({
 
             {/* Job Title */}
             <div>
-                <label htmlFor="jobTitle" className={labelCls}>Job Title / Designation <span className="text-destructive">*</span></label>
+                <label htmlFor="jobTitle" className={labelCls}>Designation <span className="text-destructive">*</span></label>
                 <JobDesignationCombobox
                     id="jobTitle"
                     value={data.jobTitle}
