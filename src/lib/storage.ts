@@ -56,6 +56,21 @@ export function validateUpload(
 }
 
 /**
+ * The watermark logo, read from disk once per process rather than once per PDF.
+ * A profile submission watermarks twice (the uploaded CV and the generated common CV).
+ * A failed read is not memoised, so a transient error retries on the next call.
+ */
+let logoBytesPromise: Promise<Buffer> | null = null;
+
+function loadLogoBytes(): Promise<Buffer> {
+    logoBytesPromise ??= fs.readFile(path.join(process.cwd(), "public", "logo.jpg")).catch((e) => {
+        logoBytesPromise = null;
+        throw e;
+    });
+    return logoBytesPromise;
+}
+
+/**
  * Watermarks a PDF file with the company logo as a smaller circular badge.
  * @param fileBuffer - The buffer of the PDF file.
  * @returns The buffer of the watermarked PDF.
@@ -64,10 +79,7 @@ export async function watermarkPDF(fileBuffer: ArrayBuffer): Promise<Uint8Array>
     try {
         const pdfDoc = await PDFDocument.load(fileBuffer);
 
-        // Load logo from public folder
-        const logoPath = path.join(process.cwd(), "public", "logo.jpg");
-        const logoImageBytes = await fs.readFile(logoPath);
-        const logoImage = await pdfDoc.embedJpg(logoImageBytes);
+        const logoImage = await pdfDoc.embedJpg(await loadLogoBytes());
 
         // Scale down to ~45% of the original size (was 0.1, now 0.055)
         const logoDims = logoImage.scale(0.055);
@@ -139,11 +151,16 @@ export async function uploadFile(
 ) {
     const supabase = createAdminClient();
 
-    // Check if bucket exists, if not create it
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.find((b) => b.name === bucket);
+    const upload = () =>
+        supabase.storage.from(bucket).upload(filePath, fileBody, { contentType, upsert: true });
 
-    if (!bucketExists) {
+    let { error } = await upload();
+
+    // Auto-creating a missing bucket used to cost a listBuckets() round trip before EVERY
+    // upload, to cover an empty environment. Same safety net, moved onto the failure path:
+    // in any environment that has run once the bucket exists, so the happy path is now a
+    // single request instead of two.
+    if (error && /bucket not found/i.test(error.message)) {
         const { error: createError } = await supabase.storage.createBucket(bucket, {
             public: false, // Private: PII buckets are read via signed URLs (see signStorageUrl)
             fileSizeLimit: 5242880, // 5MB limit
@@ -152,19 +169,12 @@ export async function uploadFile(
 
         if (createError) {
             console.error(`Failed to create bucket '${bucket}':`, createError);
-            // Don't throw here, try uploading anyway as listBuckets might fail due to permissions
-            // but upload might succeed if bucket actually exists or RLS allows creation
         } else {
             console.log(`Created storage bucket: ${bucket}`);
         }
-    }
 
-    const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, fileBody, {
-            contentType,
-            upsert: true,
-        });
+        ({ error } = await upload());
+    }
 
     if (error) {
         console.error("Storage upload error:", error);

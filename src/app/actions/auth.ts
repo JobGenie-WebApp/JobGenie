@@ -14,6 +14,7 @@ import {
     sendVerificationEmail,
 } from "@/lib/email";
 import crypto from "crypto";
+import { after } from "next/server";
 import { insertCandidateRegistrationDirect } from "@/lib/db/candidate-registration-direct";
 import { verifyEmailCodeDirect } from "@/lib/db/verify-email-direct";
 import { generateMembershipNumber } from "@/lib/utils/membership";
@@ -190,19 +191,26 @@ export async function registerCandidate(
         }
 
         // Send verification email
-        const emailResult = await sendVerificationEmail(
-            data.email,
-            verificationCode,
-            data.firstName
-        );
+        // Sent after the response. Registration never fails on a send error (it only logs),
+        // so holding the signup request open for a Resend round-trip bought nothing — the
+        // candidate is redirected to the verify-email page and reads their inbox from there.
+        const newUserId = authData.user.id;
+        after(async () => {
+            const emailResult = await sendVerificationEmail(
+                data.email,
+                verificationCode,
+                data.firstName
+            );
 
-        if (!emailResult.success) {
-            console.error("Failed to send verification email");
-            // Don't fail registration, just log the error
-        }
+            if (!emailResult.success) {
+                console.error("Failed to send verification email");
+                // Don't fail registration, just log the error
+            }
+
+            await logAuth("candidate_signup_success", newUserId, "candidate", { email: data.email }, ipAddress || undefined);
+        });
 
         // Success - return redirect URL for verify-email page
-        await logAuth("candidate_signup_success", authData.user.id, "candidate", { email: data.email }, ipAddress || undefined);
         return {
             success: true,
             message: "Account created successfully! Please check your email for the verification code.",
@@ -1502,18 +1510,24 @@ export async function registerEmployer(
         }
 
         // Send verification email
-        const emailResult = await sendVerificationEmail(
-            validatedData.employer.email,
-            verificationCode,
-            validatedData.employer.firstName
-        );
+        // Sent after the response. Registration never fails on a send error (it only logs),
+        // so holding the signup request open for a Resend round-trip bought nothing — the
+        // candidate is redirected to the verify-email page and reads their inbox from there.
+        const newUserId = authData.user.id;
+        after(async () => {
+            const emailResult = await sendVerificationEmail(
+                validatedData.employer.email,
+                verificationCode,
+                validatedData.employer.firstName
+            );
 
-        if (!emailResult.success) {
-            console.error("Failed to send verification email");
-            // Don't fail registration, just log the error
-        }
+            if (!emailResult.success) {
+                console.error("Failed to send verification email");
+                // Don't fail registration, just log the error
+            }
 
-        await logAuth("employer_signup_success", authData.user.id, "employer", { email: validatedData.employer.email, companyName: validatedData.company.companyName });
+            await logAuth("employer_signup_success", newUserId, "employer", { email: validatedData.employer.email, companyName: validatedData.company.companyName });
+        });
         return {
             success: true,
             message: "Account created successfully! Please check your email for the verification code.",

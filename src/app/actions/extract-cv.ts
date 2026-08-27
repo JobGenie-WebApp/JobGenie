@@ -9,6 +9,7 @@ import { buildCvExtractionPrompt } from "@/lib/cv-extraction-prompt";
 import { createClient } from "@/lib/supabase/server";
 import { getCountryNames } from "@/lib/countries";
 import { resolveIndustryIdsForProfile } from "@/lib/job-designations-resolve";
+import { cachedList } from "@/lib/reference-cache";
 
 /** PDF is the only format accepted for submission, and the only one the resume storage path takes. */
 const PDF_MIME = "application/pdf";
@@ -27,23 +28,28 @@ export type CVExtractionState = {
  */
 async function designationNamesFor(industry: string): Promise<string[]> {
     if (!industry?.trim()) return [];
-    try {
-        const supabase = await createClient();
-        const { data: industries } = await supabase.from("industries").select("industry_id, industry_name");
-        const ids = resolveIndustryIdsForProfile(industry, industries ?? []);
-        if (!ids.length) return [];
+    // Two reference reads that used to run on every single upload. Only a populated list is
+    // cached, so a failed lookup is retried rather than silently unconstraining job titles
+    // for the next 12 hours (see reference-cache.ts).
+    return cachedList(`designations:${industry.trim().toLowerCase()}`, async () => {
+        try {
+            const supabase = await createClient();
+            const { data: industries } = await supabase.from("industries").select("industry_id, industry_name");
+            const ids = resolveIndustryIdsForProfile(industry, industries ?? []);
+            if (!ids.length) return [];
 
-        const { data } = await supabase
-            .from("job_designations")
-            .select("designation_name")
-            .in("industry_id", ids)
-            .order("designation_name", { ascending: true });
+            const { data } = await supabase
+                .from("job_designations")
+                .select("designation_name")
+                .in("industry_id", ids)
+                .order("designation_name", { ascending: true });
 
-        return [...new Set((data ?? []).map((d) => d.designation_name).filter(Boolean))];
-    } catch (error) {
-        console.warn("Could not load job designations for CV extraction:", error);
-        return [];
-    }
+            return [...new Set((data ?? []).map((d) => d.designation_name).filter(Boolean))];
+        } catch (error) {
+            console.warn("Could not load job designations for CV extraction:", error);
+            return [];
+        }
+    });
 }
 
 export async function extractCVData(

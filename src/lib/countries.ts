@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { cachedList } from "@/lib/reference-cache";
 
 export type CountryOption = { code: string; name: string; flag_emoji: string; calling_code: string | null };
 
@@ -10,15 +11,17 @@ export type CountryOption = { code: string; name: string; flag_emoji: string; ca
  * has: that list is parameterised by industry and changes per candidate, this one is 249 static
  * rows. Fetched once per request and handed down as props, so the field has no loading state.
  */
-export const getCountries = cache(async (): Promise<CountryOption[]> => {
-    const supabase = await createClient();
-    const { data, error } = await supabase.from("countries").select("code, name, flag_emoji, calling_code").order("name");
-    if (error) {
-        console.error("Could not load countries:", error);
-        return [];
-    }
-    return data ?? [];
-});
+export const getCountries = cache(async (): Promise<CountryOption[]> =>
+    cachedList("countries", async () => {
+        const supabase = await createClient();
+        const { data, error } = await supabase.from("countries").select("code, name, flag_emoji, calling_code").order("name");
+        if (error) {
+            console.error("Could not load countries:", error);
+            return [];
+        }
+        return data ?? [];
+    })
+);
 
 export const getCountryNames = async (): Promise<string[]> =>
     (await getCountries()).map((c) => c.name);
