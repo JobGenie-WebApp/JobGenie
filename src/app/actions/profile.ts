@@ -353,7 +353,7 @@ export async function completeFullProfileWithCV(
 
         try {
             profileData = JSON.parse(profileDataJson);
-        } catch (e) {
+        } catch {
             return { success: false, message: "Invalid profile data format." };
         }
 
@@ -396,123 +396,85 @@ export async function completeFullProfileWithCV(
 
         const candidateId = candidate.id;
 
-        // 2. Upload Profile Image if provided
-        let uploadedProfileImageUrl: string | null = null;
+        // 2. Storage work — the slowest part of this action, and none of it depends on the
+        // database writes below. The profile image, the uploaded CV and the generated common
+        // CV are independent of each other, so they run together instead of end to end.
+        // Imported here rather than at the top of the file so the other actions in this
+        // module don't pay pdf-lib's load cost on a cold start.
+        const [{ StorageService }, { generateCommonCV }] = await Promise.all([
+            import("@/lib/storage"),
+            import("@/lib/pdf-generator"),
+        ]);
 
-        if (profileImageFile && profileImageFile.size > 0) {
-            try {
-                // Dynamically import storage service
-                const { StorageService } = await import("@/lib/storage");
-                const { url } = await StorageService.uploadProfileImage(candidateId, profileImageFile);
-                uploadedProfileImageUrl = url;
-            } catch (error) {
-                console.error("Profile Image Upload failed:", error);
-                return {
-                    success: false,
-                    message: "Failed to upload profile image. Please try again.",
-                };
-            }
-        }
+        const candidateBasicInfo = {
+            firstName: data.basicInfo.firstName,
+            lastName: data.basicInfo.lastName,
+            email: data.basicInfo.email,
+            phone: data.basicInfo.phone,
+            address: data.basicInfo.address,
+            currentPosition: data.basicInfo.currentPosition,
+            industry: data.industry,
+            yearsOfExperience: data.basicInfo.yearsOfExperience,
+            professionalSummary: data.professionalSummary,
+        };
 
-        // 3. Upload CV if provided
-        let uploadedCvPath: string | null = null;
-        let uploadedCvUrl: string | null = null;
+        const [imageOutcome, cvOutcome, commonCvOutcome] = await Promise.allSettled([
+            profileImageFile && profileImageFile.size > 0
+                ? StorageService.uploadProfileImage(candidateId, profileImageFile)
+                : null,
+            cvFile && cvFile.size > 0
+                ? StorageService.uploadResume(candidateId, cvFile)
+                : null,
+            generateCommonCV(data, candidateBasicInfo).then((buffer) =>
+                StorageService.uploadCommonCV(candidateId, buffer)
+            ),
+        ]);
 
-        if (cvFile && cvFile.size > 0) {
-            try {
-                // Dynamically import storage service to avoid server/client issues if any
-                const { StorageService } = await import("@/lib/storage");
-                const { url, filePath } = await StorageService.uploadResume(candidateId, cvFile);
-                uploadedCvUrl = url;
-                uploadedCvPath = filePath;
-            } catch (error) {
-                console.error("CV Upload failed:", error);
+        const uploadedProfileImageUrl = imageOutcome.status === "fulfilled" ? imageOutcome.value?.url ?? null : null;
+        const uploadedProfileImagePath = imageOutcome.status === "fulfilled" ? imageOutcome.value?.filePath ?? null : null;
+        const uploadedCvUrl = cvOutcome.status === "fulfilled" ? cvOutcome.value?.url ?? null : null;
+        const uploadedCvPath = cvOutcome.status === "fulfilled" ? cvOutcome.value?.filePath ?? null : null;
+        const uploadedCommonCvUrl = commonCvOutcome.status === "fulfilled" ? commonCvOutcome.value.url : null;
+        const uploadedCommonCvPath = commonCvOutcome.status === "fulfilled" ? commonCvOutcome.value.filePath : null;
 
-                // Rollback profile image if it was uploaded
-                if (uploadedProfileImageUrl) {
-                    try {
-                        const { StorageService } = await import("@/lib/storage");
-                        await StorageService.deleteProfileImage(uploadedProfileImageUrl);
-                    } catch (deleteError) {
-                        console.error("Failed to rollback profile image:", deleteError);
-                    }
+        /**
+         * Delete whatever actually reached storage. Because the three run concurrently, a
+         * failure in one can leave the other two uploaded, so every rollback path clears all
+         * of them. deleteProfileImage takes a storage path, not a URL — passing the URL here
+         * silently no-opped before.
+         */
+        const rollbackUploads = async () => {
+            const results = await Promise.allSettled([
+                uploadedCvPath ? StorageService.deleteResume(uploadedCvPath) : null,
+                uploadedCommonCvPath ? StorageService.deleteCommonCV(uploadedCommonCvPath) : null,
+                uploadedProfileImagePath ? StorageService.deleteProfileImage(uploadedProfileImagePath) : null,
+            ]);
+            for (const result of results) {
+                if (result.status === "rejected") {
+                    console.error("CRITICAL: storage rollback failed:", result.reason);
                 }
-
-                return {
-                    success: false,
-                    message: "Failed to upload CV. Please try again.",
-                };
             }
+        };
+
+        const uploadFailure =
+            imageOutcome.status === "rejected"
+                ? { reason: imageOutcome.reason, message: "Failed to upload profile image. Please try again." }
+                : cvOutcome.status === "rejected"
+                  ? { reason: cvOutcome.reason, message: "Failed to upload CV. Please try again." }
+                  : commonCvOutcome.status === "rejected"
+                    ? { reason: commonCvOutcome.reason, message: "Failed to generate common CV. Please try again." }
+                    : null;
+
+        if (uploadFailure) {
+            console.error("Profile submission storage step failed:", uploadFailure.reason);
+            await rollbackUploads();
+            return { success: false, message: uploadFailure.message };
         }
 
-        // 4. Generate and upload Common CV
-        let uploadedCommonCvPath: string | null = null;
-        let uploadedCommonCvUrl: string | null = null;
-
+        // 3. Update Database (Transaction-like)
         try {
-            // Import PDF generator
-            const { generateCommonCV } = await import("@/lib/pdf-generator");
-
-            // Prepare candidate info for CV generation
-            const candidateBasicInfo = {
-                firstName: data.basicInfo.firstName,
-                lastName: data.basicInfo.lastName,
-                email: data.basicInfo.email,
-                phone: data.basicInfo.phone,
-                address: data.basicInfo.address,
-                currentPosition: data.basicInfo.currentPosition,
-                industry: data.industry,
-                yearsOfExperience: data.basicInfo.yearsOfExperience,
-                professionalSummary: data.professionalSummary,
-            };
-
-            // Generate common CV PDF
-            const commonCvBuffer = await generateCommonCV(data, candidateBasicInfo);
-
-            // Upload common CV with watermark
-            const { StorageService } = await import("@/lib/storage");
-            const { url, filePath } = await StorageService.uploadCommonCV(
-                candidateId,
-                commonCvBuffer
-            );
-
-            uploadedCommonCvUrl = url;
-            uploadedCommonCvPath = filePath;
-
-        } catch (error) {
-            console.error("Common CV generation/upload failed:", error);
-
-            // Rollback original CV if it was uploaded
-            if (uploadedCvPath) {
-                try {
-                    const { StorageService } = await import("@/lib/storage");
-                    await StorageService.deleteResume(uploadedCvPath);
-                    console.log("Rollback: Deleted original CV");
-                } catch (deleteError) {
-                    console.error("Failed to rollback original CV:", deleteError);
-                }
-            }
-
-            // Rollback profile image if it was uploaded
-            if (uploadedProfileImageUrl) {
-                try {
-                    const { StorageService } = await import("@/lib/storage");
-                    await StorageService.deleteProfileImage(uploadedProfileImageUrl);
-                    console.log("Rollback: Deleted profile image");
-                } catch (deleteError) {
-                    console.error("Failed to rollback profile image:", deleteError);
-                }
-            }
-
-            return {
-                success: false,
-                message: "Failed to generate common CV. Please try again.",
-            };
-        }
-
-        // 5. Update Database (Transaction-like)
-        try {
-            // Update basic candidate info with resume_url
+            // The candidate row goes first: until it succeeds nothing has been destroyed, so a
+            // failure here costs only the uploaded files.
             const { error: updateError } = await supabase
                 .from("candidates")
                 .update({
@@ -551,171 +513,146 @@ export async function completeFullProfileWithCV(
                 throw new Error(`Profile update failed: ${updateError.message}`);
             }
 
-            // Sync the uploaded CV into the "My Resumes" list so it shows up there.
-            // Only create a row if the candidate has none yet (My Resumes is managed
-            // independently afterwards — avoid duplicating on profile resubmission).
-            if (uploadedCvUrl && uploadedCvPath && cvFile && cvFile.size > 0) {
-                const { count: existingResumeCount } = await supabase
+            const now = new Date().toISOString();
+
+            // Every relation table is wiped and rewritten from the wizard's state. They are
+            // independent of one another, so this runs as two batched rounds — all the deletes,
+            // then all the inserts — instead of ten sequential round trips.
+            //
+            // `alwaysClear` keeps the existing rule intact: projects and certificates are
+            // IT-only steps, and when the wizard sends none the candidate's existing rows are
+            // left alone rather than wiped.
+            const relations: { table: string; rows: Record<string, unknown>[]; alwaysClear: boolean }[] = [
+                {
+                    table: "work_experiences",
+                    alwaysClear: true,
+                    rows: data.workExperiences.map((exp) => ({
+                        candidate_id: candidateId,
+                        job_title: exp.jobTitle,
+                        company: exp.company,
+                        employment_type: exp.employmentType || "full_time",
+                        location: exp.location || null,
+                        location_type: exp.locationType || "onsite",
+                        start_date: exp.startDate ? `${exp.startDate}-01` : null,
+                        end_date: exp.isCurrent ? null : (exp.endDate ? `${exp.endDate}-01` : null),
+                        description: exp.description || null,
+                        is_current: exp.isCurrent || false,
+                        created_at: now,
+                        updated_at: now,
+                    })),
+                },
+                {
+                    table: "educations",
+                    alwaysClear: true,
+                    rows: data.educations.map((edu) => ({
+                        candidate_id: candidateId,
+                        education_type: edu.educationType || "academic",
+                        degree_diploma: edu.degreeDiploma,
+                        professional_qualification: edu.educationType === "professional" ? edu.degreeDiploma : null,
+                        institution: edu.institution,
+                        status: edu.status || "incomplete",
+                        created_at: now,
+                        updated_at: now,
+                    })),
+                },
+                {
+                    table: "awards",
+                    alwaysClear: true,
+                    rows: data.awards.map((award) => ({
+                        candidate_id: candidateId,
+                        nature_of_award: award.natureOfAward,
+                        offered_by: award.offeredBy || null,
+                        description: award.description || null,
+                        created_at: now,
+                        updated_at: now,
+                    })),
+                },
+                {
+                    table: "projects",
+                    alwaysClear: false,
+                    rows: (data.projects ?? []).map((proj) => ({
+                        candidate_id: candidateId,
+                        project_name: proj.projectName,
+                        description: proj.description || null,
+                        demo_url: proj.demoUrl || null,
+                        is_current: proj.isCurrent || false,
+                        created_at: now,
+                        updated_at: now,
+                    })),
+                },
+                {
+                    table: "certificates",
+                    alwaysClear: false,
+                    rows: (data.certificates ?? []).map((cert) => ({
+                        candidate_id: candidateId,
+                        certificate_name: cert.certificateName,
+                        issuing_authority: cert.issuingAuthority || null,
+                        issue_date: cert.issueDate || null,
+                        expiry_date: cert.expiryDate || null,
+                        credential_id: cert.credentialId || null,
+                        credential_url: cert.credentialUrl || null,
+                        description: cert.description || null,
+                        created_at: now,
+                        updated_at: now,
+                    })),
+                },
+            ];
+
+            /**
+             * Sync the uploaded CV into the "My Resumes" list so it shows up there. Only creates
+             * a row if the candidate has none yet — My Resumes is managed independently
+             * afterwards, so resubmitting a profile must not duplicate the entry.
+             */
+            const syncResumeRow = async () => {
+                if (!uploadedCvUrl || !uploadedCvPath || !cvFile || cvFile.size === 0) return;
+
+                const { count } = await supabase
                     .from("candidate_resumes")
                     .select("id", { count: "exact", head: true })
                     .eq("candidate_id", candidateId);
 
-                if ((existingResumeCount ?? 0) === 0) {
-                    const resumeDisplayName = cvFile.name
-                        .replace(/\.[^.]+$/, "")
-                        .replace(/[_-]+/g, " ")
-                        .replace(/\s+/g, " ")
-                        .trim() || "My Resume";
+                if ((count ?? 0) > 0) return;
 
-                    await supabase.from("candidate_resumes").insert({
-                        candidate_id: candidateId,
-                        file_name: resumeDisplayName,
-                        file_url: uploadedCvUrl,
-                        file_path: uploadedCvPath,
-                        is_primary: true,
-                    });
-                }
-            }
+                const resumeDisplayName = cvFile.name
+                    .replace(/\.[^.]+$/, "")
+                    .replace(/[_-]+/g, " ")
+                    .replace(/\s+/g, " ")
+                    .trim() || "My Resume";
 
-            // Handle other relations (Work Exp, Edu, etc.)
-            // Reuse logic or copy-paste? Copied logic for robustness as we are in a different function context
-            // Note: ideally refactor to shared function, but for now duplicating the relation updates is safer to avoid breaking existing flow.
-
-            // ... [Relation updates same as completeFullProfile] ...
-            // For brevity in this turn, I will assume we should call the internal update logic.
-            // But to ensure "all or nothing", if relation updates fail, we should probably throw and catch.
-
-            // Work Experiences
-            await supabase.from("work_experiences").delete().eq("candidate_id", candidateId);
-            if (data.workExperiences.length > 0) {
-                const now = new Date().toISOString();
-                const workExpRecords = data.workExperiences.map((exp) => ({
+                await supabase.from("candidate_resumes").insert({
                     candidate_id: candidateId,
-                    job_title: exp.jobTitle,
-                    company: exp.company,
-                    employment_type: exp.employmentType || "full_time",
-                    location: exp.location || null,
-                    location_type: exp.locationType || "onsite",
-                    start_date: exp.startDate ? `${exp.startDate}-01` : null,
-                    end_date: exp.isCurrent ? null : (exp.endDate ? `${exp.endDate}-01` : null),
-                    description: exp.description || null,
-                    is_current: exp.isCurrent || false,
-                    created_at: now,
-                    updated_at: now,
-                }));
-                const { error } = await supabase.from("work_experiences").insert(workExpRecords);
-                if (error) throw new Error(`Work experience update failed: ${error.message}`);
-            }
+                    file_name: resumeDisplayName,
+                    file_url: uploadedCvUrl,
+                    file_path: uploadedCvPath,
+                    is_primary: true,
+                });
+            };
 
-            // ... (Repeat for other sections: Education, Awards, etc.)
-            // Education
-            await supabase.from("educations").delete().eq("candidate_id", candidateId);
-            if (data.educations.length > 0) {
-                const now = new Date().toISOString();
-                const eduRecords = data.educations.map((edu) => ({
-                    candidate_id: candidateId,
-                    education_type: edu.educationType || "academic",
-                    degree_diploma: edu.degreeDiploma,
-                    professional_qualification: edu.educationType === "professional" ? edu.degreeDiploma : null,
-                    institution: edu.institution,
-                    status: edu.status || "incomplete",
-                    created_at: now,
-                    updated_at: now,
-                }));
-                const { error } = await supabase.from("educations").insert(eduRecords);
-                if (error) throw new Error(`Education update failed: ${error.message}`);
-            }
+            // Round one: clear the relations, and sync the resume row alongside them.
+            const toClear = relations.filter((rel) => rel.alwaysClear || rel.rows.length > 0);
+            await Promise.all([
+                syncResumeRow(),
+                ...toClear.map((rel) => supabase.from(rel.table).delete().eq("candidate_id", candidateId)),
+            ]);
 
-            // Awards
-            await supabase.from("awards").delete().eq("candidate_id", candidateId);
-            if (data.awards.length > 0) {
-                const now = new Date().toISOString();
-                const awardRecords = data.awards.map((award) => ({
-                    candidate_id: candidateId,
-                    nature_of_award: award.natureOfAward,
-                    offered_by: award.offeredBy || null,
-                    description: award.description || null,
-                    created_at: now,
-                    updated_at: now,
-                }));
-                const { error } = await supabase.from("awards").insert(awardRecords);
-                if (error) throw new Error(`Awards update failed: ${error.message}`);
-            }
+            // Round two: write everything back.
+            const toInsert = relations.filter((rel) => rel.rows.length > 0);
+            const insertResults = await Promise.all(
+                toInsert.map((rel) => supabase.from(rel.table).insert(rel.rows))
+            );
 
-            // IT Projects
-            if (data.projects && data.projects.length > 0) {
-                await supabase.from("projects").delete().eq("candidate_id", candidateId);
-                const now = new Date().toISOString();
-                const projectRecords = data.projects.map((proj) => ({
-                    candidate_id: candidateId,
-                    project_name: proj.projectName,
-                    description: proj.description || null,
-                    demo_url: proj.demoUrl || null,
-                    is_current: proj.isCurrent || false,
-                    created_at: now,
-                    updated_at: now,
-                }));
-                const { error } = await supabase.from("projects").insert(projectRecords);
-                if (error) throw new Error(`Projects update failed: ${error.message}`);
+            const failedIndex = insertResults.findIndex((result) => result.error);
+            if (failedIndex !== -1) {
+                throw new Error(
+                    `${toInsert[failedIndex].table} update failed: ${insertResults[failedIndex].error!.message}`
+                );
             }
-
-            // Certificates
-            if (data.certificates && data.certificates.length > 0) {
-                await supabase.from("certificates").delete().eq("candidate_id", candidateId);
-                const now = new Date().toISOString();
-                const certRecords = data.certificates.map((cert) => ({
-                    candidate_id: candidateId,
-                    certificate_name: cert.certificateName,
-                    issuing_authority: cert.issuingAuthority || null,
-                    issue_date: cert.issueDate || null,
-                    expiry_date: cert.expiryDate || null,
-                    credential_id: cert.credentialId || null,
-                    credential_url: cert.credentialUrl || null,
-                    description: cert.description || null,
-                    created_at: now,
-                    updated_at: now,
-                }));
-                const { error } = await supabase.from("certificates").insert(certRecords);
-                if (error) throw new Error(`Certificates update failed: ${error.message}`);
-            }
-
         } catch (dbError) {
             console.error("Database Transaction Failed. Rolling back storage...", dbError);
-
-            // ROLLBACK: Delete all uploaded files
-
-            // Rollback original CV
-            if (uploadedCvPath) {
-                try {
-                    const { StorageService } = await import("@/lib/storage");
-                    await StorageService.deleteResume(uploadedCvPath);
-                    console.log("Storage rollback successful: deleted original CV", uploadedCvPath);
-                } catch (deleteError) {
-                    console.error("CRITICAL: Failed to rollback original CV:", uploadedCvPath, deleteError);
-                }
-            }
-
-            // Rollback common CV
-            if (uploadedCommonCvPath) {
-                try {
-                    const { StorageService } = await import("@/lib/storage");
-                    await StorageService.deleteCommonCV(uploadedCommonCvPath);
-                    console.log("Storage rollback successful: deleted common CV", uploadedCommonCvPath);
-                } catch (deleteError) {
-                    console.error("CRITICAL: Failed to rollback common CV:", uploadedCommonCvPath, deleteError);
-                }
-            }
-
-            // Rollback profile image
-            if (uploadedProfileImageUrl) {
-                try {
-                    const { StorageService } = await import("@/lib/storage");
-                    await StorageService.deleteProfileImage(uploadedProfileImageUrl);
-                    console.log("Storage rollback successful: deleted profile image", uploadedProfileImageUrl);
-                } catch (deleteError) {
-                    console.error("CRITICAL: Failed to rollback profile image:", uploadedProfileImageUrl, deleteError);
-                }
-            }
+            // ponytail: files roll back, rows do not — a failure partway through the relation
+            // writes leaves the profile half-written. Move the block above into a single
+            // getServerSql() transaction if that ever actually bites.
+            await rollbackUploads();
 
             return {
                 success: false,

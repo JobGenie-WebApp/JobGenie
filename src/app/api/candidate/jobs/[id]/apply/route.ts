@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { logError } from "@/lib/logger";
 import { jobApplySchema } from "@/lib/validations/job-schema";
 import { buildAtsUpdate } from "@/app/actions/ats-score";
@@ -107,28 +107,36 @@ export async function POST(request: NextRequest, { params }: Params) {
         // application. Fully isolated: any failure here — Gemini down, no résumé, a
         // crash — is swallowed so the application still succeeds (201). Failures are
         // recorded as ats_status="failed" so the employer can retry ("Check again").
-        try {
-            const resumeUrl = parsed.data.resume_url ?? candidate.resume_url ?? null;
-            const atsUpdate = await buildAtsUpdate({
-                jobTitle: job.job_title,
-                jobDescription: job.description,
-                experienceLevel: job.experience_level,
-                resumeUrl,
-            });
-            await admin.from("job_applications").update(atsUpdate).eq("id", application.id);
-        } catch (atsError) {
-            await logError({
-                source: "api/candidate/jobs/[id]/apply:ats",
-                errorType: "AtsScoreError",
-                message: atsError instanceof Error ? atsError.message : String(atsError),
-            });
-            // Best-effort: mark failed so the employer can retry. Ignore if even this fails.
-            await admin
-                .from("job_applications")
-                .update({ ats_status: "failed", ats_error: "Scoring error" })
-                .eq("id", application.id)
-                .then(undefined, () => {});
-        }
+        //
+        // Runs after the response. Scoring is a résumé download plus a Gemini call, and
+        // making the candidate hold a spinner through both to submit an application was the
+        // single slowest thing in the apply flow. The row is created with ats_status
+        // "pending" (schema default) and the employer's view already renders that state, so
+        // the score simply arrives a few seconds later.
+        after(async () => {
+            try {
+                const resumeUrl = parsed.data.resume_url ?? candidate.resume_url ?? null;
+                const atsUpdate = await buildAtsUpdate({
+                    jobTitle: job.job_title,
+                    jobDescription: job.description,
+                    experienceLevel: job.experience_level,
+                    resumeUrl,
+                });
+                await admin.from("job_applications").update(atsUpdate).eq("id", application.id);
+            } catch (atsError) {
+                await logError({
+                    source: "api/candidate/jobs/[id]/apply:ats",
+                    errorType: "AtsScoreError",
+                    message: atsError instanceof Error ? atsError.message : String(atsError),
+                });
+                // Best-effort: mark failed so the employer can retry. Ignore if even this fails.
+                await admin
+                    .from("job_applications")
+                    .update({ ats_status: "failed", ats_error: "Scoring error" })
+                    .eq("id", application.id)
+                    .then(undefined, () => {});
+            }
+        });
 
         return NextResponse.json({ application_id: application.id }, { status: 201 });
     } catch (error) {
