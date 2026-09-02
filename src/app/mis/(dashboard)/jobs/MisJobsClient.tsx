@@ -16,6 +16,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { cn, formatLabel } from "@/lib/utils";
+import { formatSalaryRange } from "@/lib/currencies";
 
 const MDXViewer = dynamic(
     () => import("@/components/employer/MdxViewer").then((m) => m.MdxViewer),
@@ -148,15 +149,6 @@ function fmt(d: string | null, opts?: Intl.DateTimeFormatOptions) {
     return new Date(d).toLocaleDateString("en-GB", opts ?? { day: "numeric", month: "short", year: "numeric" });
 }
 
-function salaryLabel(min: number | null, max: number | null, currency: string | null) {
-    const c = currency ?? "LKR";
-    const f = (v: number) => v.toLocaleString();
-    if (min && max) return `${c} ${f(min)} – ${f(max)}`;
-    if (min) return `${c} ${f(min)}+`;
-    if (max) return `Up to ${c} ${f(max)}`;
-    return null;
-}
-
 function getCompany(job: JobListItem | JobDetail) {
     return Array.isArray(job.company) ? job.company[0] : job.company;
 }
@@ -220,7 +212,7 @@ function JobDetailPanel({
     onRefresh: () => void;
 }) {
     const router = useRouter();
-    const salary = salaryLabel(job.salary_min, job.salary_max, job.salary_currency);
+    const salary = formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency);
     const cfg = STATUS_CONFIG[job.is_deleted ? "deleted" : job.status] ?? STATUS_CONFIG.draft;
     const isL = (k: string) => actionLoading === k;
     const company = getCompany(job);
@@ -380,10 +372,9 @@ function JobDetailPanel({
 
 // ── Right panel: Applications ─────────────────────────────────────────────────
 
-function ApplicationsPanel({ job, onUpdateStatus }: { job: JobDetail; onUpdateStatus: (appId: string, status: string) => void }) {
+function ApplicationsPanel({ job }: { job: JobDetail }) {
     const apps = Array.isArray(job.job_applications) ? job.job_applications as Application[] : [];
     const [filter, setFilter] = useState<string>("all");
-    const [updatingApp, setUpdatingApp] = useState<string | null>(null);
 
     const filtered = filter === "all" ? apps : apps.filter((a) => a.status === filter);
 
@@ -391,12 +382,6 @@ function ApplicationsPanel({ job, onUpdateStatus }: { job: JobDetail; onUpdateSt
         acc[a.status] = (acc[a.status] ?? 0) + 1;
         return acc;
     }, {});
-
-    async function handleStatusChange(appId: string, status: string) {
-        setUpdatingApp(appId);
-        await onUpdateStatus(appId, status);
-        setUpdatingApp(null);
-    }
 
     return (
         <div className="flex flex-col h-full">
@@ -458,21 +443,6 @@ function ApplicationsPanel({ job, onUpdateStatus }: { job: JobDetail; onUpdateSt
                                         <p className="text-xs text-muted-foreground truncate mt-0.5">{app.candidate.current_position}</p>
                                     )}
                                     <div className="flex items-center gap-2 mt-1.5">
-                                        <Select
-                                            value={app.status}
-                                            onValueChange={(v) => handleStatusChange(app.id, v)}
-                                            disabled={updatingApp === app.id}
-                                        >
-                                            <SelectTrigger className="h-6 text-[11px] w-28">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Object.entries(APP_STATUS_CONFIG).map(([key, cfg]) => (
-                                                    <SelectItem key={key} value={key} className="text-xs">{cfg.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {updatingApp === app.id && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
                                         <span className="text-[11px] text-muted-foreground ml-auto">{fmt(app.applied_at, { day: "numeric", month: "short" })}</span>
                                     </div>
                                 </div>
@@ -668,19 +638,6 @@ export function MisJobsClient() {
         } finally { setActionLoading(null); }
     }
 
-    async function updateApplicationStatus(appId: string, status: string) {
-        if (!selectedId) return;
-        const res = await fetch(`/api/mis/jobs/${selectedId}/applications/${appId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status }),
-        });
-        const data = await res.json();
-        if (!res.ok) { toast.error(data.error || "Failed"); return; }
-        toast.success("Application status updated");
-        fetchDetail(selectedId);
-    }
-
     return (
         <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
 
@@ -790,7 +747,7 @@ export function MisJobsClient() {
             {/* ── RIGHT: Applications ── */}
             <div style={{ width: 300, minWidth: 260, flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
                 {jobDetail ? (
-                    <ApplicationsPanel job={jobDetail} onUpdateStatus={updateApplicationStatus} />
+                    <ApplicationsPanel job={jobDetail} />
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                         <Users className="h-10 w-10 opacity-20 mb-2" />

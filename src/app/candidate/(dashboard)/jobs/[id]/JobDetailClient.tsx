@@ -34,6 +34,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { formatSalaryRange } from "@/lib/currencies";
 
 const MDXViewer = dynamic(
     () => import("@/components/employer/MdxViewer").then((module) => module.MdxViewer),
@@ -67,16 +68,6 @@ function fmt(date: string | null) {
         month: "short",
         year: "numeric",
     });
-}
-
-function salaryDisplay(min: number | null, max: number | null, currency: string | null) {
-    if (!min && !max) return null;
-    const resolvedCurrency = currency ?? "LKR";
-    if (min && max) {
-        return `${resolvedCurrency} ${min.toLocaleString()} – ${max.toLocaleString()} / month`;
-    }
-    if (min) return `${resolvedCurrency} ${min.toLocaleString()}+ / month`;
-    return `Up to ${resolvedCurrency} ${max!.toLocaleString()} / month`;
 }
 
 interface JobDetail {
@@ -321,7 +312,7 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
     if (!job) return null;
 
     const company = Array.isArray(job.company) ? job.company[0] : job.company;
-    const salary = salaryDisplay(job.salary_min, job.salary_max, job.salary_currency);
+    const salary = formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency, " / month");
     const jobType = JOB_TYPE_LABELS[job.job_type] ?? formatLabel(job.job_type);
     const descriptionHasTechnicalError =
         Boolean(job.description) && TECHNICAL_ERROR_PATTERN.test(job.description ?? "");

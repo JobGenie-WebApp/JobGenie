@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -310,16 +311,16 @@ function PaymentsTab() {
                         onChange={(e) => { setJobSearch(e.target.value); setPage(1); }}
                         className="w-44"
                     />
-                    <Input
-                        type="number" min="0" placeholder="Min amount"
+                    <MoneyInput
+                        placeholder="Min amount"
                         value={amountMin}
-                        onChange={(e) => { setAmountMin(e.target.value); setPage(1); }}
+                        onChange={(v) => { setAmountMin(v); setPage(1); }}
                         className="w-28"
                     />
-                    <Input
-                        type="number" min="0" placeholder="Max amount"
+                    <MoneyInput
+                        placeholder="Max amount"
                         value={amountMax}
-                        onChange={(e) => { setAmountMax(e.target.value); setPage(1); }}
+                        onChange={(v) => { setAmountMax(v); setPage(1); }}
                         className="w-28"
                     />
                     <Button variant="ghost" size="sm" onClick={() => { loadPayments(); loadStats(); }}>
@@ -868,7 +869,7 @@ function CreatePaymentRequestDialog({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label>Amount (LKR) — leave blank to use pricing</Label>
-                            <Input type="number" min="0" placeholder="0.00" value={form.amount} onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))} />
+                            <MoneyInput placeholder="0.00" value={form.amount} onChange={(v) => setForm(f => ({ ...f, amount: v }))} />
                         </div>
                         <div className="space-y-1.5">
                             <Label>Due Date (optional)</Label>
@@ -972,7 +973,14 @@ function PaymentDetailDialog({ open, payment, onClose, onChanged }: {
                             <div><span className="text-muted-foreground">Method:</span> {payment.payment_method === "online_payment" ? "Online payment" : "Bank transfer"}</div>
                         )}
                         {job && (
-                            <div><span className="text-muted-foreground">Job:</span> <span className="font-medium">{job.job_title}</span></div>
+                            <div>
+                                <span className="text-muted-foreground">Job:</span>{" "}
+                                <a href={`/mis/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline">
+                                    {job.job_title}
+                                    <ExternalLink className="h-3 w-3" />
+                                </a>
+                            </div>
                         )}
                         <div className="col-span-2"><span className="text-muted-foreground">Description:</span> {payment.description}</div>
                         {payment.bank_transfer_reference && (
@@ -1541,7 +1549,7 @@ function JobAdPricingManager() {
                                     </div>
                                     <div className="space-y-1 flex-1">
                                         <Label className="text-xs">Amount</Label>
-                                        <Input type="number" min="0" placeholder="0.00" value={amountVal} onChange={(e) => setDraft({ amount: e.target.value })} />
+                                        <MoneyInput placeholder="0.00" value={amountVal} onChange={(v) => setDraft({ amount: v })} />
                                     </div>
                                     <Button size="sm" onClick={() => save(row.code)} disabled={savingCode === row.code || !type}>
                                         {savingCode === row.code ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
@@ -1849,7 +1857,7 @@ function PaymentTypesManager() {
                         </div>
                         <div className="space-y-1.5">
                             <Label>Amount (LKR) *</Label>
-                            <Input type="number" min="0" placeholder="0.00" value={pricingAmount} onChange={(e) => setPricingAmount(e.target.value)} />
+                            <MoneyInput placeholder="0.00" value={pricingAmount} onChange={setPricingAmount} />
                         </div>
                         <p className="text-xs text-muted-foreground">Setting a new price deactivates the previous pricing for this type.</p>
                     </div>

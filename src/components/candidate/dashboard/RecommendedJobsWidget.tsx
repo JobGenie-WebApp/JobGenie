@@ -5,21 +5,10 @@ import Link from "next/link";
 import { Bookmark, ChevronRight, MapPin, Briefcase, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RecommendedJob } from "@/app/actions/candidate-dashboard-data";
+import { formatSalaryRange } from "@/lib/currencies";
 
 interface RecommendedJobsWidgetProps {
     jobs: RecommendedJob[];
-}
-
-function formatSalary(min: number | null, max: number | null): string | null {
-    if (!min && !max) return null;
-    const fmt = (n: number) => {
-        if (n >= 1000) return `$${(n / 1000).toFixed(0)}k`;
-        return `$${n}`;
-    };
-    if (min && max) return `${fmt(min)} – ${fmt(max)}`;
-    if (min) return `From ${fmt(min)}`;
-    if (max) return `Up to ${fmt(max)}`;
-    return null;
 }
 
 function getCompanyInitials(name: string | null): string {
@@ -44,7 +33,7 @@ function JobRow({ job, index }: { job: RecommendedJob; index: number }) {
     const [saved, setSaved] = useState(false);
     const [hovered, setHovered] = useState(false);
     const av = avatarBg[index % avatarBg.length];
-    const salaryStr = formatSalary(job.salary_min, job.salary_max);
+    const salaryStr = formatSalaryRange(job.salary_min, job.salary_max);
     const typeLabel = job.employment_type
         ? (employmentTypeLabels[job.employment_type] || job.employment_type)
         : null;

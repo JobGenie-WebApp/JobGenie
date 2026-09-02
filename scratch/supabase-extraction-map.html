@@ -1,0 +1,1515 @@
+<title>Supabase Extraction Map</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  --ground:#eaeff0; --surface:#ffffff; --surface-2:#f3f6f7;
+  --ink:#11252b; --ink-2:#2c464d; --muted:#5e767c; --line:#cfdadd; --line-2:#e2eaec;
+  --accent:#0f5a6b; --accent-soft:#dbeaee;
+  --signal:#a85f14; --signal-soft:#f6e7d3;
+  --crit:#9d2620; --crit-soft:#f7dedc;
+  --ok:#256b50; --ok-soft:#d9ece4;
+  --shadow:0 1px 2px rgba(17,37,43,.06),0 8px 24px -16px rgba(17,37,43,.25);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0b1316; --surface:#101d21; --surface-2:#152429;
+  --ink:#dee9eb; --ink-2:#b3c7cc; --muted:#8098a0; --line:#22383e; --line-2:#1a2c31;
+  --accent:#5cb8ca; --accent-soft:#12333c;
+  --signal:#e2a55a; --signal-soft:#3a2c17;
+  --crit:#e88a83; --crit-soft:#3d1d1b;
+  --ok:#6fc4a0; --ok-soft:#12312a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{
+  --ground:#0b1316; --surface:#101d21; --surface-2:#152429;
+  --ink:#dee9eb; --ink-2:#b3c7cc; --muted:#8098a0; --line:#22383e; --line-2:#1a2c31;
+  --accent:#5cb8ca; --accent-soft:#12333c;
+  --signal:#e2a55a; --signal-soft:#3a2c17;
+  --crit:#e88a83; --crit-soft:#3d1d1b;
+  --ok:#6fc4a0; --ok-soft:#12312a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:"Source Sans 3",ui-sans-serif,system-ui,sans-serif;font-size:15.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+h1,h2,h3,.disp{font-family:Archivo,ui-sans-serif,system-ui,sans-serif;text-wrap:balance}
+a{color:var(--accent)}
+
+.wrap{display:grid;grid-template-columns:210px minmax(0,1fr);gap:44px;max-width:1320px;margin:0 auto;padding:0 28px 96px}
+@media (max-width:960px){.wrap{grid-template-columns:1fr;gap:0}.rail{display:none}}
+
+/* ---- masthead ---- */
+.mast{border-bottom:1px solid var(--line);background:var(--surface);margin-bottom:40px}
+.mast-in{max-width:1320px;margin:0 auto;padding:46px 28px 38px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.eyebrow .sep{width:22px;height:1px;background:var(--line);display:inline-block}
+h1{font-size:clamp(32px,4.6vw,54px);font-weight:800;letter-spacing:-.028em;line-height:1.03;margin:16px 0 0;max-width:17ch}
+.lede{font-size:18px;color:var(--ink-2);max-width:62ch;margin:16px 0 0}
+.lede strong{color:var(--ink);font-weight:600}
+
+/* ---- verdict ---- */
+.verdict{margin-top:28px;border-left:3px solid var(--signal);background:var(--signal-soft);padding:16px 20px;border-radius:0 6px 6px 0;max-width:78ch}
+.verdict p{margin:0;color:var(--ink)}
+.verdict p+p{margin-top:8px}
+
+/* ---- scoreboard ---- */
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:1px;background:var(--line-2);border:1px solid var(--line-2);border-radius:8px;overflow:hidden;margin-top:34px}
+.tile{background:var(--surface);padding:16px 18px 18px}
+.tile .n{font-family:Archivo,sans-serif;font-weight:800;font-size:30px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink)}
+.tile .n.sig{color:var(--signal)}
+.tile .l{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.tile .sub{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+
+/* ---- rail ---- */
+.rail{position:sticky;top:20px;align-self:start;max-height:calc(100vh - 40px);overflow-y:auto;padding-top:6px}
+.rail ol{list-style:none;margin:0;padding:0;counter-reset:r}
+.rail li{counter-increment:r}
+.rail a{display:block;padding:6px 0 6px 26px;position:relative;font-size:13.5px;color:var(--muted);text-decoration:none;border-left:1px solid var(--line-2);line-height:1.35}
+.rail a::before{content:counter(r,decimal-leading-zero);position:absolute;left:9px;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--line);top:8px}
+.rail a:hover{color:var(--ink);border-left-color:var(--accent)}
+.rail a:hover::before{color:var(--accent)}
+
+/* ---- sections ---- */
+section{scroll-margin-top:20px;margin-bottom:56px}
+.sh{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:9px;margin-bottom:20px}
+.sh .num{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);font-weight:600}
+h2{font-size:23px;font-weight:700;letter-spacing:-.018em;margin:0}
+h3{font-size:16px;font-weight:600;letter-spacing:-.005em;margin:28px 0 10px;color:var(--ink)}
+p{max-width:72ch}
+section>p:first-of-type{margin-top:0}
+ul{max-width:72ch;padding-left:20px}
+li{margin:5px 0}
+
+/* ---- surface cards ---- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;margin-top:18px}
+.card{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:16px 18px 18px;box-shadow:var(--shadow)}
+.card h4{font-family:Archivo,sans-serif;font-size:14.5px;font-weight:700;margin:0 0 3px;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card h4 .ct{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.card .role{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.card p{font-size:13.5px;color:var(--ink-2);margin:0 0 10px;max-width:none}
+.card .need{border-top:1px dashed var(--line);padding-top:9px;font-size:12.5px;color:var(--muted)}
+.card .need b{color:var(--ink);font-weight:600;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:4px}
+
+/* ---- tables ---- */
+.tw{overflow-x:auto;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+thead th{position:sticky;top:0;background:var(--surface-2);z-index:2;text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+.c-route code{font-size:12.5px;font-weight:500;color:var(--ink);white-space:nowrap}
+.c-m{white-space:nowrap}
+.c-b{white-space:nowrap}
+.c-d{font-size:12px;color:var(--ink-2);min-width:180px}
+.c-t{min-width:200px}
+.dim{color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase}
+code.t{display:inline-block;font-size:11px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:3px;padding:1px 5px;margin:1px 0;color:var(--ink-2)}
+code.fn{display:inline-block;font-size:11px;color:var(--accent);margin-right:4px}
+
+.m{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;letter-spacing:.06em;padding:2px 5px;border-radius:3px;margin-right:3px;border:1px solid transparent}
+.m--GET{color:var(--ok);background:var(--ok-soft)}
+.m--POST{color:var(--accent);background:var(--accent-soft)}
+.m--PUT,.m--PATCH{color:var(--signal);background:var(--signal-soft)}
+.m--DELETE{color:var(--crit);background:var(--crit-soft)}
+.b{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:500;letter-spacing:.05em;padding:2px 6px;border-radius:99px;margin-right:3px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.b--auth{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.b--db{color:var(--ink-2);background:var(--surface-2)}
+.b--st{color:var(--signal);border-color:var(--signal);background:var(--signal-soft)}
+.b--rpc{color:var(--crit);border-color:var(--crit);background:var(--crit-soft)}
+.b--rt{color:var(--ok);border-color:var(--ok);background:var(--ok-soft)}
+.b--crit{color:var(--crit);border-color:var(--crit);background:var(--crit-soft)}
+
+/* ---- filter ---- */
+.filter{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.filter input{font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:7px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);min-width:230px}
+.filter input:focus-visible,.chip:focus-visible,.rail a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.04em;padding:6px 11px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--muted);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.count{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+
+/* ---- misc ---- */
+.warn{border:1px solid var(--crit);background:var(--crit-soft);border-radius:8px;padding:15px 18px;margin:18px 0}
+.warn h4{font-family:Archivo,sans-serif;font-size:14px;font-weight:700;margin:0 0 6px;color:var(--crit)}
+.warn p{font-size:13.5px;margin:0;color:var(--ink)}
+.warn p+p{margin-top:7px}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.pill{font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:4px 10px;border-radius:5px;background:var(--surface);border:1px solid var(--line-2);color:var(--ink-2)}
+.pill b{color:var(--ink);font-weight:600}
+.pill.priv{border-color:var(--signal);color:var(--signal)}
+.ep{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;overflow:hidden;margin:12px 0;box-shadow:var(--shadow)}
+.ep-h{background:var(--surface-2);padding:9px 15px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line-2);display:flex;justify-content:space-between;gap:12px}
+.ep-h .r{text-transform:none;letter-spacing:0;color:var(--ink-2)}
+.ep ul{list-style:none;margin:0;padding:8px 0;max-width:none}
+.ep li{display:grid;grid-template-columns:70px minmax(200px,320px) 1fr;gap:14px;padding:5px 15px;margin:0;font-size:12.5px;align-items:baseline}
+@media (max-width:700px){.ep li{grid-template-columns:1fr;gap:2px}}
+.ep li .v{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--accent)}
+.ep li .p{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink)}
+.ep li .w{color:var(--muted);font-size:12.5px}
+ol.steps{list-style:none;counter-reset:s;padding:0;max-width:78ch}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:32px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line-2);margin:0}
+ol.steps li:last-child{border-bottom:0}
+ol.steps li::before{content:counter(s,decimal-leading-zero);font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--accent);padding-top:3px}
+ol.steps b{display:block;font-family:Archivo,sans-serif;font-size:14.5px;font-weight:600;margin-bottom:2px}
+ol.steps span{font-size:13.5px;color:var(--ink-2)}
+footer{border-top:1px solid var(--line);margin-top:20px;padding-top:18px;font-size:12.5px;color:var(--muted);max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="mast"><div class="mast-in">
+<div class="eyebrow"><span>JobGenie</span><span class="sep"></span><span>Backend migration audit</span><span class="sep"></span><span>1 September 2026</span></div>
+<h1>Supabase Extraction Map</h1>
+<p class="lede">Every place the application talks to Supabase, and what the replacement backend has to answer for. Swept across <strong>143 API routes</strong>, <strong>57 server actions</strong>, all pages, hooks and shared libraries.</p>
+<div class="verdict">
+<p><b>All 143 API routes touch Supabase</b> — directly or through a shared library. There is no subset to carve out; the dependency is total.</p>
+<p>But the routes themselves are not the problem. <b>They already are your API.</b> What must be rebuilt is the layer underneath them: five Supabase services the route handlers call. Plus 11 places where the browser and client components skip the API entirely and query Supabase directly — those need brand-new endpoints that do not exist today.</p>
+</div>
+<div class="score">
+<div class="tile"><div class="n">143</div><div class="l">API routes</div><div class="sub">All Supabase-dependent</div></div>
+<div class="tile"><div class="n sig">268</div><div class="l">Auth call sites</div><div class="sub">234 are <code>getUser()</code></div></div>
+<div class="tile"><div class="n">785</div><div class="l">PostgREST queries</div><div class="sub">Across 39 tables</div></div>
+<div class="tile"><div class="n">9</div><div class="l">Storage buckets</div><div class="sub">4 private, signed URLs</div></div>
+<div class="tile"><div class="n">5</div><div class="l">Realtime tables</div><div class="sub">8 subscription sites</div></div>
+<div class="tile"><div class="n sig">15</div><div class="l">DB functions</div><div class="sub">3 RPC, 12 triggers</div></div>
+<div class="tile"><div class="n">2</div><div class="l">Scheduled jobs</div><div class="sub">+1 duplicate edge fn</div></div>
+</div>
+</div></div>
+
+<div class="wrap">
+<nav class="rail" aria-label="Contents"><ol>
+<li><a href="#surfaces">The five surfaces</a></li>
+<li><a href="#direct">Browser-direct calls</a></li>
+<li><a href="#routes">API route inventory</a></li>
+<li><a href="#actions">Server actions</a></li>
+<li><a href="#ssr">Server components</a></li>
+<li><a href="#libs">Shared libraries</a></li>
+<li><a href="#dbside">Logic inside Postgres</a></li>
+<li><a href="#jobs">Scheduled work</a></li>
+<li><a href="#target">Target backend surface</a></li>
+<li><a href="#traps">What will bite you</a></li>
+<li><a href="#order">Migration order</a></li>
+</ol></nav>
+
+<main>
+
+<section id="surfaces">
+<div class="sh"><span class="num">01</span><h2>The five surfaces to replace</h2></div>
+<p>Supabase is not one dependency here, it is five separate services wearing one SDK. Each needs its own answer in the new backend, and they have very different difficulty.</p>
+<div class="cards">
+
+<div class="card"><h4>Auth <span class="ct">268 sites</span></h4><div class="role">GoTrue · cookie sessions</div>
+<p>Cookie-based sessions via <code>@supabase/ssr</code>, refreshed in <code>middleware.ts</code> on every request. Methods in use: <code>getUser</code> ×234, <code>signOut</code> ×11, <code>signInWithPassword</code> ×5, <code>signUp</code> ×4, <code>admin.createUser</code> ×4, <code>admin.deleteUser</code> ×4, <code>admin.updateUserById</code> ×3, <code>admin.listUsers</code> ×2, <code>getSession</code> ×1.</p>
+<div class="need"><b>Backend must provide</b>Session issue/refresh/revoke, an admin user API, and a <code>getUser</code> that is cheap — it runs on every one of the 234 sites, so verify the JWT locally rather than round-tripping.</div></div>
+
+<div class="card"><h4>Database <span class="ct">785 queries</span></h4><div class="role">PostgREST · supabase-js</div>
+<p>Every runtime query is a PostgREST call through <code>supabase-js</code>. 39 tables. Prisma is present but <b>schema and migrations only</b> — zero runtime usage, so the new backend can adopt Prisma outright.</p>
+<div class="need"><b>Backend must provide</b>Either a thin repository layer the routes call instead of <code>.from()</code>, or a PostgREST-compatible shim. Repository layer is the honest choice; the shim just postpones the work.</div></div>
+
+<div class="card"><h4>Storage <span class="ct">9 buckets</span></h4><div class="role">S3-backed object store</div>
+<p>Upload, remove, list, signed URL, public URL, and create-bucket-on-miss. Private PII buckets are read through short-lived signed URLs minted by <code>signStorageUrl()</code>; <code>signPiiUrls()</code> walks 25 API responses rewriting them.</p>
+<div class="need"><b>Backend must provide</b>Object put/delete/list, signed-URL minting with TTL, and a public URL scheme. See the URL-shape trap in §10.</div></div>
+
+<div class="card"><h4>Realtime <span class="ct">8 subs</span></h4><div class="role">WebSocket · postgres_changes</div>
+<p>Five tables are in the <code>supabase_realtime</code> publication: <code>notifications</code>, <code>job_invitations</code>, <code>payment_requests</code>, <code>interview_rounds</code>, <code>job_offers</code>. Subscriptions drive sidebar badge counts and SWR cache invalidation.</p>
+<div class="need"><b>Backend must provide</b>A change stream with per-row filters — or drop it. Every subscription here only triggers a refetch, so SWR polling replaces all eight with no feature loss.</div></div>
+
+<div class="card"><h4>Postgres logic <span class="ct">15 functions</span></h4><div class="role">RPC · triggers · RLS</div>
+<p>Three functions called as RPC, twelve <code>notify_on_*</code> triggers that write the notification feed, three RLS helper functions, and several hundred RLS policies doing real authorization work.</p>
+<div class="need"><b>Backend must provide</b>The triggers and RLS have no HTTP surface today — they are invisible in the route list and the easiest thing to leave behind by accident. See §7.</div></div>
+
+</div></section>
+
+<section id="direct">
+<div class="sh"><span class="num">02</span><h2>Calls that bypass your API entirely</h2></div>
+<p>These talk to Supabase straight from the browser. They have <b>no endpoint today</b>, so each one is net-new work in the replacement backend — not a rewrite, an addition. Start here: they are the only part of the migration that adds API surface rather than swapping implementations.</p>
+<div class="tw"><table>
+<thead><tr><th>File</th><th>What it does</th><th>New endpoint needed</th></tr></thead>
+<tbody>
+<tr><td class="c-route"><code>hooks/useNotifications.ts</code></td><td class="c-d">Reads, marks read, deletes from <code class="t">notifications</code>; subscribes to three realtime events</td><td class="c-d"><code>GET/PATCH/DELETE /notifications</code> + change stream or poll</td></tr>
+<tr><td class="c-route"><code>hooks/useInvitationCount.ts</code></td><td class="c-d">Resolves candidate/employer, counts unopened <code class="t">job_invitations</code>, subscribes</td><td class="c-d"><code>GET /invitations/unread-count</code> <span class="dim">note: <code>/api/candidate/invitations/unopened-count</code> already exists but the hook does not use it</span></td></tr>
+<tr><td class="c-route"><code>hooks/usePendingPaymentCount.ts</code></td><td class="c-d">Counts pending <code class="t">payment_requests</code> for the company, subscribes</td><td class="c-d"><code>GET /payments/pending-count</code> <span class="dim">route exists, unused by the hook</span></td></tr>
+<tr><td class="c-route"><code>hooks/useRealtimeCount.ts</code></td><td class="c-d">Generic counter — arbitrary table, filters, <code>count: exact</code>, plus subscription</td><td class="c-d">Cannot be generic in a real API. Replace each caller with a named count endpoint</td></tr>
+<tr><td class="c-route"><code>components/realtime/InvitationRealtimeBridge.tsx</code></td><td class="c-d">Watches <code class="t">job_invitations</code> to invalidate SWR caches, candidate and employer variants</td><td class="c-d">Change stream, or SWR <code>refreshInterval</code></td></tr>
+<tr><td class="c-route"><code>…/invitations/[id]/InvitationDetailClient.tsx</code></td><td class="c-d">Per-invitation channel on <code class="t">job_invitations</code> and <code class="t">job_offers</code></td><td class="c-d">Change stream, or SWR revalidation on focus</td></tr>
+<tr><td class="c-route"><code>candidate|employer/settings/AccountSecuritySettings.tsx</code></td><td class="c-d"><code>auth.signOut()</code> from the browser</td><td class="c-d"><code>POST /auth/sign-out</code></td></tr>
+<tr><td class="c-route"><code>candidate|employer/settings/DangerZoneSettings.tsx</code></td><td class="c-d"><code>auth.signOut()</code> after account deletion</td><td class="c-d"><code>POST /auth/sign-out</code></td></tr>
+<tr><td class="c-route"><code>components/employer/profile/EmployerProfileWizard.tsx</code></td><td class="c-d"><code>auth.getUser()</code> from the browser</td><td class="c-d"><code>GET /auth/user</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="routes">
+<div class="sh"><span class="num">03</span><h2>API route inventory</h2></div>
+<p>All 143 routes under <code>src/app/api/</code>, with the Supabase surfaces each one uses and the tables it reaches. <b>DB via lib</b> marks a route with no direct query of its own that pulls Supabase in through a shared library — the cron routes are the ones to watch, they look clean and are not.</p>
+<div class="filter">
+<input id="q" type="search" placeholder="filter route, table, method…" aria-label="Filter routes">
+<button class="chip" data-f="auth" aria-pressed="false">Auth</button>
+<button class="chip" data-f="st" aria-pressed="false">Storage</button>
+<button class="chip" data-f="rpc" aria-pressed="false">RPC</button>
+<button class="chip" data-f="ind" aria-pressed="false">Indirect only</button>
+<span class="count" id="ct"></span>
+</div>
+<div class="tw"><table id="rt">
+<thead><tr><th>Route</th><th>Methods</th><th>Surfaces</th><th>Detail</th><th>Tables</th></tr></thead>
+<tbody>
+<tr data-s="/api/auth/logout post users getuser signout  " data-k="auth db" data-g="auth">
+<td class="c-route"><code>/api/auth/logout</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser, signOut<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+<tr data-s="/api/candidate/applications get candidates job_applications getuser  " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/applications</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/candidate/applications/[id] delete candidates job_applications getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/applications/[id]</code></td>
+<td class="c-m"><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/candidate/calendar get candidates job_invitations getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/calendar</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/candidate/interview-rounds/[roundid]/assessment-attachment get candidates interview_rounds getuser createsignedurl " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/interview-rounds/[roundId]/assessment-attachment</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> createSignedUrl</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/candidate/interview-rounds/[roundid]/assessment-submission post get candidates interview_rounds getuser listbuckets createbucket upload remove createsignedurl " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/interview-rounds/[roundId]/assessment-submission</code></td>
+<td class="c-m"><span class="m m--POST">POST</span><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> listBuckets, createBucket, upload, remove, createSignedUrl<br><span class="dim">via lib</span> storage</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/candidate/interview-rounds/[roundid]/cancel-round post candidates interview_rounds getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/interview-rounds/[roundId]/cancel-round</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/candidate/interview-rounds/[roundid]/respond post candidates interview_rounds job_invitations getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/interview-rounds/[roundId]/respond</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">interview_rounds</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/candidate/invitations get candidates job_invitations getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/invitations</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/candidate/invitations/[id] get candidates job_invitations getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/invitations/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/candidate/invitations/[id]/cancel-interview post candidates job_invitations getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/invitations/[id]/cancel-interview</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/candidate/invitations/[id]/offer get post candidates job_invitations job_offers job_applications getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/invitations/[id]/offer</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code> <code class="t">job_offers</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/candidate/invitations/[id]/respond post candidates job_invitations interview_rounds getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/invitations/[id]/respond</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/candidate/invitations/[id]/rounds get candidates job_invitations interview_rounds getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/invitations/[id]/rounds</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/candidate/invitations/unopened-count get candidates job_invitations getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/invitations/unopened-count</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/candidate/job-preferences get put candidates getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/job-preferences</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr data-s="/api/candidate/jobs get jobs candidates saved_jobs job_applications getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/jobs</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">jobs</code> <code class="t">candidates</code> <code class="t">saved_jobs</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/candidate/jobs/[id] get candidates jobs job_applications saved_jobs getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/jobs/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">jobs</code> <code class="t">job_applications</code> <code class="t">saved_jobs</code></td></tr>
+<tr data-s="/api/candidate/jobs/[id]/apply post candidates jobs job_applications notifications getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/jobs/[id]/apply</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">jobs</code> <code class="t">job_applications</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/candidate/jobs/[id]/save post delete candidates saved_jobs getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/jobs/[id]/save</code></td>
+<td class="c-m"><span class="m m--POST">POST</span><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">saved_jobs</code></td></tr>
+<tr data-s="/api/candidate/profile get candidates getuser  " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/profile</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, storage</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr data-s="/api/candidate/resumes get post candidates candidate_resumes getuser  " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/resumes</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">candidate_resumes</code></td></tr>
+<tr data-s="/api/candidate/resumes/[id] delete candidates candidate_resumes getuser  " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/resumes/[id]</code></td>
+<td class="c-m"><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">candidate_resumes</code></td></tr>
+<tr data-s="/api/candidate/resumes/[id]/primary put candidates candidate_resumes getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/resumes/[id]/primary</code></td>
+<td class="c-m"><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">candidate_resumes</code></td></tr>
+<tr data-s="/api/candidate/saved-jobs get candidates saved_jobs job_applications getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/saved-jobs</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">saved_jobs</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/candidate/settings/delete-account delete candidates getuser admin.deleteuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/settings/delete-account</code></td>
+<td class="c-m"><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser, admin.deleteUser</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr data-s="/api/candidate/sidebar-visibility get mis_sidebar_visibility_settings getuser  " data-k="auth db" data-g="candidate">
+<td class="c-route"><code>/api/candidate/sidebar-visibility</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">mis_sidebar_visibility_settings</code></td></tr>
+<tr data-s="/api/candidate/upload-cover-image post delete candidates getuser listbuckets createbucket upload getpublicurl list remove " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/upload-cover-image</code></td>
+<td class="c-m"><span class="m m--POST">POST</span><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> listBuckets, createBucket, upload, getPublicUrl, list, remove<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr data-s="/api/candidate/upload-profile-image post candidates getuser listbuckets createbucket upload getpublicurl " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/upload-profile-image</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> listBuckets, createBucket, upload, getPublicUrl<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr data-s="/api/candidate/upload-resume post candidates getuser  " data-k="auth db st" data-g="candidate">
+<td class="c-route"><code>/api/candidate/upload-resume</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr data-s="/api/cron/expire-jobs get    " data-k="ind" data-g="cron">
+<td class="c-route"><code>/api/cron/expire-jobs</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--ind">DB via lib</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr data-s="/api/cron/interview-reminders get    " data-k="ind" data-g="cron">
+<td class="c-route"><code>/api/cron/interview-reminders</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--ind">DB via lib</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr data-s="/api/delete-file post users getuser remove " data-k="auth db st" data-g="delete-file">
+<td class="c-route"><code>/api/delete-file</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> remove<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+<tr data-s="/api/delete-presignup-file post   remove " data-k="st ind" data-g="delete-presignup-file">
+<td class="c-route"><code>/api/delete-presignup-file</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--st">Storage</span><span class="b b--ind">DB via lib</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">storage</span> remove<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr data-s="/api/employer/applications get employers jobs job_applications getuser  " data-k="auth db st" data-g="employer">
+<td class="c-route"><code>/api/employer/applications</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/employer/applications/[id]/ats-recompute post employers job_applications getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/applications/[id]/ats-recompute</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/employer/applications/[id]/reject post employers job_applications candidates companies notifications getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/applications/[id]/reject</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_applications</code> <code class="t">candidates</code> <code class="t">companies</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/employer/applications/[id]/review post employers job_applications candidates notifications getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/applications/[id]/review</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_applications</code> <code class="t">candidates</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/employer/applications/[id]/schedule-interview post employers job_applications candidates job_invitations companies notifications getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/applications/[id]/schedule-interview</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_applications</code> <code class="t">candidates</code> <code class="t">job_invitations</code> <code class="t">companies</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/employer/bank-details get users payment_bank_details getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/bank-details</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_bank_details</code></td></tr>
+<tr data-s="/api/employer/calendar get employers job_invitations getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/calendar</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/employer/candidates/[id] get employers candidates getuser  " data-k="auth db st" data-g="employer">
+<td class="c-route"><code>/api/employer/candidates/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, storage</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">candidates</code></td></tr>
+<tr data-s="/api/employer/company get employers getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/company</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/[roundid]/assessment-attachment get employers interview_rounds getuser createsignedurl " data-k="auth db st" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/[roundId]/assessment-attachment</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> createSignedUrl</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/[roundid]/assessment-submission get employers interview_rounds getuser createsignedurl " data-k="auth db st" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/[roundId]/assessment-submission</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> createSignedUrl</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/[roundid]/cancel-round post employers interview_rounds getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/[roundId]/cancel-round</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/[roundid]/confirm post employers interview_rounds companies getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/[roundId]/confirm</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">interview_rounds</code> <code class="t">companies</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/[roundid]/edit patch interview_rounds employers getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/[roundId]/edit</code></td>
+<td class="c-m"><span class="m m--PATCH">PATCH</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">interview_rounds</code> <code class="t">employers</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/[roundid]/feedback post get employers interview_rounds job_invitations job_applications getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/[roundId]/feedback</code></td>
+<td class="c-m"><span class="m m--POST">POST</span><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">interview_rounds</code> <code class="t">job_invitations</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/[roundid]/offer post get employers interview_rounds job_offers job_invitations getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/[roundId]/offer</code></td>
+<td class="c-m"><span class="m m--POST">POST</span><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">interview_rounds</code> <code class="t">job_offers</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/employer/interview-rounds/next-round post employers interview_rounds job_invitations companies getuser listbuckets createbucket upload remove " data-k="auth db st" data-g="employer">
+<td class="c-route"><code>/api/employer/interview-rounds/next-round</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> listBuckets, createBucket, upload, remove<br><span class="dim">via lib</span> db, storage</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">interview_rounds</code> <code class="t">job_invitations</code> <code class="t">companies</code></td></tr>
+<tr data-s="/api/employer/invitations get post employers job_invitations candidates companies getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code> <code class="t">candidates</code> <code class="t">companies</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/cancel-interview post employers job_invitations getuser  notify_user" data-k="auth db rpc" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/cancel-interview</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--rpc">RPC</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">rpc</span> notify_user<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/check-offer get employers job_invitations job_offers getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/check-offer</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code> <code class="t">job_offers</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/confirm post employers job_invitations interview_rounds getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/confirm</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/current-round get employers job_invitations interview_rounds getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/current-round</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/edit patch job_invitations employers getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/edit</code></td>
+<td class="c-m"><span class="m m--PATCH">PATCH</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">job_invitations</code> <code class="t">employers</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/mark-seen post employers job_invitations getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/mark-seen</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/rounds get employers job_invitations interview_rounds getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/rounds</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/employer/invitations/[id]/seed-round post job_invitations employers interview_rounds getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/[id]/seed-round</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">job_invitations</code> <code class="t">employers</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/employer/invitations/cancel delete employers job_invitations getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/cancel</code></td>
+<td class="c-m"><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/employer/invitations/pending-count get employers job_invitations getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/pending-count</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/employer/invitations/status get job_invitations getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/invitations/status</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/employer/jobs get post employers jobs getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/employer/jobs/[id] get patch delete employers jobs getuser  " data-k="auth db st" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PATCH">PATCH</span><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/employer/jobs/[id]/extend post employers jobs payment_requests getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs/[id]/extend</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code> <code class="t">payment_requests</code></td></tr>
+<tr data-s="/api/employer/jobs/[id]/pause post employers jobs getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs/[id]/pause</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/employer/jobs/[id]/republish-request post employers jobs job_compliance_flags mis_user notifications getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs/[id]/republish-request</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code> <code class="t">job_compliance_flags</code> <code class="t">mis_user</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/employer/jobs/[id]/request-payment post employers jobs payment_requests getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs/[id]/request-payment</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code> <code class="t">payment_requests</code></td></tr>
+<tr data-s="/api/employer/jobs/[id]/resume post employers jobs getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs/[id]/resume</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/employer/jobs/active get employers jobs getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/jobs/active</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/employer/payments get employers payment_requests payment_types getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/payments</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">payment_requests</code> <code class="t">payment_types</code></td></tr>
+<tr data-s="/api/employer/payments/[id] get employers payment_requests getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/payments/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">payment_requests</code></td></tr>
+<tr data-s="/api/employer/payments/[id]/report post employers payment_requests event_logs mis_user notifications getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/payments/[id]/report</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">payment_requests</code> <code class="t">event_logs</code> <code class="t">mis_user</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/employer/payments/[id]/upload-proof post employers payment_requests payment_proofs getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/payments/[id]/upload-proof</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">payment_requests</code> <code class="t">payment_proofs</code></td></tr>
+<tr data-s="/api/employer/payments/pending-count get employers payment_requests getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/payments/pending-count</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">payment_requests</code></td></tr>
+<tr data-s="/api/employer/payments/quote get users payment_pricing getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/payments/quote</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_pricing</code></td></tr>
+<tr data-s="/api/employer/settings/deactivate-company post employers companies getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/settings/deactivate-company</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">companies</code></td></tr>
+<tr data-s="/api/employer/settings/delete-account delete employers getuser admin.deleteuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/settings/delete-account</code></td>
+<td class="c-m"><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser, admin.deleteUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr data-s="/api/employer/settings/hiring-preferences get put employers getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/settings/hiring-preferences</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr data-s="/api/employer/settings/me get employers getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/settings/me</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr data-s="/api/employer/settings/privacy get put employers companies getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/settings/privacy</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">companies</code></td></tr>
+<tr data-s="/api/employer/settings/team get put employers companies getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/settings/team</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">companies</code></td></tr>
+<tr data-s="/api/employer/sidebar-visibility get mis_sidebar_visibility_settings getuser  " data-k="auth db" data-g="employer">
+<td class="c-route"><code>/api/employer/sidebar-visibility</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">mis_sidebar_visibility_settings</code></td></tr>
+<tr data-s="/api/employer/upload-company-logo post employers getuser listbuckets createbucket upload getpublicurl " data-k="auth db st" data-g="employer">
+<td class="c-route"><code>/api/employer/upload-company-logo</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> listBuckets, createBucket, upload, getPublicUrl<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr data-s="/api/industries get industries   " data-k="db" data-g="industries">
+<td class="c-route"><code>/api/industries</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">industries</code></td></tr>
+<tr data-s="/api/job-designations get industries job_designations   " data-k="db" data-g="job-designations">
+<td class="c-route"><code>/api/job-designations</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">industries</code> <code class="t">job_designations</code></td></tr>
+<tr data-s="/api/mis/analytics/reports get mis_user event_logs candidates users employers companies jobs job_invitations job_offers getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/analytics/reports</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">event_logs</code> <code class="t">candidates</code> <code class="t">users</code> <code class="t">employers</code> <code class="t">companies</code> <code class="t">jobs</code> <code class="t">job_invitations</code> <code class="t">job_offers</code></td></tr>
+<tr data-s="/api/mis/analytics/stats get mis_user candidates companies jobs job_invitations event_logs getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/analytics/stats</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">candidates</code> <code class="t">companies</code> <code class="t">jobs</code> <code class="t">job_invitations</code> <code class="t">event_logs</code></td></tr>
+<tr data-s="/api/mis/audit/errors get mis_user error_logs getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/audit/errors</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">error_logs</code></td></tr>
+<tr data-s="/api/mis/audit/logs get mis_user event_logs getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/audit/logs</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">event_logs</code></td></tr>
+<tr data-s="/api/mis/audit/summary get mis_user getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/audit/summary</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code></td></tr>
+<tr data-s="/api/mis/bank-details get post users payment_bank_details getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/bank-details</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_bank_details</code></td></tr>
+<tr data-s="/api/mis/bank-details/[id] patch delete users payment_bank_details getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/bank-details/[id]</code></td>
+<td class="c-m"><span class="m m--PATCH">PATCH</span><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_bank_details</code></td></tr>
+<tr data-s="/api/mis/candidates/[id] get users candidates getuser  " data-k="auth db st" data-g="mis">
+<td class="c-route"><code>/api/mis/candidates/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, storage</td>
+<td class="c-t"><code class="t">users</code> <code class="t">candidates</code></td></tr>
+<tr data-s="/api/mis/companies/[companyid] get users companies employers getuser  " data-k="auth db st" data-g="mis">
+<td class="c-route"><code>/api/mis/companies/[companyId]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, storage</td>
+<td class="c-t"><code class="t">users</code> <code class="t">companies</code> <code class="t">employers</code></td></tr>
+<tr data-s="/api/mis/employers get users employers getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/employers</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, auth</td>
+<td class="c-t"><code class="t">users</code> <code class="t">employers</code></td></tr>
+<tr data-s="/api/mis/interview-rounds/[roundid]/reschedule post users interview_rounds job_invitations interview_reminder_sent getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/interview-rounds/[roundId]/reschedule</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">interview_rounds</code> <code class="t">job_invitations</code> <code class="t">interview_reminder_sent</code></td></tr>
+<tr data-s="/api/mis/interviews get users job_invitations getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/interviews</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/mis/interviews/[id] get users job_invitations interview_rounds getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/interviews/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">job_invitations</code> <code class="t">interview_rounds</code></td></tr>
+<tr data-s="/api/mis/interviews/[id]/reschedule post users job_invitations interview_reminder_sent getuser  notify_user" data-k="auth db rpc" data-g="mis">
+<td class="c-route"><code>/api/mis/interviews/[id]/reschedule</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--rpc">RPC</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">rpc</span> notify_user<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">job_invitations</code> <code class="t">interview_reminder_sent</code></td></tr>
+<tr data-s="/api/mis/interviews/stats get users job_invitations getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/interviews/stats</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/mis/jobs get users jobs getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/jobs</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, auth</td>
+<td class="c-t"><code class="t">users</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/mis/jobs/[id] get patch users jobs getuser  " data-k="auth db st" data-g="mis">
+<td class="c-route"><code>/api/mis/jobs/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PATCH">PATCH</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db, auth</td>
+<td class="c-t"><code class="t">users</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/mis/jobs/[id]/applications/[appid] patch users job_applications getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/jobs/[id]/applications/[appId]</code></td>
+<td class="c-m"><span class="m m--PATCH">PATCH</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, auth</td>
+<td class="c-t"><code class="t">users</code> <code class="t">job_applications</code></td></tr>
+<tr data-s="/api/mis/jobs/[id]/compliance-pause post users mis_user jobs job_compliance_flags notifications getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/jobs/[id]/compliance-pause</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, auth</td>
+<td class="c-t"><code class="t">users</code> <code class="t">mis_user</code> <code class="t">jobs</code> <code class="t">job_compliance_flags</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/mis/jobs/[id]/compliance-resolve post users mis_user job_compliance_flags jobs notifications getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/jobs/[id]/compliance-resolve</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, auth</td>
+<td class="c-t"><code class="t">users</code> <code class="t">mis_user</code> <code class="t">job_compliance_flags</code> <code class="t">jobs</code> <code class="t">notifications</code></td></tr>
+<tr data-s="/api/mis/jobs/[id]/status post users jobs getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/jobs/[id]/status</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, auth</td>
+<td class="c-t"><code class="t">users</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/mis/jobs/compliance get users job_compliance_flags jobs getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/jobs/compliance</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">job_compliance_flags</code> <code class="t">jobs</code></td></tr>
+<tr data-s="/api/mis/master-data/designations get post mis_user job_designations getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/master-data/designations</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">job_designations</code></td></tr>
+<tr data-s="/api/mis/master-data/designations/bulk-upload post mis_user industries seniority_levels job_designations getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/master-data/designations/bulk-upload</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">industries</code> <code class="t">seniority_levels</code> <code class="t">job_designations</code></td></tr>
+<tr data-s="/api/mis/master-data/industries get post mis_user industries getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/master-data/industries</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">industries</code></td></tr>
+<tr data-s="/api/mis/master-data/industries/bulk-upload post mis_user industries getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/master-data/industries/bulk-upload</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">industries</code></td></tr>
+<tr data-s="/api/mis/master-data/seniority-levels get post mis_user seniority_levels getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/master-data/seniority-levels</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">seniority_levels</code></td></tr>
+<tr data-s="/api/mis/master-data/seniority-levels/bulk-upload post mis_user seniority_levels getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/master-data/seniority-levels/bulk-upload</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">seniority_levels</code></td></tr>
+<tr data-s="/api/mis/payment-pricing get post users payment_pricing getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payment-pricing</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_pricing</code></td></tr>
+<tr data-s="/api/mis/payment-settings get patch users payment_settings getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payment-settings</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PATCH">PATCH</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_settings</code></td></tr>
+<tr data-s="/api/mis/payment-types get post users payment_types getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payment-types</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_types</code></td></tr>
+<tr data-s="/api/mis/payment-types/[id] patch users payment_types getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payment-types/[id]</code></td>
+<td class="c-m"><span class="m m--PATCH">PATCH</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_types</code></td></tr>
+<tr data-s="/api/mis/payments get post users payment_requests jobs payment_types mis_user employers getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payments</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_requests</code> <code class="t">jobs</code> <code class="t">payment_types</code> <code class="t">mis_user</code> <code class="t">employers</code></td></tr>
+<tr data-s="/api/mis/payments/[id] get users payment_requests getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payments/[id]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_requests</code></td></tr>
+<tr data-s="/api/mis/payments/[id]/review post users mis_user payment_requests payment_proofs getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payments/[id]/review</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">mis_user</code> <code class="t">payment_requests</code> <code class="t">payment_proofs</code></td></tr>
+<tr data-s="/api/mis/payments/stats get users payment_requests getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/payments/stats</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">payment_requests</code></td></tr>
+<tr data-s="/api/mis/permissions get mis_user mis_permissions getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/permissions</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">mis_permissions</code></td></tr>
+<tr data-s="/api/mis/placements get users job_invitations getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/placements</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">job_invitations</code></td></tr>
+<tr data-s="/api/mis/register post mis_user users signup  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/register</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> signUp<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">users</code></td></tr>
+<tr data-s="/api/mis/roles get post mis_user mis_roles mis_role_permissions getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/roles</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">mis_roles</code> <code class="t">mis_role_permissions</code></td></tr>
+<tr data-s="/api/mis/roles/[roleid] get patch delete mis_user mis_roles getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/roles/[roleId]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PATCH">PATCH</span><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">mis_roles</code></td></tr>
+<tr data-s="/api/mis/roles/[roleid]/permissions post delete mis_user mis_roles mis_role_permissions mis_permissions getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/roles/[roleId]/permissions</code></td>
+<td class="c-m"><span class="m m--POST">POST</span><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">mis_roles</code> <code class="t">mis_role_permissions</code> <code class="t">mis_permissions</code></td></tr>
+<tr data-s="/api/mis/settings/interview-reminders get put mis_interview_reminder_settings getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/settings/interview-reminders</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db, auth</td>
+<td class="c-t"><code class="t">mis_interview_reminder_settings</code></td></tr>
+<tr data-s="/api/mis/settings/sidebar-visibility get put mis_user mis_sidebar_visibility_settings getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/settings/sidebar-visibility</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">mis_user</code> <code class="t">mis_sidebar_visibility_settings</code></td></tr>
+<tr data-s="/api/mis/users get users mis_user getuser  " data-k="auth db" data-g="mis">
+<td class="c-route"><code>/api/mis/users</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">users</code> <code class="t">mis_user</code></td></tr>
+<tr data-s="/api/payments/proofs/[proofid] get payment_proofs users employers getuser createsignedurl " data-k="auth db st" data-g="payments">
+<td class="c-route"><code>/api/payments/proofs/[proofId]</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">storage</span> createSignedUrl<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">payment_proofs</code> <code class="t">users</code> <code class="t">employers</code></td></tr>
+<tr data-s="/api/seniority-levels get seniority_levels   " data-k="db" data-g="seniority-levels">
+<td class="c-route"><code>/api/seniority-levels</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><code class="t">seniority_levels</code></td></tr>
+<tr data-s="/api/upload post users getuser  " data-k="auth db st" data-g="upload">
+<td class="c-route"><code>/api/upload</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span><span class="b b--st">Storage</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+<tr data-s="/api/upload-presignup post    " data-k="st ind" data-g="upload-presignup">
+<td class="c-route"><code>/api/upload-presignup</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--st">Storage</span><span class="b b--ind">DB via lib</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">via lib</span> storage, db</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr data-s="/api/user/change-password post users getuser admin.updateuserbyid  " data-k="auth db" data-g="user">
+<td class="c-route"><code>/api/user/change-password</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser, admin.updateUserById</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+<tr data-s="/api/user/notification-preferences get put users getuser  " data-k="auth db" data-g="user">
+<td class="c-route"><code>/api/user/notification-preferences</code></td>
+<td class="c-m"><span class="m m--GET">GET</span><span class="m m--PUT">PUT</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+<tr data-s="/api/user/sessions get  getuser getsession  get_my_sessions" data-k="auth rpc" data-g="user">
+<td class="c-route"><code>/api/user/sessions</code></td>
+<td class="c-m"><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--rpc">RPC</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser, getSession<br><span class="dim">rpc</span> get_my_sessions</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr data-s="/api/user/sessions/[id] delete  getuser  delete_my_session" data-k="auth rpc" data-g="user">
+<td class="c-route"><code>/api/user/sessions/[id]</code></td>
+<td class="c-m"><span class="m m--DELETE">DELETE</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--rpc">RPC</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser<br><span class="dim">rpc</span> delete_my_session</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr data-s="/api/user/sign-out-all post  getuser signout  " data-k="auth" data-g="user">
+<td class="c-route"><code>/api/user/sign-out-all</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser, signOut</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr data-s="/api/user/timezone post get users getuser  " data-k="auth db" data-g="user">
+<td class="c-route"><code>/api/user/timezone</code></td>
+<td class="c-m"><span class="m m--POST">POST</span><span class="m m--GET">GET</span></td>
+<td class="c-b"><span class="b b--auth">Auth</span><span class="b b--db">DB</span></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+<tr data-s="/api/verify-br-certificate post    " data-k="ind" data-g="verify-br-certificate">
+<td class="c-route"><code>/api/verify-br-certificate</code></td>
+<td class="c-m"><span class="m m--POST">POST</span></td>
+<td class="c-b"><span class="b b--ind">DB via lib</span></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">via lib</span> db</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="actions">
+<div class="sh"><span class="num">04</span><h2>Server actions</h2></div>
+<p>57 exported server actions across 14 files. These are invoked as form actions from client components, so they are a second, parallel API surface — every one of them must be repointed at the new backend alongside the routes above. <code>auth.ts</code> is the heaviest: it drives all registration, login and password-reset flows against both Supabase Auth <em>and</em> your own <code class="t">users</code> table.</p>
+<div class="tw"><table>
+<thead><tr><th>File</th><th>Actions</th><th>Auth / storage</th><th>Tables</th></tr></thead>
+<tbody>
+<tr>
+<td class="c-route"><code>ats-score.ts</code></td>
+<td class="c-d"><code class="fn">fetchResumeAsBase64</code> <code class="fn">computeAtsScore</code> <code class="fn">buildAtsUpdate</code></td>
+<td class="c-d"><span class="dim">auth</span> —<br><span class="dim">storage</span> yes</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr>
+<td class="c-route"><code>auth.ts</code></td>
+<td class="c-d"><code class="fn">registerCandidate</code> <code class="fn">verifyEmail</code> <code class="fn">resendVerificationCode</code> <code class="fn">loginCandidate</code> <code class="fn">registerMISUser</code> <code class="fn">loginMISUser</code> <code class="fn">addMISUser</code> <code class="fn">setupMISPassword</code> <code class="fn">registerEmployer</code> <code class="fn">loginEmployer</code> <code class="fn">requestPasswordReset</code> <code class="fn">resetPassword</code></td>
+<td class="c-d"><span class="dim">auth</span> signUp, signOut, signInWithPassword, getUser, admin.createUser, admin.updateUserById</td>
+<td class="c-t"><code class="t">users</code> <code class="t">candidates</code> <code class="t">mis_user</code> <code class="t">mis_roles</code> <code class="t">industries</code> <code class="t">job_designations</code> <code class="t">companies</code> <code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>candidate-dashboard-data.ts</code></td>
+<td class="c-d"><code class="fn">getCandidateDashboardData</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">job_invitations</code> <code class="t">work_experiences</code> <code class="t">educations</code> <code class="t">jobs</code> <code class="t">saved_jobs</code> <code class="t">job_applications</code></td></tr>
+<tr>
+<td class="c-route"><code>candidate.ts</code></td>
+<td class="c-d"><code class="fn">markApprovalMessageAsSeen</code> <code class="fn">approveCandidateProfile</code> <code class="fn">rejectCandidateProfile</code> <code class="fn">revokeCandidateApproval</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">users</code></td></tr>
+<tr>
+<td class="c-route"><code>employer-actions.ts</code></td>
+<td class="c-d"><code class="fn">createSubAdmin</code> <code class="fn">setupEmployerPassword</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser, admin.createUser, admin.deleteUser, admin.updateUserById</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">users</code></td></tr>
+<tr>
+<td class="c-route"><code>employer-dashboard-data.ts</code></td>
+<td class="c-d"><code class="fn">getEmployerDashboardData</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">jobs</code> <code class="t">job_invitations</code> <code class="t">payment_requests</code> <code class="t">job_applications</code> <code class="t">job_offers</code></td></tr>
+<tr>
+<td class="c-route"><code>employer-profile.ts</code></td>
+<td class="c-d"><code class="fn">getEmployerProfileData</code> <code class="fn">completeEmployerProfile</code> <code class="fn">updateCompanyInfo</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">companies</code></td></tr>
+<tr>
+<td class="c-route"><code>employer-profiles.ts</code></td>
+<td class="c-d"><code class="fn">getEmployerProfile</code> <code class="fn">getCompanyProfile</code> <code class="fn">getEmployerAndCompanyProfiles</code></td>
+<td class="c-d"><span class="dim">auth</span> —</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">companies</code></td></tr>
+<tr>
+<td class="c-route"><code>employer.ts</code></td>
+<td class="c-d"><code class="fn">markCompanyApprovalMessageAsSeen</code> <code class="fn">approveCompanyProfile</code> <code class="fn">rejectCompanyProfile</code> <code class="fn">revokeCompanyApproval</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">employers</code> <code class="t">companies</code> <code class="t">users</code></td></tr>
+<tr>
+<td class="c-route"><code>extract-cv.ts</code></td>
+<td class="c-d"><code class="fn">extractCVData</code> <code class="fn">generateProfessionalSummary</code></td>
+<td class="c-d"><span class="dim">auth</span> —</td>
+<td class="c-t"><code class="t">industries</code> <code class="t">job_designations</code></td></tr>
+<tr>
+<td class="c-route"><code>profile-mutations.ts</code></td>
+<td class="c-d"><code class="fn">addExperience</code> <code class="fn">updateExperience</code> <code class="fn">deleteExperience</code> <code class="fn">addProject</code> <code class="fn">updateProject</code> <code class="fn">deleteProject</code> <code class="fn">addCertification</code> <code class="fn">updateCertification</code> <code class="fn">deleteCertification</code> <code class="fn">addAward</code> <code class="fn">updateAward</code> <code class="fn">deleteAward</code> <code class="fn">addEducation</code> <code class="fn">updateEducation</code> <code class="fn">deleteEducation</code> <code class="fn">updateBasicInfo</code> <code class="fn">updateAboutSection</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">work_experiences</code> <code class="t">projects</code> <code class="t">certificates</code> <code class="t">awards</code> <code class="t">educations</code></td></tr>
+<tr>
+<td class="c-route"><code>profile.ts</code></td>
+<td class="c-d"><code class="fn">completeProfile</code> <code class="fn">completeFullProfile</code> <code class="fn">completeFullProfileWithCV</code></td>
+<td class="c-d"><span class="dim">auth</span> getUser</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">work_experiences</code> <code class="t">educations</code> <code class="t">awards</code> <code class="t">projects</code> <code class="t">certificates</code> <code class="t">candidate_resumes</code></td></tr>
+<tr>
+<td class="c-route"><code>universal-auth.ts</code></td>
+<td class="c-d"><code class="fn">universalLogin</code></td>
+<td class="c-d"><span class="dim">auth</span> signInWithPassword</td>
+<td class="c-t"><code class="t">users</code> <code class="t">candidates</code> <code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>verify-br-certificate.ts</code></td>
+<td class="c-d"><code class="fn">verifyBRCertificate</code></td>
+<td class="c-d"><span class="dim">auth</span> —</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="ssr">
+<div class="sh"><span class="num">05</span><h2>Server components querying directly</h2></div>
+<p>Pages and layouts that query Supabase during render rather than calling an API route. Rows marked <span class="b b--crit">service-role</span> use the admin client, which <b>bypasses RLS completely</b> — whatever authorization those pages need is written in the page body, not in a policy, and must be carried over by hand.</p>
+<div class="tw"><table>
+<thead><tr><th>File</th><th>Client</th><th>Auth</th><th>Tables</th></tr></thead>
+<tbody>
+<tr>
+<td class="c-route"><code>app/candidate/(dashboard)/calendar/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr>
+<td class="c-route"><code>app/candidate/(dashboard)/dashboard/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr>
+<td class="c-route"><code>app/candidate/(dashboard)/invitations/[id]/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr>
+<td class="c-route"><code>app/candidate/(dashboard)/invitations/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr>
+<td class="c-route"><code>app/candidate/create-profile/layout.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr>
+<td class="c-route"><code>app/candidate/create-profile/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/admins/add/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/admins/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">uid, getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/calendar/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/candidates/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">employers</code> <code class="t">job_invitations</code> <code class="t">industries</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/company/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/dashboard/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/invitations/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/profile/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><span class="dim">—</span></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/(dashboard)/settings/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/complete-profile/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>app/employer/setup-password/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">users</code> <code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/candidates/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/dashboard/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">candidates</code> <code class="t">companies</code> <code class="t">jobs</code> <code class="t">job_invitations</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/employers/page.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">companies</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/interviews/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">job_invitations</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/roles/[roleId]/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">mis_roles</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/roles/[roleId]/permissions/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">mis_roles</code> <code class="t">mis_permissions</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/roles/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">mis_roles</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/(dashboard)/users/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">mis_user</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/register/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">mis_user</code></td></tr>
+<tr>
+<td class="c-route"><code>app/mis/setup-password/page.tsx</code></td>
+<td><span class="b b--crit">service-role</span></td>
+<td class="c-d">—</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+<tr>
+<td class="c-route"><code>components/candidate/CandidateLayout.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">candidates</code></td></tr>
+<tr>
+<td class="c-route"><code>components/employer/EmployerLayout.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">employers</code></td></tr>
+<tr>
+<td class="c-route"><code>components/mis/MISLayout.tsx</code></td>
+<td><span class="b b--auth">user session</span></td>
+<td class="c-d">getUser</td>
+<td class="c-t"><code class="t">users</code></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="libs">
+<div class="sh"><span class="num">06</span><h2>Shared libraries</h2></div>
+<p>Thirteen modules under <code>src/lib/</code> reach Supabase on behalf of their callers. Porting these is the highest-leverage work in the whole migration — they are the seam that lets route handlers change once rather than 143 times.</p>
+<div class="tw"><table>
+<thead><tr><th>Module</th><th>Surface</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td class="c-route"><code>@/lib/storage</code></td><td><span class="b b--st">Storage</span></td><td class="c-d">Upload, delete, watermark PDFs, mint signed URLs, rewrite PII URLs in responses</td></tr>
+<tr><td class="c-route"><code>@/lib/permissions</code></td><td><span class="b b--auth">Auth</span> <span class="b b--db">DB</span></td><td class="c-d">MIS role and permission checks — the authorization gate on every MIS route</td></tr>
+<tr><td class="c-route"><code>@/lib/logger</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Writes <code class="t">event_logs</code>, <code class="t">api_request_logs</code>, <code class="t">error_logs</code>; called from middleware</td></tr>
+<tr><td class="c-route"><code>@/lib/payments</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Pricing, payment requests, settings, notification fan-out</td></tr>
+<tr><td class="c-route"><code>@/lib/job-advertisement</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Job ad lifecycle against <code class="t">jobs</code>, <code class="t">payment_requests</code>, <code class="t">notifications</code></td></tr>
+<tr><td class="c-route"><code>@/lib/process-job-expiry</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Cron body for <code>/api/cron/expire-jobs</code></td></tr>
+<tr><td class="c-route"><code>@/lib/process-interview-reminders</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Cron body for <code>/api/cron/interview-reminders</code></td></tr>
+<tr><td class="c-route"><code>@/lib/public-directory</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Public job, company and candidate listings</td></tr>
+<tr><td class="c-route"><code>@/lib/audit-queries</code></td><td><span class="b b--db">DB</span></td><td class="c-d">MIS audit log reads</td></tr>
+<tr><td class="c-route"><code>@/lib/countries</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Reference data for <code class="t">countries</code></td></tr>
+<tr><td class="c-route"><code>@/lib/utils/membership</code></td><td><span class="b b--db">DB</span></td><td class="c-d">Candidate membership resolution</td></tr>
+<tr><td class="c-route"><code>@/lib/bootstrap/seed-super-admin</code></td><td><span class="b b--auth">Auth</span> <span class="b b--db">DB</span></td><td class="c-d">Startup seed, runs from <code>instrumentation.ts</code></td></tr>
+<tr><td class="c-route"><code>@/lib/supabase/{client,server,admin,proxy}</code></td><td><span class="b b--auth">Auth</span></td><td class="c-d">The four client factories. <b>Replace these four files and every import site keeps compiling</b></td></tr>
+</tbody></table></div>
+<h3>Storage buckets</h3>
+<div class="pill-row">
+<span class="pill priv"><b>resume</b> private · signed</span>
+<span class="pill priv"><b>resume_copy</b> private · signed</span>
+<span class="pill priv"><b>br-certificates</b> private · signed</span>
+<span class="pill priv"><b>payment-proofs</b> private · signed</span>
+<span class="pill"><b>profile-images</b> public</span>
+<span class="pill"><b>cover-images</b> public</span>
+<span class="pill"><b>company-logos</b> public</span>
+<span class="pill"><b>assessment-attachments</b> signed</span>
+<span class="pill"><b>assessment-submissions</b> signed</span>
+</div>
+</section>
+
+<section id="dbside">
+<div class="sh"><span class="num">07</span><h2>Logic that lives inside Postgres</h2></div>
+<p>None of this appears in the route inventory, which is exactly why it gets missed. It runs in the database today and has to run somewhere in the new backend.</p>
+<h3>Called as RPC from application code</h3>
+<div class="tw"><table>
+<thead><tr><th>Function</th><th>Called from</th><th>Replacement</th></tr></thead>
+<tbody>
+<tr><td class="c-route"><code>notify_user</code></td><td class="c-d"><code>employer/invitations/[id]/cancel-interview</code>, <code>mis/interviews/[id]/reschedule</code> ×2</td><td class="c-d">A notification service method in the backend</td></tr>
+<tr><td class="c-route"><code>get_my_sessions</code></td><td class="c-d"><code>GET /api/user/sessions</code></td><td class="c-d">Session store listing — depends entirely on your new session design</td></tr>
+<tr><td class="c-route"><code>delete_my_session</code></td><td class="c-d"><code>DELETE /api/user/sessions/[id]</code></td><td class="c-d">Session revoke by id</td></tr>
+</tbody></table></div>
+<h3>Triggers writing the notification feed</h3>
+<p>Twelve functions fire on insert, update and status change: <code>notify_on_invitation_insert</code>, <code>notify_on_invitation_update</code>, <code>notify_on_invitation_status_change</code>, <code>notify_on_offer_insert</code>, <code>notify_on_offer_update</code>, <code>notify_on_offer_created</code>, <code>notify_on_offer_status_change</code>, <code>notify_on_round_insert</code>, <code>notify_on_round_update</code>, <code>notify_on_round_status_change</code>, plus the <code>notify_user</code> helper. Notifications currently appear <em>because the database wrote them</em>. If the new backend writes invitations without reproducing these, the notification feed silently goes empty — no error, no failed request.</p>
+<h3>Row Level Security</h3>
+<p>Several hundred policies plus the helpers <code>is_candidate</code>, <code>is_employer</code>, <code>is_mis_user</code>. Of the 143 routes, <b>138 use the RLS-scoped session client and 124 also use the service-role client</b> — 123 use both in the same handler. That split is the real authorization model, and it is only half written in the code.</p>
+</section>
+
+<section id="jobs">
+<div class="sh"><span class="num">08</span><h2>Scheduled work</h2></div>
+<div class="tw"><table>
+<thead><tr><th>Job</th><th>Trigger</th><th>Schedule</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td class="c-route"><code>/api/cron/expire-jobs</code></td><td class="c-d">Vercel cron</td><td class="c-d"><code>0 10 * * *</code></td><td class="c-d">Runs <code>@/lib/process-job-expiry</code></td></tr>
+<tr><td class="c-route"><code>/api/cron/interview-reminders</code></td><td class="c-d">Vercel cron</td><td class="c-d"><code>0 3 * * *</code></td><td class="c-d">Runs <code>@/lib/process-interview-reminders</code></td></tr>
+<tr><td class="c-route"><code>supabase/functions/interview-reminders</code></td><td class="c-d">pg_cron → <code>net.http_post</code></td><td class="c-d"><code>*/15 * * * *</code></td><td class="c-d"><b>Duplicate</b> of the route above, in Deno, on a different schedule. Retire it with Supabase</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="target">
+<div class="sh"><span class="num">09</span><h2>What the new backend has to expose</h2></div>
+<p>The application's own <code>/api/*</code> routes stay. What follows is the internal surface those routes will call instead of <code>supabase-js</code> — whether you build it as HTTP services or as in-process modules.</p>
+
+<div class="ep"><div class="ep-h"><span>Auth</span><span class="r">replaces GoTrue · 268 call sites</span></div><ul>
+<li><span class="v">GET</span><span class="p">/auth/user</span><span class="w">The hot path — 234 sites. Verify the JWT locally, do not round-trip</span></li>
+<li><span class="v">POST</span><span class="p">/auth/sign-in</span><span class="w">Email + password, sets the session cookie</span></li>
+<li><span class="v">POST</span><span class="p">/auth/sign-up</span><span class="w">Creates the auth identity only; the profile row is written separately</span></li>
+<li><span class="v">POST</span><span class="p">/auth/sign-out</span><span class="w">Needs a scope argument — <code>others</code> is used by sign-out-all</span></li>
+<li><span class="v">POST</span><span class="p">/auth/token/refresh</span><span class="w">Middleware refreshes on every request today</span></li>
+<li><span class="v">GET</span><span class="p">/auth/sessions</span><span class="w">Replaces <code>get_my_sessions</code></span></li>
+<li><span class="v">DELETE</span><span class="p">/auth/sessions/:id</span><span class="w">Replaces <code>delete_my_session</code></span></li>
+<li><span class="v">POST</span><span class="p">/auth/admin/users</span><span class="w">Employer sub-admins, MIS users, seed super-admin</span></li>
+<li><span class="v">PATCH</span><span class="p">/auth/admin/users/:id</span><span class="w">Password set on reset and on MIS password setup</span></li>
+<li><span class="v">DELETE</span><span class="p">/auth/admin/users/:id</span><span class="w">Account deletion, candidate and employer</span></li>
+<li><span class="v">GET</span><span class="p">/auth/admin/users</span><span class="w">Seed scripts only — can be dropped from the runtime API</span></li>
+</ul></div>
+
+<div class="ep"><div class="ep-h"><span>Storage</span><span class="r">replaces Supabase Storage · 9 buckets</span></div><ul>
+<li><span class="v">PUT</span><span class="p">/storage/:bucket/*path</span><span class="w">Upsert semantics; content type preserved</span></li>
+<li><span class="v">DELETE</span><span class="p">/storage/:bucket/*path</span><span class="w">Accepts a list — cleanup paths remove several at once</span></li>
+<li><span class="v">GET</span><span class="p">/storage/:bucket?prefix=</span><span class="w">Used to clear a candidate's old cover images</span></li>
+<li><span class="v">POST</span><span class="p">/storage/:bucket/sign</span><span class="w">TTL in seconds; default 3600. Four private buckets depend on this</span></li>
+</ul></div>
+
+<div class="ep"><div class="ep-h"><span>Data</span><span class="r">replaces PostgREST · 785 queries, 39 tables</span></div><ul>
+<li><span class="v">—</span><span class="p">Repository modules</span><span class="w">Prisma is already in the repo with the full 39-model schema and zero runtime usage. Adopt it directly rather than shimming PostgREST</span></li>
+<li><span class="v">—</span><span class="p">Authorization layer</span><span class="w">Where RLS is today. This is the largest and least visible piece of work</span></li>
+<li><span class="v">—</span><span class="p">Notification service</span><span class="w">Replaces the twelve <code>notify_on_*</code> triggers and <code>notify_user</code></span></li>
+</ul></div>
+
+<div class="ep"><div class="ep-h"><span>Realtime</span><span class="r">replaces postgres_changes · 5 tables</span></div><ul>
+<li><span class="v">WS</span><span class="p">/realtime?table=&amp;filter=</span><span class="w">Only if you want to keep live updates</span></li>
+<li><span class="v">—</span><span class="p">or: delete it</span><span class="w">All eight subscriptions do nothing but trigger a refetch. SWR <code>refreshInterval</code> replaces every one with no user-visible change</span></li>
+</ul></div>
+</section>
+
+<section id="traps">
+<div class="sh"><span class="num">10</span><h2>What will bite you</h2></div>
+
+<div class="warn"><h4>Service-role keys are committed to git</h4>
+<p><code>supabase/migrations/20260523_02_schedule_dev.sql</code> and <code>…_03_schedule_prod.sql</code> contain live <code>service_role</code> JWTs and the cron shared secret in plaintext, and both files are tracked. Anyone with repo access has full RLS-bypassing database access to dev <em>and</em> prod.</p>
+<p>This is worth fixing today, independent of the migration — rotate both keys now, and do not carry the pattern into the new backend.</p></div>
+
+<div class="warn"><h4>Stored URLs encode the Supabase host</h4>
+<p>The database stores full public URLs shaped <code>…/storage/v1/object/public/&lt;bucket&gt;/&lt;path&gt;</code>. <code>privatePiiTarget()</code> in <code>src/lib/storage.ts</code> parses that exact string to recover bucket and path. Change the storage host and every stored URL breaks unless you either keep the path shape or run a data migration over every resume, logo, image and certificate column.</p></div>
+
+<div class="warn"><h4>Passwords are stored twice</h4>
+<p><code>users.password</code> exists in the Prisma schema and Supabase Auth holds its own copy. <code>resetPassword()</code> writes both. Email verification and password reset are already custom — your own tokens, your own emails — so only the login check itself depends on GoTrue. Pick one store during the move and delete the other; carrying both into the new backend carries the drift bug with it.</p></div>
+
+<div class="warn"><h4>Notifications appear by trigger, not by code</h4>
+<p>Nothing in the application inserts most notification rows — the database does, on twelve triggers. Write invitations from a new backend without porting those and the feed goes quiet with no error anywhere.</p></div>
+
+<div class="warn"><h4>The cron routes look Supabase-free</h4>
+<p><code>/api/cron/expire-jobs</code> and <code>/api/cron/interview-reminders</code> have no <code>.from()</code> and no auth call in their own files. Both are entirely Supabase-dependent through their lib imports. Any inventory built by grepping route files alone will miss them.</p></div>
+</section>
+
+<section id="order">
+<div class="sh"><span class="num">11</span><h2>Suggested order</h2></div>
+<ol class="steps">
+<li><b>Rotate the leaked keys</b><span>Before anything else, and unrelated to the migration.</span></li>
+<li><b>Replace the four client factories first</b><span><code>src/lib/supabase/{client,server,admin,proxy}.ts</code> are imported by 205 files. Give the new backend an SDK with the same shape and the whole codebase keeps compiling while you swap implementations underneath.</span></li>
+<li><b>Auth, then middleware</b><span><code>getUser()</code> runs 234 times and on every middleware pass. Get it right and cheap before anything else moves.</span></li>
+<li><b>Port the thirteen shared libraries</b><span>Highest leverage — routes change once instead of 143 times.</span></li>
+<li><b>Move RLS into the backend authorization layer</b><span>The biggest and least visible piece. 123 routes mix session-scoped and service-role clients in one handler; each one needs a deliberate decision, not a mechanical translation.</span></li>
+<li><b>Port the triggers as service methods</b><span>Notifications and the audit trail. Verify by watching the feed, not the HTTP status.</span></li>
+<li><b>Give the browser-direct calls real endpoints</b><span>The eleven files in §2. Two of them already have matching routes that simply are not being used.</span></li>
+<li><b>Retire realtime or rebuild it</b><span>Deleting it is defensible — every subscription only triggers a refetch.</span></li>
+<li><b>Storage last</b><span>Self-contained, and it is the one that needs a data migration if you change the URL shape.</span></li>
+</ol>
+</section>
+
+<footer>Generated by sweeping <code>src/</code>, <code>scripts/</code>, <code>supabase/</code> and <code>prisma/</code> for every <code>supabase-js</code> and <code>@supabase/ssr</code> call site — direct and via shared libraries. Counts are call sites, not unique operations. Branch <code>landing</code>, 1 September 2026.</footer>
+</main></div>
+
+<script>
+(function(){
+ var q=document.getElementById('q'),ct=document.getElementById('ct'),
+     rows=Array.prototype.slice.call(document.querySelectorAll('#rt tbody tr')),
+     chips=Array.prototype.slice.call(document.querySelectorAll('.chip')),active=[];
+ function apply(){
+  var t=q.value.trim().toLowerCase(),n=0;
+  rows.forEach(function(r){
+   var ok=(!t||r.dataset.s.indexOf(t)>-1);
+   if(ok&&active.length){
+    var k=r.dataset.k.split(' ');
+    ok=active.every(function(f){return k.indexOf(f)>-1;});
+   }
+   r.hidden=!ok; if(ok)n++;
+  });
+  ct.textContent=n+' of '+rows.length+' routes';
+ }
+ q.addEventListener('input',apply);
+ chips.forEach(function(c){c.addEventListener('click',function(){
+  var f=c.dataset.f,i=active.indexOf(f);
+  if(i>-1){active.splice(i,1);c.setAttribute('aria-pressed','false');}
+  else{active.push(f);c.setAttribute('aria-pressed','true');}
+  apply();
+ });});
+ apply();
+})();
+</script>

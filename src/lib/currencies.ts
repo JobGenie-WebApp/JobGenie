@@ -51,3 +51,18 @@ export const currencySelectOptions = () =>
 /** "LKR 150,000" - the code rather than a symbol, since one symbol serves a dozen currencies. */
 export const formatSalary = (amount: number | string, currency?: string | null) =>
     `${currency || DEFAULT_CURRENCY} ${Number(amount).toLocaleString()}`;
+
+/** "LKR 100,000 – 200,000" / "LKR 100,000+" / "Up to LKR 200,000" - null when neither bound is set. */
+export function formatSalaryRange(
+    min: number | null | undefined,
+    max: number | null | undefined,
+    currency?: string | null,
+    suffix = ""
+) {
+    if (!min && !max) return null;
+    const c = currency || DEFAULT_CURRENCY;
+    const f = (v: number) => v.toLocaleString();
+    if (min && max) return `${c} ${f(min)} – ${f(max)}${suffix}`;
+    if (min) return `${c} ${f(min)}+${suffix}`;
+    return `Up to ${c} ${f(max!)}${suffix}`;
+}

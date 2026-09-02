@@ -30,7 +30,7 @@ interface TimeSlot {
 import { formatUTCTime, formatUTCDate, formatTimestamp } from "@/lib/date-utils";
 import { formatIndustry, formatPhoneNumber } from "@/lib/utils";
 import { InterviewRoundsDisplay } from "@/components/employer/InterviewRoundsDisplay";
-import { InvitationsKanban } from "./InvitationsKanban";
+import { InvitationsKanban, type AppliedApplicant } from "./InvitationsKanban";
 
 const INTERVIEW_TIME_SLOTS = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -1007,6 +1007,7 @@ export default function InvitationsClient() {
     const searchParams = useSearchParams();
     const { mutate } = useSWRConfig();
     const [invitations, setInvitations] = useState<Invitation[]>([]);
+    const [applicants, setApplicants] = useState<AppliedApplicant[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string>("all");
     const [selectedInvitation, setSelectedInvitation] = useState<Invitation | null>(null);
@@ -1040,6 +1041,7 @@ export default function InvitationsClient() {
 
     useEffect(() => {
         fetchInvitations();
+        fetchApplicants();
     }, []);
 
     // Mark invitation as seen when opened (updates sidebar unread count)
@@ -1103,6 +1105,24 @@ export default function InvitationsClient() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Applicants who applied to a job ad but have no invitation yet - the board's
+    // "Applied" column. `unlinkedOnly=1` drops anyone already shown as an invitation card.
+    const fetchApplicants = async () => {
+        try {
+            const response = await fetch('/api/employer/applications?unlinkedOnly=1');
+            const data = await response.json();
+            if (data.success) setApplicants(data.data);
+        } catch (error) {
+            console.error("Error fetching applicants:", error);
+        }
+    };
+
+    // The board draws from both sources, so any action on it refreshes both.
+    const refreshBoard = () => {
+        fetchInvitations();
+        fetchApplicants();
     };
 
     // Helper function to update URL with invitation ID
@@ -1268,7 +1288,10 @@ export default function InvitationsClient() {
             <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 pb-4">
                 <div className="flex items-center justify-between shrink-0">
                     <p className="text-xs text-muted-foreground">
-                        {invitations.length} total
+                        {invitations.length + applicants.length} total
+                        {applicants.length > 0 && (
+                            <> · <span className="font-medium">{applicants.length} applied</span></>
+                        )}
                         {statusCounts.pending > 0 && (
                             <> · <span className="text-amber-600 dark:text-amber-400 font-medium">{statusCounts.pending} need action</span></>
                         )}
@@ -1283,7 +1306,8 @@ export default function InvitationsClient() {
                 </div>
                 <InvitationsKanban
                     invitations={invitations}
-                    fetchInvitations={fetchInvitations}
+                    applicants={applicants}
+                    fetchInvitations={refreshBoard}
                 />
             </div>
         );

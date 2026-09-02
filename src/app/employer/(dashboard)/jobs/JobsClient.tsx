@@ -20,6 +20,8 @@ import {
     type ApplicantApplication,
     type ApplicantLinkedInvitation,
 } from "@/components/employer/ApplicantDetailModal";
+import { type AtsResult } from "@/components/employer/AtsDetails";
+import { formatSalaryRange } from "@/lib/currencies";
 
 const MDXViewer = dynamic(
     () => import("@/components/employer/MdxViewer").then((m) => m.MdxViewer),
@@ -62,7 +64,7 @@ interface JobDetail extends JobBase {
     job_applications: Application[];
 }
 
-interface Application {
+interface Application extends AtsResult {
     id: string;
     status: string;
     applied_at: string;
@@ -93,7 +95,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
 };
 
 const APP_STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-    pending:     { label: "Pending",     icon: <Clock className="h-3.5 w-3.5" />,        color: "text-muted-foreground" },
+    pending:     { label: "Not reviewed", icon: <Clock className="h-3.5 w-3.5" />,       color: "text-amber-600" },
     reviewed:    { label: "Reviewed",    icon: <Eye className="h-3.5 w-3.5" />,          color: "text-primary" },
     shortlisted: { label: "Shortlisted", icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: "text-primary" },
     rejected:    { label: "Rejected",    icon: <XCircle className="h-3.5 w-3.5" />,      color: "text-destructive" },
@@ -113,15 +115,6 @@ type TabValue = "all" | "draft" | "published" | "paused" | "expired";
 function fmt(d: string | null, opts?: Intl.DateTimeFormatOptions) {
     if (!d) return null;
     return new Date(d).toLocaleDateString("en-GB", opts ?? { day: "numeric", month: "short", year: "numeric" });
-}
-
-function salaryLabel(min: number | null, max: number | null, currency: string | null) {
-    const c = currency ?? "LKR";
-    const f = (v: number) => v.toLocaleString();
-    if (min && max) return `${c} ${f(min)} – ${f(max)}`;
-    if (min) return `${c} ${f(min)}+`;
-    if (max) return `Up to ${c} ${f(max)}`;
-    return null;
 }
 
 function getPendingPaymentId(job: JobBase): string | null {
@@ -187,7 +180,7 @@ function JobDetail({
     onDelete: (jobId: string) => void;
 }) {
     const router = useRouter();
-    const salary = salaryLabel(job.salary_min, job.salary_max, job.salary_currency);
+    const salary = formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency);
     const pendingPaymentId = getPendingPaymentId(job);
     const cfg = STATUS_CONFIG[job.status] ?? STATUS_CONFIG.draft;
     const isLoading = (suffix: string) => actionLoading === job.id + suffix;
@@ -325,12 +318,7 @@ function ApplicationsPanel({ job, onRefresh }: { job: JobDetail; onRefresh: () =
     // Open the applicant profile; a still-"pending" application is auto-marked reviewed.
     const openApplicant = (app: Application) => {
         setSelectedApp({
-            id: app.id,
-            status: app.status,
-            cover_letter: app.cover_letter,
-            resume_url: app.resume_url,
-            notes: app.notes,
-            applied_at: app.applied_at,
+            ...app,
             job: { id: job.id, job_title: job.job_title, industry: job.industry },
             candidate: { id: app.candidate.id, first_name: app.candidate.first_name, last_name: app.candidate.last_name },
             job_invitation: normalizeInvitation(app.job_invitation),
@@ -368,13 +356,17 @@ function ApplicationsPanel({ job, onRefresh }: { job: JobDetail; onRefresh: () =
                     </button>
                     {Object.entries(APP_STATUS_CONFIG).map(([key, cfg]) => {
                         const c = counts[key] ?? 0;
-                        if (c === 0) return null;
+                        if (c === 0 && key !== "pending") return null;
                         return (
                             <button
                                 key={key}
                                 onClick={() => setFilter(key)}
                                 className={cn("text-[11px] px-2 py-0.5 rounded-full border transition-colors",
-                                    filter === key ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted")}
+                                    filter === key
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : key === "pending" && c > 0
+                                        ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
+                                        : "border-border text-muted-foreground hover:bg-muted")}
                             >
                                 {cfg.label} ({c})
                             </button>
@@ -387,7 +379,13 @@ function ApplicationsPanel({ job, onRefresh }: { job: JobDetail; onRefresh: () =
                 {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                         <Users className="h-10 w-10 opacity-20 mb-2" />
-                        <p className="text-sm">No applications yet.</p>
+                        <p className="text-sm">
+                            {apps.length === 0
+                                ? "No applications yet."
+                                : filter === "pending"
+                                ? "Every applicant has been reviewed."
+                                : `No ${(APP_STATUS_CONFIG[filter]?.label ?? filter).toLowerCase()} applicants.`}
+                        </p>
                     </div>
                 ) : (
                     filtered.map((app) => {

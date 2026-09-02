@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +18,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatLabel } from "@/lib/utils";
+import { resolveDraft } from "@/lib/job-form-draft";
+import { formatSalaryRange } from "@/lib/currencies";
 
 const MdxEditor = dynamic(
     () => import("@/components/employer/MdxEditor").then((m) => m.MdxEditor),
@@ -77,20 +80,10 @@ function comparableIndustryName(value: string) {
     return INDUSTRY_NAME_ALIASES[normalized] ?? normalized;
 }
 
-// ── Salary formatter ───────────────────────────────────────────────────────────
-
-function formatSalary(min: string, max: string, currency: string) {
-    if (!min && !max) return null;
-    const fmt = (v: string) => Number(v).toLocaleString();
-    if (min && max) return `${currency} ${fmt(min)} – ${fmt(max)}`;
-    if (min) return `${currency} ${fmt(min)}+`;
-    return `Up to ${currency} ${fmt(max)}`;
-}
-
 // ── Live Preview ───────────────────────────────────────────────────────────────
 
 function JobAdPreview({ form, companyName }: { form: JobFormData; companyName: string }) {
-    const salary = formatSalary(form.salary_min, form.salary_max, form.salary_currency);
+    const salary = formatSalaryRange(Number(form.salary_min), Number(form.salary_max), form.salary_currency);
     const jobTypeLabel = JOB_TYPES[form.job_type] ?? form.job_type;
     const hasContent = form.job_title || form.location || form.industry_name || form.description;
 
@@ -249,7 +242,7 @@ function DesignationCombobox({
                     setTimeout(() => inputRef.current?.focus(), 10);
                 }}
                 className={cn(
-                    "flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
+                    "flex h-9 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background",
                     "hover:bg-accent hover:text-accent-foreground",
                     "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                     "disabled:cursor-not-allowed disabled:opacity-50",
@@ -353,9 +346,9 @@ export function JobFormClient({ mode, jobId }: Props) {
     useEffect(() => {
         if (mode === "create") {
             try {
-                const saved = localStorage.getItem(storageKey);
-                if (saved) {
-                    setForm(JSON.parse(saved) as JobFormData);
+                const { form: restored, isDraft } = resolveDraft(INITIAL, localStorage.getItem(storageKey));
+                if (isDraft) {
+                    setForm(restored);
                     setHasDraft(true);
                     toast.info("Draft restored from your last session.", { duration: 4000 });
                 }
@@ -371,7 +364,12 @@ export function JobFormClient({ mode, jobId }: Props) {
             fetch(`/api/employer/jobs/${jobId}`)
                 .then((r) => r.json())
                 .then(({ job }) => {
-                    if (!job) return;
+                    // Render an empty form only when we know why - a silent
+                    // failure here looks exactly like "the data did not load".
+                    if (!job) {
+                        toast.error("Could not load this job. Please refresh the page.");
+                        return;
+                    }
                     setJobStatus(job.status ?? "draft");
                     const loaded: JobFormData = {
                         job_title: job.job_title ?? "",
@@ -393,17 +391,14 @@ export function JobFormClient({ mode, jobId }: Props) {
                     };
                     setServerForm(loaded);
                     try {
-                        const saved = localStorage.getItem(storageKey);
-                        if (saved) {
-                            setForm(JSON.parse(saved) as JobFormData);
-                            setHasDraft(true);
-                            toast.info("Unsaved draft restored. Save to keep changes.", { duration: 5000 });
-                        } else {
-                            setForm(loaded);
-                        }
+                        const { form: restored, isDraft } = resolveDraft(loaded, localStorage.getItem(storageKey));
+                        setForm(restored);
+                        setHasDraft(isDraft);
+                        if (isDraft) toast.info("Unsaved draft restored. Save to keep changes.", { duration: 5000 });
                     } catch { setForm(loaded); }
                     isInitialLoad.current = false;
                 })
+                .catch(() => toast.error("Could not load this job. Please refresh the page."))
                 .finally(() => setLoading(false));
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -554,7 +549,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                                 }
                                             }}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="w-full rounded-lg">
                                                 <SelectValue placeholder={industries.length === 0 ? "Loading..." : "Choose industry"} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -584,7 +579,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                     <div className="space-y-1.5">
                                         <Label>Job Type</Label>
                                         <Select value={form.job_type} onValueChange={(v) => set("job_type", v)}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectTrigger className="w-full rounded-lg"><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 {Object.entries(JOB_TYPES).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
                                             </SelectContent>
@@ -596,7 +591,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                     <div className="space-y-1.5">
                                         <Label>Experience Level</Label>
                                         <Select value={form.experience_level || "__none__"} onValueChange={(v) => set("experience_level", v === "__none__" ? "" : v)}>
-                                            <SelectTrigger><SelectValue placeholder="Not specified" /></SelectTrigger>
+                                            <SelectTrigger className="w-full rounded-lg"><SelectValue placeholder="Not specified" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="__none__">Not specified</SelectItem>
                                                 {["Entry Level", "Junior", "Mid Level", "Senior", "Lead", "Executive"].map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
@@ -618,7 +613,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                     <div className="space-y-1.5">
                                         <Label>Currency</Label>
                                         <Select value={form.salary_currency} onValueChange={(v) => set("salary_currency", v)}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectTrigger className="w-full rounded-lg"><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 {["LKR", "USD", "EUR", "GBP"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                                             </SelectContent>
@@ -626,11 +621,11 @@ export function JobFormClient({ mode, jobId }: Props) {
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label htmlFor="salary_min">Min Salary</Label>
-                                        <Input id="salary_min" type="number" min="0" step="1000" value={form.salary_min} onChange={(e) => set("salary_min", e.target.value)} placeholder="e.g. 100000" />
+                                        <MoneyInput id="salary_min" value={form.salary_min} onChange={(v) => set("salary_min", v)} placeholder="e.g. 100,000" />
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label htmlFor="salary_max">Max Salary</Label>
-                                        <Input id="salary_max" type="number" min="0" step="1000" value={form.salary_max} onChange={(e) => set("salary_max", e.target.value)} placeholder="e.g. 200000" />
+                                        <MoneyInput id="salary_max" value={form.salary_max} onChange={(v) => set("salary_max", v)} placeholder="e.g. 200,000" />
                                     </div>
                                 </div>
                             </CardContent>
@@ -668,7 +663,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                                                 }
                                             }}
                                         >
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectTrigger className="w-full rounded-lg"><SelectValue /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="30">30 days</SelectItem>
                                                 <SelectItem value="60">60 days</SelectItem>
@@ -731,7 +726,7 @@ export function JobFormClient({ mode, jobId }: Props) {
                             <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
                             <Button type="submit" disabled={submitting}>
                                 {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                                {mode === "create" ? "Save as Draft" : "Save Changes"}
+                                {mode === "create" ? "Save" : "Save Changes"}
                             </Button>
                         </div>
                     </form>

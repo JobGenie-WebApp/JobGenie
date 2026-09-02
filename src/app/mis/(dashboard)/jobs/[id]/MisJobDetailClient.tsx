@@ -28,7 +28,6 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
     deleted: { label: "Deleted", variant: "destructive" },
 };
 
-const APP_STATUS_OPTIONS = ["pending", "reviewed", "shortlisted", "rejected", "hired", "withdrawn"];
 const APP_STATUS_LABELS: Record<string, string> = {
     pending: "Pending", reviewed: "Reviewed", shortlisted: "Shortlisted",
     rejected: "Rejected", hired: "Hired", withdrawn: "Withdrawn",
@@ -69,7 +68,6 @@ export function MisJobDetailClient({ jobId }: { jobId: string }) {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [publishDays, setPublishDays] = useState("30");
-    const [updatingApp, setUpdatingApp] = useState<string | null>(null);
 
     const fetchJob = useCallback(async () => {
         setLoading(true);
@@ -94,21 +92,6 @@ export function MisJobDetailClient({ jobId }: { jobId: string }) {
             toast.success("Status updated");
             fetchJob();
         } finally { setActionLoading(null); }
-    }
-
-    async function updateApplicationStatus(appId: string, status: string) {
-        setUpdatingApp(appId);
-        try {
-            const res = await fetch(`/api/mis/jobs/${jobId}/applications/${appId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status }),
-            });
-            const data = await res.json();
-            if (!res.ok) { toast.error(data.error || "Failed"); return; }
-            toast.success("Application status updated");
-            fetchJob();
-        } finally { setUpdatingApp(null); }
     }
 
     const isL = (k: string) => actionLoading === k;
@@ -260,23 +243,7 @@ export function MisJobDetailClient({ jobId }: { jobId: string }) {
                                                 <p className="text-xs text-muted-foreground">{app.candidate.current_position || app.candidate.email} · Applied {fmt(app.applied_at)}</p>
                                                 {app.notes && <p className="text-xs text-muted-foreground mt-1 italic">{app.notes}</p>}
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Select
-                                                    value={app.status}
-                                                    onValueChange={(v) => updateApplicationStatus(app.id, v)}
-                                                    disabled={updatingApp === app.id}
-                                                >
-                                                    <SelectTrigger className="w-36 h-8">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {APP_STATUS_OPTIONS.map((s) => (
-                                                            <SelectItem key={s} value={s}>{APP_STATUS_LABELS[s]}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                {updatingApp === app.id && <Loader2 className="h-4 w-4 animate-spin" />}
-                                            </div>
+                                            <Badge variant="secondary">{APP_STATUS_LABELS[app.status] ?? formatLabel(app.status)}</Badge>
                                         </div>
                                     </CardContent>
                                 </Card>
