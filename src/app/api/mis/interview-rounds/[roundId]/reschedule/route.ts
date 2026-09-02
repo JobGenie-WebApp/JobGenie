@@ -155,8 +155,8 @@ export async function POST(
             .select(`
                 id,
                 job_designation,
-                candidate:candidates!inner(id, first_name, last_name, email),
-                employer:employers!inner(id, first_name, last_name, email),
+                candidate:candidates!inner(id, user_id, first_name, last_name, email),
+                employer:employers!inner(id, user_id, first_name, last_name, email),
                 company:companies!inner(id, company_name)
             `)
             .eq("id", round.invitation_id)
@@ -169,8 +169,8 @@ export async function POST(
             .eq("job_invitation_id", round.invitation_id);
 
         if (invitation) {
-            const candidateData = (invitation.candidate as unknown as { id: string; first_name: string; last_name: string; email: string }[])?.[0];
-            const employerData = (invitation.employer as unknown as { id: string; first_name: string; last_name: string; email: string }[])?.[0];
+            const candidateData = (invitation.candidate as unknown as { id: string; user_id: string; first_name: string; last_name: string; email: string }[])?.[0];
+            const employerData = (invitation.employer as unknown as { id: string; user_id: string; first_name: string; last_name: string; email: string }[])?.[0];
             const companyData = (invitation.company as unknown as { company_name: string }[])?.[0];
             const roundLabel = round.round_label || `Round ${round.round_number}`;
             const meetingLinkOrAddress = interview_mode === 'online' ? meeting_link : interview_address;
@@ -209,6 +209,47 @@ export async function POST(
                 notes || '',
                 employerTz
             );
+
+            // In-app notifications (non-blocking)
+            const notificationPayload = {
+                invitation_id: round.invitation_id,
+                round_id: roundId,
+                date,
+                time,
+                interview_mode,
+            };
+
+            const inAppPromises: Promise<unknown>[] = [];
+
+            if (candidateData?.user_id) {
+                inAppPromises.push(
+                    Promise.resolve(
+                        adminClient.rpc('notify_user', {
+                            p_user_id: candidateData.user_id,
+                            p_type: 'interview_rescheduled',
+                            p_title: 'Interview Rescheduled',
+                            p_body: `Your ${roundLabel} for ${invitation.job_designation} at ${companyData.company_name} has been rescheduled by JobGenie.`,
+                            p_data: notificationPayload,
+                        })
+                    ).catch((err: unknown) => console.error('Candidate notification error:', err))
+                );
+            }
+
+            if (employerData?.user_id) {
+                inAppPromises.push(
+                    Promise.resolve(
+                        adminClient.rpc('notify_user', {
+                            p_user_id: employerData.user_id,
+                            p_type: 'interview_rescheduled',
+                            p_title: 'Interview Rescheduled',
+                            p_body: `The ${roundLabel} with ${candidateData.first_name} ${candidateData.last_name} for ${invitation.job_designation} has been rescheduled by JobGenie.`,
+                            p_data: notificationPayload,
+                        })
+                    ).catch((err: unknown) => console.error('Employer notification error:', err))
+                );
+            }
+
+            await Promise.all(inAppPromises);
         }
 
         await logAudit("round_rescheduled_by_mis", user.id, "mis", "interview_round", roundId, { date, time, interview_mode });

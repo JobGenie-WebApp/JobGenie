@@ -23,6 +23,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -225,17 +226,14 @@ export function AboutDialog({ open, onOpenChange, profile }: AboutDialogProps) {
                                                 className="w-32 shrink-0 px-3"
                                             />
                                             <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    min="0"
-                                                    placeholder="e.g. 150000"
+                                                <MoneyInput
+                                                    placeholder="e.g. 150,000"
                                                     {...field}
                                                     value={field.value ?? ""}
                                                     className="flex-1"
-                                                    onChange={(e) => {
-                                                        const value = e.target.value;
-                                                        field.onChange(value === "" ? null : parseFloat(value));
-                                                    }}
+                                                    onChange={(value) =>
+                                                        field.onChange(value === "" ? null : parseFloat(value))
+                                                    }
                                                 />
                                             </FormControl>
                                         </div>

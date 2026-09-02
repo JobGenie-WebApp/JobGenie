@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { DateField } from "@/components/ui/date-field";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -155,8 +156,8 @@ export function MisJobEditClient({ jobId }: { jobId: string }) {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div><Label>Min</Label><Input type="number" value={form.salary_min} onChange={(e) => set("salary_min", e.target.value)} /></div>
-                    <div><Label>Max</Label><Input type="number" value={form.salary_max} onChange={(e) => set("salary_max", e.target.value)} /></div>
+                    <div><Label>Min</Label><MoneyInput value={form.salary_min} onChange={(v) => set("salary_min", v)} /></div>
+                    <div><Label>Max</Label><MoneyInput value={form.salary_max} onChange={(v) => set("salary_max", v)} /></div>
                 </CardContent>
             </Card>
 

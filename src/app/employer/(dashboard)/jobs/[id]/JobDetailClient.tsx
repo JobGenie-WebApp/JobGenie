@@ -21,6 +21,7 @@ import {
     type ApplicantApplication,
     type ApplicantLinkedInvitation,
 } from "@/components/employer/ApplicantDetailModal";
+import { type AtsResult } from "@/components/employer/AtsDetails";
 import {
     getInvitationJourneyDisplay,
     journeyVariantToEmployerBadgeProps,
@@ -98,10 +99,9 @@ interface ComplianceFlag {
     resolution_notes: string | null; resolved_at: string | null;
 }
 
-interface Application {
+interface Application extends AtsResult {
     id: string; status: string; applied_at: string;
     cover_letter: string | null; resume_url: string | null; notes: string | null;
-    ats_score: number | null; ats_status: string | null; ats_error: string | null;
     candidate: { id: string; first_name: string; last_name: string; email: string; current_position: string | null; profile_image_url: string | null };
     job_invitation: ApplicantLinkedInvitation | ApplicantLinkedInvitation[] | null;
 }
@@ -198,12 +198,7 @@ export function JobDetailClient({ jobId }: { jobId: string }) {
     const openApplicant = (app: Application) => {
         if (!job) return;
         setSelectedApp({
-            id: app.id,
-            status: app.status,
-            cover_letter: app.cover_letter,
-            resume_url: app.resume_url,
-            notes: app.notes,
-            applied_at: app.applied_at,
+            ...app,
             job: { id: job.id, job_title: job.job_title, industry: job.industry },
             candidate: { id: app.candidate.id, first_name: app.candidate.first_name, last_name: app.candidate.last_name },
             job_invitation: normalizeInvitation(app.job_invitation),

@@ -18,7 +18,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { MultiCombobox } from "@/components/ui/multi-combobox";
-import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { CandidateDetailModal } from "./CandidateDetailModal";
 import { cn, formatIndustry, formatLabel } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -286,12 +286,11 @@ export function CandidateTable({ candidates, industries }: CandidateTableProps) 
                                 <label htmlFor="salary-filter" className="text-sm font-medium block">
                                     Max Expected Salary (LKR)
                                 </label>
-                                <Input
+                                <MoneyInput
                                     id="salary-filter"
-                                    type="number"
-                                    placeholder="e.g. 150000"
+                                    placeholder="e.g. 150,000"
                                     value={expectedSalaryStr}
-                                    onChange={(e) => setExpectedSalaryStr(e.target.value)}
+                                    onChange={setExpectedSalaryStr}
                                 />
                             </div>
 

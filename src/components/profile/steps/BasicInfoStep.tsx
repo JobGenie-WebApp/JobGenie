@@ -2,6 +2,7 @@
 
 import { User, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -551,13 +552,11 @@ export function BasicInfoStep({ data, onChange, onNext, onPrevious, onImageSelec
                                     emptyMessage="No currency found."
                                     className="w-32 shrink-0 px-3"
                                 />
-                                <Input
+                                <MoneyInput
                                     id="expectedMonthlySalary"
-                                    type="number"
-                                    min="0"
                                     value={data.expectedMonthlySalary || ""}
-                                    onChange={(e) => updateField("expectedMonthlySalary", parseInt(e.target.value) || 0)}
-                                    placeholder="e.g., 150000"
+                                    onChange={(v) => updateField("expectedMonthlySalary", parseInt(v) || 0)}
+                                    placeholder="e.g., 150,000"
                                     className="flex-1"
                                 />
                             </div>

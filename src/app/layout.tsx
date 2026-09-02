@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Stack_Sans_Text } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import StoreProvider from "@/components/providers/StoreProvider";
@@ -26,9 +26,9 @@ export const metadata: Metadata = {
   },
 };
 
-const fontSans = Roboto({
+const fontSans = Stack_Sans_Text({
   subsets: ["latin"],
-  variable: "--font-roboto",
+  variable: "--font-stack-sans-text",
   display: "swap",
 });
 

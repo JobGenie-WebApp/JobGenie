@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, MapPin, Clock, Building2, DollarSign, CheckCircle2 } from "lucide-react";
+import { formatSalaryRange } from "@/lib/currencies";
 
 export interface JobCardData {
     id: string;
@@ -42,14 +43,6 @@ export function postedAgo(dateString: string | null): string | null {
     return `${diffDays} days ago`;
 }
 
-export function salaryDisplay(min: number | null, max: number | null, currency: string | null) {
-    if (!min && !max) return null;
-    const c = currency ?? "LKR";
-    if (min && max) return `${c} ${min.toLocaleString()} – ${max.toLocaleString()}`;
-    if (min) return `${c} ${min.toLocaleString()}+`;
-    return `Up to ${c} ${max!.toLocaleString()}`;
-}
-
 // Shared job card used across Browse / Applied / Saved sections so the design
 // stays identical. `rightSlot` (top-right), `extraBadges` (after the level
 // badge) and `footer` are composed by each caller.
@@ -63,7 +56,7 @@ export function JobCard({ job, rightSlot, extraBadges, footer, applied }: {
 }) {
     const router = useRouter();
     const urgent = daysLeft(job.expires_at);
-    const salary = salaryDisplay(job.salary_min, job.salary_max, job.salary_currency);
+    const salary = formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency);
     const posted = postedAgo(job.published_at);
     const company = Array.isArray(job.company) ? job.company[0] : job.company;
 

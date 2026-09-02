@@ -364,14 +364,10 @@ function buildCandidateGroups(events: CalendarEvent[]): CandidateGroup[] {
     for (const g of map.values()) {
         g.events.sort((a, b) => a.start.getTime() - b.start.getTime());
     }
-    // Sort groups: those with upcoming first, then by earliest event
-    return Array.from(map.values()).sort((a, b) => {
-        const now = new Date();
-        const aUpcoming = a.events.some(e => e.start >= now);
-        const bUpcoming = b.events.some(e => e.start >= now);
-        if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-        return a.events[0].start.getTime() - b.events[0].start.getTime();
-    });
+    // Chronological by scheduled time - earliest interview of the day first.
+    return Array.from(map.values()).sort(
+        (a, b) => a.events[0].start.getTime() - b.events[0].start.getTime()
+    );
 }
 
 function RoadmapStepIcon({ isCanceled, isConfirmed, misRescheduled, isPastEvent }: {
@@ -414,9 +410,10 @@ function CandidateRoadmapCard({ group, onSelectEvent, isExpanded, onToggle }: {
                     <p className="text-[13px] font-semibold text-foreground truncate leading-tight">{group.candidateName}</p>
                     <p className="text-[10px] text-muted-foreground">
                         {group.events.length} {group.events.length === 1 ? "interview" : "interviews"}
-                        {hasUpcoming && nextEvent && (
-                            <span className="text-primary"> · next {format(nextEvent.start, "MMM d")}</span>
-                        )}
+                        {" · "}
+                        <span className={cn(hasUpcoming && "text-primary font-semibold")}>
+                            {format((nextEvent ?? group.events[0]).start, "h:mm a")}
+                        </span>
                     </p>
                 </div>
                 <ChevronRight className={cn("h-3.5 w-3.5 text-muted-foreground flex-shrink-0 transition-transform", isExpanded && "rotate-90")} />
@@ -469,7 +466,7 @@ function CandidateRoadmapCard({ group, onSelectEvent, isExpanded, onToggle }: {
                                         )}
                                     </div>
                                     <p className={cn("text-[10px] mt-0.5", isPastEvent ? "text-muted-foreground/60" : "text-muted-foreground")}>
-                                        {format(ev.start, "MMM d")} · {format(ev.start, "h:mm a")}
+                                        {format(ev.start, "h:mm a")}
                                     </p>
                                 </button>
                             </div>
@@ -578,6 +575,17 @@ export default function EmployerCalendarClient() {
             ? allEvents
             : allEvents.filter(e => getEventStatusCategory(e.resource) === statusFilter),
         [allEvents, statusFilter]
+    );
+
+    // The sidebar tracks today only - what the employer has to run right now -
+    // while the grid stays free to browse other months.
+    const todayEvents = useMemo(
+        () => allEvents.filter(e => isToday(e.start)).sort((a, b) => a.start.getTime() - b.start.getTime()),
+        [allEvents]
+    );
+    const todayFilteredEvents = useMemo(
+        () => events.filter(e => isToday(e.start)),
+        [events]
     );
 
     const handleSelectEvent = useCallback((event: CalendarEvent) => {
@@ -697,7 +705,10 @@ export default function EmployerCalendarClient() {
 
                 {/* Sidebar — one card per candidate with roadmap */}
                 <div className="hidden lg:flex w-72 flex-shrink-0 flex-col gap-2">
-                    <p className="text-sm font-semibold text-foreground px-1">Candidates</p>
+                    <div className="flex items-baseline justify-between gap-2 px-1">
+                        <p className="text-sm font-semibold text-foreground">Today&apos;s Interviews</p>
+                        <span className="text-[11px] text-muted-foreground">{format(new Date(), "EEE, MMM d")}</span>
+                    </div>
                     {allEvents.length === 0 ? (
                         <div className="rounded-lg border border-border/50 bg-card/50 px-4 py-5 text-center space-y-2">
                             <p className="text-xs font-medium text-muted-foreground">No interviews yet</p>
@@ -708,10 +719,17 @@ export default function EmployerCalendarClient() {
                                 Open invitations
                             </Link>
                         </div>
+                    ) : todayEvents.length === 0 ? (
+                        <div className="rounded-lg border border-border/50 bg-card/50 px-4 py-5 text-center space-y-1.5">
+                            <p className="text-xs font-medium text-muted-foreground">Nothing scheduled today</p>
+                            <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+                                
+                            </p>
+                        </div>
                     ) : (
                         <CandidateRoadmapSidebar
-                            allEvents={allEvents}
-                            filteredEvents={events}
+                            allEvents={todayEvents}
+                            filteredEvents={todayFilteredEvents}
                             onSelectEvent={handleSelectEvent}
                         />
                     )}

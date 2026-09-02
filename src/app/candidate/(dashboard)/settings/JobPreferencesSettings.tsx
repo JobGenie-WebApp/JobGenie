@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -207,10 +208,10 @@ export function JobPreferencesSettings() {
                             emptyMessage="No currency found."
                             className="h-10 w-32 shrink-0 px-3"
                         />
-                        <Input
-                            type="number" min={0} step={5000} placeholder="e.g. 150,000"
+                        <MoneyInput
+                            placeholder="e.g. 150,000"
                             value={prefs.expected_monthly_salary ?? ""}
-                            onChange={e => setPrefs(p => ({ ...p, expected_monthly_salary: e.target.value ? Number(e.target.value) : null }))}
+                            onChange={v => setPrefs(p => ({ ...p, expected_monthly_salary: v ? Number(v) : null }))}
                             className="flex-1"
                         />
                         {prefs.expected_monthly_salary !== null && (

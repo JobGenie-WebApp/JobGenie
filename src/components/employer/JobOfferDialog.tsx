@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/money-input";
 import { DateField } from "@/components/ui/date-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -136,12 +137,11 @@ export function JobOfferDialog({
                     <div className="grid grid-cols-3 gap-3">
                         <div className="col-span-3 sm:col-span-1 space-y-2">
                             <Label htmlFor="salary_amount">Salary Amount</Label>
-                            <Input
+                            <MoneyInput
                                 id="salary_amount"
-                                type="number"
                                 value={formData.salary_amount}
-                                onChange={(e) => setFormData({ ...formData, salary_amount: e.target.value })}
-                                placeholder="100000"
+                                onChange={(v) => setFormData({ ...formData, salary_amount: v })}
+                                placeholder="100,000"
                                 disabled={submitting}
                             />
                         </div>

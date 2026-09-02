@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ScheduleInterviewDialog } from "@/components/employer/ScheduleInterviewDialog";
 import { CandidateDetailModal } from "@/app/employer/(dashboard)/candidates/CandidateDetailModal";
+import { AtsDetails, type AtsResult } from "@/components/employer/AtsDetails";
 
 export interface ApplicantLinkedInvitation {
     id: string;
@@ -31,7 +32,7 @@ export interface ApplicantLinkedInvitation {
     job_offers?: { id: string; status: string }[];
 }
 
-export interface ApplicantApplication {
+export interface ApplicantApplication extends AtsResult {
     id: string;
     status: string;
     cover_letter: string | null;
@@ -82,6 +83,23 @@ function ApplicationActions({
     const [showReject, setShowReject] = useState(false);
     const [rejectReason, setRejectReason] = useState("");
     const [rejecting, setRejecting] = useState(false);
+    const [rechecking, setRechecking] = useState(false);
+
+    const handleRecheck = async () => {
+        setRechecking(true);
+        try {
+            const res = await fetch(`/api/employer/applications/${app.id}/ats-recompute`, { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                toast.success("ATS score recalculated");
+                onRefresh();
+            } else {
+                toast.error(data.error || "Scoring failed");
+            }
+        } finally {
+            setRechecking(false);
+        }
+    };
 
     const activeInv = hasActiveInvitation(app.job_invitation);
     const terminal = ["rejected", "hired", "withdrawn"].includes(app.status);
@@ -116,6 +134,8 @@ function ApplicationActions({
                 <h3 className="text-lg font-semibold">Application</h3>
                 <span className="text-xs text-muted-foreground">Applied {fmt(app.applied_at)}</span>
             </div>
+
+            <AtsDetails app={app} onRecheck={handleRecheck} rechecking={rechecking} />
 
             {app.cover_letter && (
                 <div className="space-y-1">

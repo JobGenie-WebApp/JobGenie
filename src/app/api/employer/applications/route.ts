@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
             .from("job_applications")
             .select(`
                 id, status, cover_letter, resume_url, applied_at, updated_at, notes,
-                ats_score, ats_status, ats_scored_at, ats_error,
+                ats_score, ats_status, ats_breakdown, ats_matched_keywords, ats_missing_keywords, ats_scored_at, ats_error,
                 job:jobs!job_applications_job_id_fkey(id, job_title, industry),
                 candidate:candidates!job_applications_candidate_id_fkey(
                     id, first_name, last_name, email, current_position, profile_image_url

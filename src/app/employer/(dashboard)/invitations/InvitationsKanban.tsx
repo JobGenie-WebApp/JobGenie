@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InterviewRoundsDisplay } from "@/components/employer/InterviewRoundsDisplay";
 import { NextRoundDialog } from "@/components/employer/NextRoundDialog";
+import { ApplicantDetailModal, type ApplicantApplication } from "@/components/employer/ApplicantDetailModal";
+import { atsTone } from "@/components/employer/AtsDetails";
 
 const INTERVIEW_TIME_SLOTS = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -113,6 +115,21 @@ export interface Invitation {
     }[] | null;
 }
 
+/**
+ * Someone who applied to a job ad but has no invitation yet. These live in
+ * `job_applications`, not `job_invitations`, so they are a separate source
+ * feeding the board's first column until an interview is scheduled.
+ */
+export interface AppliedApplicant extends ApplicantApplication {
+    candidate: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        current_position?: string | null;
+        profile_image_url?: string | null;
+    } | null;
+}
+
 // ─── Column logic ─────────────────────────────────────────────────────────────
 
 interface KanbanColumn {
@@ -184,7 +201,7 @@ function getColumnId(inv: Invitation): string {
     return "invited";
 }
 
-function buildColumns(invitations: Invitation[]): KanbanColumn[] {
+function buildColumns(invitations: Invitation[], hasApplicants: boolean): KanbanColumn[] {
     // Gather round labels from interview_rounds data
     const roundMap = new Map<number, string | null>();
     for (const inv of invitations) {
@@ -241,6 +258,15 @@ function buildColumns(invitations: Invitation[]): KanbanColumn[] {
         }));
 
     return [
+        ...(hasApplicants ? [{
+            id: "applied",
+            label: "Applied",
+            accent: "bg-sky-500",
+            headerCls: "text-sky-600 dark:text-sky-300",
+            borderCls: "border-sky-200 dark:border-sky-800/60",
+            bgCls: "bg-sky-50 dark:bg-sky-950/20",
+            countBg: "bg-sky-500",
+        } as KanbanColumn] : []),
         ...(hasInvited ? [{
             id: "invited",
             label: "Invited",
@@ -956,12 +982,12 @@ function InvitationModal({
 
 function KanbanCol({
     col,
-    cards,
-    onCardClick,
+    count,
+    children,
 }: {
     col: KanbanColumn;
-    cards: Invitation[];
-    onCardClick: (inv: Invitation) => void;
+    count: number;
+    children: React.ReactNode;
 }) {
     return (
         <div className={cn(
@@ -975,23 +1001,73 @@ function KanbanCol({
                 </div>
                 <span className={cn(
                     "text-[10px] font-bold tabular-nums rounded-full w-5 h-5 flex items-center justify-center text-white",
-                    cards.length > 0 ? col.countBg : "bg-muted text-muted-foreground/40 !text-muted-foreground",
+                    count > 0 ? col.countBg : "bg-muted text-muted-foreground/40 !text-muted-foreground",
                 )}>
-                    {cards.length}
+                    {count}
                 </span>
             </div>
             <div className="flex flex-col gap-2 p-2 overflow-y-auto flex-1 min-h-0">
-                {cards.length === 0 ? (
+                {count === 0 ? (
                     <div className="flex items-center justify-center py-10 text-[10px] text-muted-foreground/30 select-none">
                         No candidates
                     </div>
-                ) : (
-                    cards.map((inv) => (
-                        <KanbanCard key={inv.id} inv={inv} onClick={() => onCardClick(inv)} />
-                    ))
-                )}
+                ) : children}
             </div>
         </div>
+    );
+}
+
+function AppliedCard({ app, onClick }: { app: AppliedApplicant; onClick: () => void }) {
+    const c = app.candidate;
+    if (!c) return null;
+    const name = `${c.first_name} ${c.last_name}`;
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={`Open ${name}'s application and schedule an interview`}
+            className={cn(
+                "w-full text-left rounded-xl border border-border bg-card p-3",
+                "hover:border-primary/40 hover:shadow-md hover:-translate-y-px",
+                "active:translate-y-0 transition-all duration-150 cursor-pointer",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+            )}
+        >
+            <div className="flex items-center gap-2.5 mb-2.5">
+                <Avatar className="h-8 w-8 shrink-0 ring-1 ring-border">
+                    <AvatarImage src={c.profile_image_url || undefined} />
+                    <AvatarFallback className="text-[10px] font-bold">
+                        {c.first_name[0]}{c.last_name[0]}
+                    </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold truncate leading-tight">{name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                        {app.job?.job_title ?? c.current_position ?? ""}
+                    </p>
+                </div>
+            </div>
+            <div className="flex items-center justify-between gap-1 flex-wrap">
+                <div className="flex items-center gap-1 flex-wrap">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold text-sky-700 dark:bg-sky-900/40 dark:text-sky-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        {app.status === "reviewed" ? "Under review" : app.status === "shortlisted" ? "Shortlisted" : "Applied"}
+                    </span>
+                    {app.ats_status === "scored" && typeof app.ats_score === "number" && (
+                        <span className={cn(
+                            "rounded-full border px-1.5 py-0.5 text-[9px] font-bold tabular-nums",
+                            atsTone(app.ats_score).chip,
+                        )}>
+                            ATS {Math.round(app.ats_score)}
+                        </span>
+                    )}
+                </div>
+                <span className="text-[9px] text-muted-foreground/50 tabular-nums">
+                    {formatTimestamp(app.applied_at, "MMM d")}
+                </span>
+            </div>
+        </button>
     );
 }
 
@@ -999,11 +1075,14 @@ function KanbanCol({
 
 interface InvitationsKanbanProps {
     invitations: Invitation[];
+    /** Applied to a job ad, no invitation yet - the board's "Applied" column. */
+    applicants?: AppliedApplicant[];
     fetchInvitations: () => void;
 }
 
-export function InvitationsKanban({ invitations, fetchInvitations }: InvitationsKanbanProps) {
+export function InvitationsKanban({ invitations, applicants = [], fetchInvitations }: InvitationsKanbanProps) {
     const [modalInv, setModalInv] = useState<Invitation | null>(null);
+    const [modalApp, setModalApp] = useState<AppliedApplicant | null>(null);
     const [nextRoundAction, setNextRoundAction] = useState<{
         previousRoundId: string;
         nextRoundNumber: number;
@@ -1013,7 +1092,7 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
     const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(false);
 
-    const columns = buildColumns(invitations);
+    const columns = buildColumns(invitations, applicants.length > 0);
 
     const grouped = new Map<string, Invitation[]>();
     for (const col of columns) grouped.set(col.id, []);
@@ -1109,14 +1188,25 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
                     className="flex min-h-0 min-w-0 flex-1 gap-3 overflow-x-auto pt-1 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-muted/40 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:cursor-pointer"
                     style={{ paddingBottom: "12px", cursor: "default" }}
                 >
-                    {columns.map((col) => (
-                        <KanbanCol
-                            key={col.id}
-                            col={col}
-                            cards={grouped.get(col.id) ?? []}
-                            onCardClick={handleCardClick}
-                        />
-                    ))}
+                    {columns.map((col) => {
+                        if (col.id === "applied") {
+                            return (
+                                <KanbanCol key={col.id} col={col} count={applicants.length}>
+                                    {applicants.map((app) => (
+                                        <AppliedCard key={app.id} app={app} onClick={() => setModalApp(app)} />
+                                    ))}
+                                </KanbanCol>
+                            );
+                        }
+                        const cards = grouped.get(col.id) ?? [];
+                        return (
+                            <KanbanCol key={col.id} col={col} count={cards.length}>
+                                {cards.map((inv) => (
+                                    <KanbanCard key={inv.id} inv={inv} onClick={() => handleCardClick(inv)} />
+                                ))}
+                            </KanbanCol>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -1127,6 +1217,17 @@ export function InvitationsKanban({ invitations, fetchInvitations }: Invitations
                 fetchInvitations={() => {
                     fetchInvitations();
                     setModalInv(null);
+                }}
+            />
+
+            {/* Applied column: the same review / reject / schedule-interview actions
+                the job detail page offers. Scheduling moves the card into the pipeline. */}
+            <ApplicantDetailModal
+                app={modalApp}
+                onClose={() => setModalApp(null)}
+                onRefresh={() => {
+                    fetchInvitations();
+                    setModalApp(null);
                 }}
             />
 
